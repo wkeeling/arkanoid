@@ -1,0 +1,8 @@
+*.pyc
+*.idea
+.cache
+build
+dist
+include
+lib
+*egg-info

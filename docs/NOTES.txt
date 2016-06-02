@@ -1,0 +1,23 @@
+Setup
+=====
+
+Project
+--------
+
+- Create virtualenv 'arkanoid' using virtualenvwrapper:
+    mkproject -p /usr/bin/python3 -f arkanoid
+
+pygame
+------
+Install pygame in the virtual environment.
+(see http://askubuntu.com/questions/299950/how-do-i-install-pygame-in-virtualenv)
+
+- Install system-wide build dependencies (Ubuntu 14.04):
+    sudo apt-get build-dep python-pygame
+    sudo apt-get install libfreetype6-dev
+
+- Add pygame to the requirements.txt file:
+    echo hg+http://bitbucket.org/pygame/pygame >> requirements.txt
+
+- Use pip to install the requirements:
+    pip install -r requirements.txt
