@@ -1,6 +1,7 @@
 """
 Entry point module for running Arkanoid.
 """
+import math
 import os
 import logging
 
@@ -9,6 +10,11 @@ import pygame
 logging.basicConfig()
 LOG = logging.getLogger('arkanoid')
 LOG.setLevel(logging.DEBUG)
+
+DISPLAY_SIZE = 600, 650
+DISPLAY_CAPTION = 'Arkanoid'
+BALL_START_ANGLE_RAD = 5.5
+BALL_START_SPEED = 8
 
 
 class Paddle(pygame.sprite.Sprite):
@@ -21,22 +27,164 @@ class Paddle(pygame.sprite.Sprite):
         self._area = screen.get_rect()
         self.rect.midbottom = self._area.midbottom
         self.rect.top -= 50
-        self._move_by = 0
+        self._offset = 0
         self._speed = 10
 
     def update(self):
-        newpos = self.rect.move(self._move_by, 0)
+        # Continuously move the paddle when the offset is non-zero.
+        newpos = self.rect.move(self._offset, 0)
         if self._area.contains(newpos):
+            # But only update the position of the paddle if it's within
+            # the screen area.
             self.rect = newpos
 
     def move_left(self):
-        self._move_by -= self._speed
+        # Set the offset to negative to move left.
+        self._offset = -self._speed
 
     def move_right(self):
-        self._move_by += self._speed
+        # A positive offset to move right.
+        self._offset = self._speed
 
-    def stopped(self):
-        self._move_by = 0
+    def stop(self):
+        self._offset = 0
+
+
+class Ball(pygame.sprite.Sprite):
+    """The ball that bounces around the screen."""
+
+    def __init__(self, start_pos, start_angle, start_speed,
+                 off_screen_callback=None):
+        """
+        Initialise a new ball.
+
+        Args:
+            start_pos:
+                The starting position of the ball (coordinates).
+            start_angle:
+                The starting angle of the ball in radians taken against the
+                x axis.
+            start_speed:
+                The starting speed of the ball.
+            off_screen_callback:
+                A no-args callable that will be called if the ball goes off
+                the edge of the screen.
+        """
+        super(Ball, self).__init__()
+        self._angle = start_angle
+        self._speed = start_speed
+        self.image, self.rect = load_png('ball.png')
+        self.rect.midbottom = start_pos
+        screen = pygame.display.get_surface()
+        self._area = screen.get_rect()
+        self._collidable_objects = {}
+        self._collidable_callbacks = {}
+        self._off_screen_callback = off_screen_callback
+
+    def update(self):
+        # Get the new position of the ball.
+        self.rect = self._calc_new_pos()
+
+        if self._area.contains(self.rect):
+            # The ball is on the screen.
+            if self._collidable_objects:
+                # Find out if the ball has collided with anything.
+                collidable_objects = list(self._collidable_objects.values())
+                index = self.rect.collidelist(collidable_objects)
+
+                if index > -1:
+                    # Ball has collided with an object. Find out which.
+                    rect = collidable_objects[index]
+
+                    # Work out the new angle of the ball based on the object
+                    # it hit.
+                    self._angle = self._calc_new_angle(rect)
+
+                    callback = self._collidable_callbacks.get(
+                        (rect.left, rect.top))
+                    if callback:
+                        # Notify the listener associated with this object
+                        # that the # object has been struck by the ball.
+                        callback(rect, self.rect)
+        else:
+            # Ball has gone off the screen.
+            # Invoke the callback if we have one.
+            if self._off_screen_callback:
+                self._off_screen_callback()
+
+        # if not self._area.contains(new_pos):
+        #     LOG.info('Off the screen: %s, %s', new_pos, self._area)
+        #     # The ball is partially out of the screen, so we need to change
+        #     # the angle in order to trigger a bounce.
+        #     tl_out = not self._area.collidepoint(new_pos.topleft)
+        #     tr_out = not self._area.collidepoint(new_pos.topright)
+        #     bl_out = not self._area.collidepoint(new_pos.bottomleft)
+        #     br_out = not self._area.collidepoint(new_pos.bottomright)
+        #     top_out = tl_out and tr_out
+        #     bottom_out = bl_out and br_out
+        #
+        #     if top_out:
+        #         if bl_out or br_out:
+        #             # The ball has gone out of a top corner, so bounce
+        #             # it back in the opposite direction
+        #             self._angle = self._angle + math.pi
+        #         else:
+        #             # Ball has hit the top
+        #             self._angle = -self._angle
+        #     elif bottom_out:
+        #         # TODO: This represents an end of life
+        #         if tl_out or tr_out:
+        #             # The ball has gone out of a bottom corner, so bounce
+        #             # it back in the opposite direction
+        #             self._angle = self._angle + math.pi
+        #         else:
+        #             # Ball has hit the bottom
+        #             self._angle = -self._angle
+        #     else:
+        #         # Ball has hit the side
+        #         self._angle = math.pi - self._angle
+
+    def _calc_new_pos(self):
+        offset_x = self._speed * math.cos(self._angle)
+        offset_y = self._speed * math.sin(self._angle)
+
+        return self.rect.move(offset_x, offset_y)
+
+    def _calc_new_angle(self, object_rect):
+        tl_col = object_rect.collidepoint(self.rect.topleft)
+        tr_col = object_rect.collidepoint(self.rect.topright)
+        bl_col = object_rect.collidepoint(self.rect.bottomleft)
+        br_col = object_rect.collidepoint(self.rect.bottomright)
+        points = tl_col, tr_col, bl_col, br_col
+        top_col = tl_col and tr_col
+        bottom_col = bl_col and br_col
+
+        if top_col or bottom_col:
+            # Top of the ball has collided with the bottom of an object,
+            # or bottom of the ball has collided with the top of an object.
+            angle = -self._angle
+        elif any(points) and not any(points):
+            # Ball has hit the corner of an object. Bounce it back in the
+            # opposite direction.
+            angle = self._angle + math.pi
+        else:
+            # Ball has hit the side of an object.
+            angle = math.pi - self._angle
+
+        return angle
+
+    def add_collidable_object(self, rect, callback=None):
+        self._collidable_objects[id(rect)] = rect
+        self._collidable_callbacks[id(rect)] = callback
+
+    def remove_collidable_object(self, rect):
+        try:
+            del self._collidable_objects[id(rect)]
+            del self._collidable_callbacks[id(rect)]
+        except KeyError:
+            # There isn't necessarily a callback associated with every
+            # collidable object.
+            pass
 
 
 def load_png(filename):
@@ -60,17 +208,30 @@ def load_png(filename):
 
 def run_game():
     # TODO: turn this into an Arkenoid class with a main_loop()
+    # TODO: doc on initialisers
 
     # Initialise the screen
     pygame.init()
     screen = create_screen()
 
-    # Fill the background
+    # Create the background
     background = create_background(screen)
+
+    # Create the edges of the game area
+    left, right, top = create_edges(background)
 
     # Initialise the sprites
     paddle = Paddle()
     paddlesprite = pygame.sprite.RenderPlain(paddle)
+    ball = Ball(start_pos=paddle.rect.midtop,
+                start_angle=BALL_START_ANGLE_RAD,
+                start_speed=BALL_START_SPEED,
+                off_screen_callback=off_screen)
+    # Let the ball know about the objects it might collide with
+    ball.add_collidable_object(left)
+    ball.add_collidable_object(right)
+    ball.add_collidable_object(top)
+    ballsprite = pygame.sprite.RenderPlain(ball)
 
     # Blit everything to the screen
     screen.blit(background, (0, 0))
@@ -96,14 +257,23 @@ def run_game():
                     paddle.move_right()
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                    paddle.stopped()
+                    paddle.stop()
 
         # Erase the previous location of the sprites
-        screen.blit(background, paddle.rect, paddle.rect)
+        paddlesprite.clear(screen, background)
+        ballsprite.clear(screen, background)
 
-        # Update the new location of the sprites
+        # Update and redraw the sprites
+        # Remove the collidable paddle object from the ball as it may
+        # not be in the same place if the paddle is in motion.
+        ball.remove_collidable_object(paddle.rect)
         paddlesprite.update()
         paddlesprite.draw(screen)
+        # Re-add the paddle object to the ball after the paddle has
+        # been updated and before the ball is updated.
+        ball.add_collidable_object(paddle.rect)
+        ballsprite.update()
+        ballsprite.draw(screen)
 
         pygame.display.flip()
 
@@ -111,8 +281,8 @@ def run_game():
 
 
 def create_screen():
-    screen = pygame.display.set_mode((600, 650))
-    pygame.display.set_caption('Arkanoid')
+    screen = pygame.display.set_mode(DISPLAY_SIZE)
+    pygame.display.set_caption(DISPLAY_CAPTION)
     pygame.mouse.set_visible(False)
     return screen
 
@@ -122,6 +292,19 @@ def create_background(screen):
     background = background.convert()
     background.fill((0, 0, 0))
     return background
+
+
+def create_edges(background):
+    edge, _ = load_png('edge.png')
+    left_rect = background.blit(edge, (0, 0))
+    right_rect = background.blit(edge, (DISPLAY_SIZE[0] - edge.get_width(), 0))
+    top_edge, _ = load_png('top.png')
+    top_rect = background.blit(top_edge, (edge.get_width(), 0))
+    return left_rect, right_rect, top_rect
+
+
+def off_screen():
+    LOG.debug('Ball gone off the screen!')
 
 
 if __name__ == '__main__':

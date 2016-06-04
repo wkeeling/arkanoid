@@ -21,3 +21,15 @@ Install pygame in the virtual environment.
 
 - Use pip to install the requirements:
     pip install -r requirements.txt
+
+The ball
+--------
+
+- I used the pygame tutorial http://www.pygame.org/docs/tut/tom/MakeGames.html to understand how
+a ball can be made to bounce around the screen. The behaviour in the tutorial is slightly different
+(2 bats either side, rather than at bottom).
+
+- I found I had to add some extra logic to handle the ball hitting the corner of the screen. In this
+scenario using the tutorial's logic, the ball would disappear through a hole in the corner. The logic
+I added was to detect when the ball was in the corner, and bounce it back in exactly the opposite
+direction.
