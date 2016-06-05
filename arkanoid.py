@@ -20,6 +20,12 @@ BALL_START_SPEED = 8
 class Paddle(pygame.sprite.Sprite):
     """The movable paddle used to control the ball."""
 
+    # TODO: Need a "bonus collision action" which can be added to the paddle
+    # and the paddle invokes the callback when a bonus is struck. This can
+    # be less generic than the "collidable object" concept the ball has,
+    # because the bonuses are the only thing to strike the paddle (apart from
+    # the ball).
+
     def __init__(self):
         super(Paddle, self).__init__()
         self.image, self.rect = load_png('paddle.png')
@@ -49,6 +55,28 @@ class Paddle(pygame.sprite.Sprite):
     def stop(self):
         self._offset = 0
 
+    @staticmethod
+    def ball_bounce_strategy(paddle_rect, ball_rect):
+        """The strategy used to calculate the angle that the ball bounces
+        off the paddle. The angle of bounce is dependent upon where the
+        ball strikes the paddle.
+
+        Note: this function is not tied to the Paddle class but we house it
+        here as it seems a reasonable place to keep it.
+
+        Args:
+            paddle_rect:
+                The Rect of the paddle.
+            ball_rect:
+                The Rect of the ball.
+
+        Returns:
+            The angle of bounce in radians.
+        """
+        # TODO: this may need to return a tuple of (angle, speed_level) where
+        # speed_level is say, NORMAL or FAST, and the Ball will then
+        # interpret that by modifying the actual speed appropriately.
+
 
 class Ball(pygame.sprite.Sprite):
     """The ball that bounces around the screen."""
@@ -77,40 +105,81 @@ class Ball(pygame.sprite.Sprite):
         self.rect.midbottom = start_pos
         screen = pygame.display.get_surface()
         self._area = screen.get_rect()
-        self._collidable_objects = {}
-        self._collidable_callbacks = {}
+        self._collidable_objects = []
         self._off_screen_callback = off_screen_callback
+
+    def add_collidable_object(self, obj, bounce_strategy=None,
+                              on_collide=None):
+        """Add an object that the ball could collide with. The object should
+        be a Rect for static objects, or a Sprite for animated objects.
+
+        Args:
+            obj:
+                The collidable object. A Rect for static objects,
+                or a Sprite for animated objects.
+            bounce_strategy:
+                Optional callable that determines how the ball should bounce
+                when it collides with the object.
+            on_collide:
+                Optional callable that will be called when a collision occurs.
+        """
+        self._collidable_objects.append((obj, bounce_strategy, on_collide))
+
+    def remove_collidable_object(self, obj):
+        """Remove an object so that the ball can no longer collide with it.
+
+        Args:
+            obj:
+                The collidable object to remove - either the Rect or Sprite.
+        """
+        self._collidable_objects = [(col, strat, cbk) for col, strat, cbk in
+                                    self._collidable_objects if col == obj]
 
     def update(self):
         # Get the new position of the ball.
         self.rect = self._calc_new_pos()
 
         if self._area.contains(self.rect):
-            # The ball is on the screen.
-            if self._collidable_objects:
-                # Find out if the ball has collided with anything.
-                collidable_objects = list(self._collidable_objects.values())
-                index = self.rect.collidelist(collidable_objects)
+            # The ball is still on the screen.
+            # Find out if the ball has collided with anything.
+            collidable_rects = self._get_collidable_rects()
+            index = self.rect.collidelist(collidable_rects)
 
-                if index > -1:
-                    # Ball has collided with an object. Find out which.
-                    rect = collidable_objects[index]
+            if index > -1:
+                # There's been a collision - find out with what.
+                rect = collidable_rects[index]
 
-                    # Work out the new angle of the ball based on the object
-                    # it hit.
+                # Work out the new angle of the ball based on what it hit.
+                _, bounce_strat, callback = self._collidable_objects[index]
+                if bounce_strat:
+                    # Use the bounce strategy that has been supplied to
+                    # work out the angle.
+                    self._angle = bounce_strat(rect, self.rect)
+                else:
+                    # Use the default calculation for the angle.
                     self._angle = self._calc_new_angle(rect)
 
-                    callback = self._collidable_callbacks.get(
-                        (rect.left, rect.top))
-                    if callback:
-                        # Notify the listener associated with this object
-                        # that the # object has been struck by the ball.
-                        callback(rect, self.rect)
+                if callback:
+                    # Notify the listener associated with this object
+                    # that the object has been struck by the ball.
+                    callback(rect, self.rect)
         else:
             # Ball has gone off the screen.
             # Invoke the callback if we have one.
             if self._off_screen_callback:
                 self._off_screen_callback()
+
+    def _get_collidable_rects(self):
+        """Resolve the Rects from the collidable objects we have."""
+        collidable_rects = []
+
+        for obj, _, _ in self._collidable_objects:
+            try:
+                collidable_rects.append(obj.rect)
+            except AttributeError:
+                collidable_rects.append(obj)
+
+        return collidable_rects
 
         # if not self._area.contains(new_pos):
         #     LOG.info('Off the screen: %s, %s', new_pos, self._area)
@@ -151,6 +220,8 @@ class Ball(pygame.sprite.Sprite):
         return self.rect.move(offset_x, offset_y)
 
     def _calc_new_angle(self, object_rect):
+        # TODO: below is the default bounce strategy
+        # strategy(ball_rect, object_rect)  ==>  angle
         tl_col = object_rect.collidepoint(self.rect.topleft)
         tr_col = object_rect.collidepoint(self.rect.topright)
         bl_col = object_rect.collidepoint(self.rect.bottomleft)
@@ -172,19 +243,6 @@ class Ball(pygame.sprite.Sprite):
             angle = math.pi - self._angle
 
         return angle
-
-    def add_collidable_object(self, rect, callback=None):
-        self._collidable_objects[id(rect)] = rect
-        self._collidable_callbacks[id(rect)] = callback
-
-    def remove_collidable_object(self, rect):
-        try:
-            del self._collidable_objects[id(rect)]
-            del self._collidable_callbacks[id(rect)]
-        except KeyError:
-            # There isn't necessarily a callback associated with every
-            # collidable object.
-            pass
 
 
 def load_png(filename):
@@ -231,6 +289,7 @@ def run_game():
     ball.add_collidable_object(left)
     ball.add_collidable_object(right)
     ball.add_collidable_object(top)
+    ball.add_collidable_object(paddle)
     ballsprite = pygame.sprite.RenderPlain(ball)
 
     # Blit everything to the screen
@@ -264,14 +323,8 @@ def run_game():
         ballsprite.clear(screen, background)
 
         # Update and redraw the sprites
-        # Remove the collidable paddle object from the ball as it may
-        # not be in the same place if the paddle is in motion.
-        ball.remove_collidable_object(paddle.rect)
         paddlesprite.update()
         paddlesprite.draw(screen)
-        # Re-add the paddle object to the ball after the paddle has
-        # been updated and before the ball is updated.
-        ball.add_collidable_object(paddle.rect)
         ballsprite.update()
         ballsprite.draw(screen)
 
