@@ -1,9 +1,10 @@
 """
 Entry point module for running Arkanoid.
 """
+import logging
 import math
 import os
-import logging
+import random
 
 import pygame
 
@@ -25,6 +26,7 @@ class Paddle(pygame.sprite.Sprite):
     # be less generic than the "collidable object" concept the ball has,
     # because the bonuses are the only thing to strike the paddle (apart from
     # the ball).
+    # TODO: offsets and speed should be passed via initialiser
 
     def __init__(self):
         super(Paddle, self).__init__()
@@ -56,10 +58,10 @@ class Paddle(pygame.sprite.Sprite):
         self._offset = 0
 
     @staticmethod
-    def ball_bounce_strategy(paddle_rect, ball_rect):
-        """The strategy used to calculate the angle that the ball bounces
-        off the paddle. The angle of bounce is dependent upon where the
-        ball strikes the paddle.
+    def bounce_strategy(paddle_rect, ball_rect):
+        """Implementation of a ball bounce strategy used to calculate
+        the angle that the ball bounces off the paddle. The angle
+        of bounce is dependent upon where the ball strikes the paddle.
 
         Note: this function is not tied to the Paddle class but we house it
         here as it seems a reasonable place to keep it.
@@ -74,17 +76,64 @@ class Paddle(pygame.sprite.Sprite):
             The angle of bounce in radians.
         """
         # TODO: this may need to return a tuple of (angle, speed_level) where
-        # speed_level is say, NORMAL or FAST, and the Ball will then
+        # speed_level is say, SLOW, NORMAL or FAST, and the Ball will then
         # interpret that by modifying the actual speed appropriately.
+
+        # Break the paddle into 8 segments. Each segment triggers a different
+        # angle of bounce.
+        segment_size = paddle_rect.width // 8
+        segments = []
+
+        for i in range(8):
+            # Create rectangles for the first 7 segments.
+            left = paddle_rect.left + segment_size * i
+            if i < 7:
+                # The first 7 segments are a fixed size.
+                segment = pygame.Rect(left, paddle_rect.top, segment_size,
+                                      paddle_rect.height)
+            else:
+                # The last segment makes up what is left of the paddle width.
+                segment = pygame.Rect(left, paddle_rect.top,
+                                      paddle_rect.width - (segment_size * 7),
+                                      paddle_rect.height)
+            segments.append(segment)
+
+        # The bounce angles corresponding to each of the 8 segments.
+        angles = -150, -130, -115, -100, -80, -65, -50, -30
+
+        # Discover which segment the ball collided with.
+        index = ball_rect.collidelist(segments)
+
+        if index > -1:
+            # Return the angle with a small amount of randomness.
+            # The randomness prevents the ball from getting stuck in a
+            # repeating bounce pattern.
+            return math.radians(angles[index] + random.randint(-5, 5))
 
 
 class Ball(pygame.sprite.Sprite):
-    """The ball that bounces around the screen."""
+    """The ball that bounces around the screen.
+
+    A Ball is aware of the screen, and any collidable objects in the screen
+    that have been added via add_collidable_object(). Where no collidable
+    objects have been added, a Ball will just travel from its start point
+    straight off the edge of the screen calling an off_screen_callback if
+    one has been set. It is up to clients to add the necessary collidable
+    objects to keep the Ball within the confines of the screen.
+
+    A Ball will collide with objects that it is told about via
+    add_collidable_object(). It will follow normall physics when bouncing
+    off an object, but this can be overriden by passing a bounce strategy
+    with a collidable object when it is added to the Ball. See
+    add_collidable_object() for further details.
+    """
 
     def __init__(self, start_pos, start_angle, start_speed,
                  off_screen_callback=None):
         """
-        Initialise a new ball.
+        Initialise a new Ball with the given arguments. If supplied,
+        the off_screen_callback will be invoked whenever the Ball leaves
+        the screen. This is a no-args callable.
 
         Args:
             start_pos:
@@ -110,8 +159,20 @@ class Ball(pygame.sprite.Sprite):
 
     def add_collidable_object(self, obj, bounce_strategy=None,
                               on_collide=None):
-        """Add an object that the ball could collide with. The object should
+        """Add an object that the ball might collide with. The object should
         be a Rect for static objects, or a Sprite for animated objects.
+
+        A bounce strategy can be supplied to override the default bouncing
+        behaviour of the ball whenever it strikes the object being added.
+        The strategy should be a callable that will receive two arguments:
+        the Rect of the object being struck, and the Rect of the ball. It
+        should return the angle of bounce in radians. If not supplied, the
+        ball will conform to normal physics when bouncing off the object.
+
+        In addition, an optional collision callable can be supplied together
+        with the object being added. This will  be invoked to perform an
+        action whenever the ball strikes the object. The callable takes two
+        arguments: the Rect of the object and the Rect of the ball.
 
         Args:
             obj:
@@ -148,21 +209,20 @@ class Ball(pygame.sprite.Sprite):
             if index > -1:
                 # There's been a collision - find out with what.
                 rect = collidable_rects[index]
+                _, bounce_strat, action = self._collidable_objects[index]
 
-                # Work out the new angle of the ball based on what it hit.
-                _, bounce_strat, callback = self._collidable_objects[index]
                 if bounce_strat:
                     # Use the bounce strategy that has been supplied to
-                    # work out the angle.
+                    # work out the bounce angle.
                     self._angle = bounce_strat(rect, self.rect)
                 else:
                     # Use the default calculation for the angle.
                     self._angle = self._calc_new_angle(rect)
 
-                if callback:
-                    # Notify the listener associated with this object
-                    # that the object has been struck by the ball.
-                    callback(rect, self.rect)
+                if action:
+                    # Call the action associated with this object to trigger
+                    # any collision specific behaviour.
+                    action(rect, self.rect)
         else:
             # Ball has gone off the screen.
             # Invoke the callback if we have one.
@@ -247,13 +307,13 @@ class Ball(pygame.sprite.Sprite):
 
 def load_png(filename):
     """Load a png image with the specified filename from the
-    data/graphics directory and return it and its rect.
+    data/graphics directory and return it and its Rect.
 
     Args:
         filename:
             The filename of the image.
     Returns:
-        A 2-tuple of the image and its rect.
+        A 2-tuple of the image and its Rect.
     """
     image = pygame.image.load(
         os.path.join('data', 'graphics', filename))
@@ -289,7 +349,7 @@ def run_game():
     ball.add_collidable_object(left)
     ball.add_collidable_object(right)
     ball.add_collidable_object(top)
-    ball.add_collidable_object(paddle)
+    ball.add_collidable_object(paddle, bounce_strategy=paddle.bounce_strategy)
     ballsprite = pygame.sprite.RenderPlain(ball)
 
     # Blit everything to the screen
@@ -322,7 +382,7 @@ def run_game():
         paddlesprite.clear(screen, background)
         ballsprite.clear(screen, background)
 
-        # Update and redraw the sprites
+        # Update the state of the sprites and redraw them
         paddlesprite.update()
         paddlesprite.draw(screen)
         ballsprite.update()

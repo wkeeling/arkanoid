@@ -33,3 +33,23 @@ a ball can be made to bounce around the screen. The behaviour in the tutorial is
 scenario using the tutorial's logic, the ball would disappear through a hole in the corner. The logic
 I added was to detect when the ball was in the corner, and bounce it back in exactly the opposite
 direction.
+
+- Decided to refactor the Ball class and introduce the concept of a "collidable object". This
+allows the Ball to not have to depend upon all the sorts of objects it needs to hit - such
+as the paddle, blocks, sides, etc. Didn't want to go the route of the tutorial and use globals.
+Callbacks better option, although bit more complex.
+
+
+Issues
+------
+
+- Logic for bouncing the ball according to standard trigonometry is buggy. Sometimes ball
+gets stuck in strange pattern (e.g. when strikes top of left or right edge).
+
+- Paddle overlaps side graphics.
+
+- Need to implement some kind of speed factor in the ball bounce strategy
+
+- Handle offscreen respawn.
+
+- Fix key up issue stopping paddle movement.
