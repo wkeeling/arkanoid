@@ -29,7 +29,7 @@ class Paddle(pygame.sprite.Sprite):
     # TODO: offsets and speed should be passed via initialiser
 
     def __init__(self):
-        super(Paddle, self).__init__()
+        super().__init__()
         self.image, self.rect = load_png('paddle.png')
         screen = pygame.display.get_surface()
         self._area = screen.get_rect()
@@ -101,14 +101,13 @@ class Paddle(pygame.sprite.Sprite):
         # The bounce angles corresponding to each of the 8 segments.
         angles = -150, -130, -115, -100, -80, -65, -50, -30
 
-        # Discover which segment the ball collided with.
+        # Discover which segment the ball collided with. Just use the first.
         index = ball_rect.collidelist(segments)
 
-        if index > -1:
-            # Return the angle with a small amount of randomness.
-            # The randomness prevents the ball from getting stuck in a
-            # repeating bounce pattern.
-            return math.radians(angles[index] + random.randint(-5, 5))
+        # Return the angle adding a small amount of randomness.
+        # The randomness prevents the ball from getting stuck in a
+        # repeating bounce pattern off the paddle.
+        return math.radians(angles[index] + random.randint(-5, 5))
 
 
 class Ball(pygame.sprite.Sprite):
@@ -147,7 +146,7 @@ class Ball(pygame.sprite.Sprite):
                 A no-args callable that will be called if the ball goes off
                 the edge of the screen.
         """
-        super(Ball, self).__init__()
+        super().__init__()
         self._angle = start_angle
         self._speed = start_speed
         self.image, self.rect = load_png('ball.png')
@@ -193,8 +192,8 @@ class Ball(pygame.sprite.Sprite):
             obj:
                 The collidable object to remove - either the Rect or Sprite.
         """
-        self._collidable_objects = [(col, strat, cbk) for col, strat, cbk in
-                                    self._collidable_objects if col == obj]
+        self._collidable_objects = [o for o in self._collidable_objects if
+                                    o.obj != obj]
 
     def update(self):
         # Get the new position of the ball.
@@ -203,26 +202,36 @@ class Ball(pygame.sprite.Sprite):
         if self._area.contains(self.rect):
             # The ball is still on the screen.
             # Find out if the ball has collided with anything.
+            # We have to get these on the fly, as the rects of sprites change.
             collidable_rects = self._get_collidable_rects()
-            index = self.rect.collidelist(collidable_rects)
+            indexes = self.rect.collidelistall(collidable_rects)
 
-            if index > -1:
+            if indexes:
                 # There's been a collision - find out with what.
-                rect = collidable_rects[index]
-                _, bounce_strat, action = self._collidable_objects[index]
+                rects, actions = [], []
+                for i in indexes:
+                    rects.append(collidable_rects[i])
+                    actions.append(self._collidable_objects[i][2])
 
-                if bounce_strat:
-                    # Use the bounce strategy that has been supplied to
-                    # work out the bounce angle.
-                    self._angle = bounce_strat(rect, self.rect)
+                if len(rects) == 1:
+                    # Collision with a single object.
+                    bounce_strategy = self._collidable_objects[indexes[0]][1]
+                    if bounce_strategy:
+                        # We have a bounce strategy, so use that.
+                        self._angle = bounce_strategy(rects[0], self.rect)
+                    else:
+                        # Use the default calculation for the angle.
+                        self._angle = self._calc_new_angle(rects)
                 else:
+                    # Collision with more than one object.
                     # Use the default calculation for the angle.
-                    self._angle = self._calc_new_angle(rect)
+                    self._angle = self._calc_new_angle(rects)
 
-                if action:
-                    # Call the action associated with this object to trigger
-                    # any collision specific behaviour.
-                    action(rect, self.rect)
+                for i in range(len(actions)):
+                    # Invoke the collision callbacks
+                    on_collide = actions[i]
+                    if on_collide:
+                        on_collide(rects[i], self.rect)
         else:
             # Ball has gone off the screen.
             # Invoke the callback if we have one.
@@ -230,48 +239,19 @@ class Ball(pygame.sprite.Sprite):
                 self._off_screen_callback()
 
     def _get_collidable_rects(self):
-        """Resolve the Rects from the collidable objects we have."""
-        collidable_rects = []
-
+        """Get the Rects of the collidable objects. Note that these have to
+        be dynamically obtained, because in the case of sprites the Rects
+        are continually changing.
+        """
+        rects = []
         for obj, _, _ in self._collidable_objects:
             try:
-                collidable_rects.append(obj.rect)
+                # obj might be a Sprite with a rect attribute
+                rects.append(obj.rect)
             except AttributeError:
-                collidable_rects.append(obj)
-
-        return collidable_rects
-
-        # if not self._area.contains(new_pos):
-        #     LOG.info('Off the screen: %s, %s', new_pos, self._area)
-        #     # The ball is partially out of the screen, so we need to change
-        #     # the angle in order to trigger a bounce.
-        #     tl_out = not self._area.collidepoint(new_pos.topleft)
-        #     tr_out = not self._area.collidepoint(new_pos.topright)
-        #     bl_out = not self._area.collidepoint(new_pos.bottomleft)
-        #     br_out = not self._area.collidepoint(new_pos.bottomright)
-        #     top_out = tl_out and tr_out
-        #     bottom_out = bl_out and br_out
-        #
-        #     if top_out:
-        #         if bl_out or br_out:
-        #             # The ball has gone out of a top corner, so bounce
-        #             # it back in the opposite direction
-        #             self._angle = self._angle + math.pi
-        #         else:
-        #             # Ball has hit the top
-        #             self._angle = -self._angle
-        #     elif bottom_out:
-        #         # TODO: This represents an end of life
-        #         if tl_out or tr_out:
-        #             # The ball has gone out of a bottom corner, so bounce
-        #             # it back in the opposite direction
-        #             self._angle = self._angle + math.pi
-        #         else:
-        #             # Ball has hit the bottom
-        #             self._angle = -self._angle
-        #     else:
-        #         # Ball has hit the side
-        #         self._angle = math.pi - self._angle
+                # obj is already a rect
+                rects.append(obj)
+        return rects
 
     def _calc_new_pos(self):
         offset_x = self._speed * math.cos(self._angle)
@@ -279,28 +259,36 @@ class Ball(pygame.sprite.Sprite):
 
         return self.rect.move(offset_x, offset_y)
 
-    def _calc_new_angle(self, object_rect):
-        # TODO: below is the default bounce strategy
-        # strategy(ball_rect, object_rect)  ==>  angle
-        tl_col = object_rect.collidepoint(self.rect.topleft)
-        tr_col = object_rect.collidepoint(self.rect.topright)
-        bl_col = object_rect.collidepoint(self.rect.bottomleft)
-        br_col = object_rect.collidepoint(self.rect.bottomright)
-        points = tl_col, tr_col, bl_col, br_col
-        top_col = tl_col and tr_col
-        bottom_col = bl_col and br_col
-
-        if top_col or bottom_col:
-            # Top of the ball has collided with the bottom of an object,
-            # or bottom of the ball has collided with the top of an object.
-            angle = -self._angle
-        elif any(points) and not any(points):
-            # Ball has hit the corner of an object. Bounce it back in the
-            # opposite direction.
+    def _calc_new_angle(self, rects):
+        """Calculate the default angle of bounce of the ball, given a
+        sequence of rectangles that the ball collided with.
+        """
+        if len(rects) == 3:
+            # Collision where 3 bricks join causes the ball to bounce back
+            # in the direction it originated.
             angle = self._angle + math.pi
         else:
-            # Ball has hit the side of an object.
-            angle = math.pi - self._angle
+            # Has to have collided with max 2 objects. Find out how
+            # many points of the ball's rect are in contact.
+            points = tl, tr, bl, br = False, False, False, False
+
+            for rect in rects:
+                tl = tl or rect.collidepoint(self.rect.topleft)
+                tr = tr or rect.collidepoint(self.rect.topright)
+                bl = bl or rect.collidepoint(self.rect.bottomleft)
+                br = br or rect.collidepoint(self.rect.bottomright)
+
+            if (tl and tr) or (bl and br):
+                # Top of the ball has collided with the bottom of an object,
+                # or bottom of the ball has collided with the top of an object.
+                angle = -self._angle
+            elif any(points) and not any(points):
+                # Ball has hit the corner of an object - bounce it back in
+                # the direction from which it originated.
+                angle = self._angle + math.pi
+            else:
+                # Ball has hit the side of an object.
+                angle = math.pi - self._angle
 
         return angle
 
@@ -414,6 +402,16 @@ def create_edges(background):
     top_edge, _ = load_png('top.png')
     top_rect = background.blit(top_edge, (edge.get_width(), 0))
     return left_rect, right_rect, top_rect
+
+
+def create_bricks(background):
+    bricks = []
+    colours = 'green',
+    for colour in colours:
+        brick, _ = load_png('brick_{}.png'.format(colour))
+        for i in range(13):
+            # 13 bricks are added horizontally
+            rect = background.blit
 
 
 def off_screen():
