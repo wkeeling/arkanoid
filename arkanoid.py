@@ -5,6 +5,7 @@ import logging
 import math
 import os
 import random
+import sys
 
 import pygame
 
@@ -78,6 +79,7 @@ class Paddle(pygame.sprite.Sprite):
         # TODO: this may need to return a tuple of (angle, speed_level) where
         # speed_level is say, SLOW, NORMAL or FAST, and the Ball will then
         # interpret that by modifying the actual speed appropriately.
+        # TODO: angles are too oblique at the ends. Reduce overall angle range
 
         # Break the paddle into 8 segments. Each segment triggers a different
         # angle of bounce.
@@ -179,9 +181,11 @@ class Ball(pygame.sprite.Sprite):
                 or a Sprite for animated objects.
             bounce_strategy:
                 Optional callable that determines how the ball should bounce
-                when it collides with the object.
+                when it collides with the object. It takes 2 arguments: the
+                Rect of the object and the Rect of the ball.
             on_collide:
                 Optional callable that will be called when a collision occurs.
+                It takes 1 argument: the Rect of the object struck.
         """
         self._collidable_objects.append((obj, bounce_strategy, on_collide))
 
@@ -193,7 +197,7 @@ class Ball(pygame.sprite.Sprite):
                 The collidable object to remove - either the Rect or Sprite.
         """
         self._collidable_objects = [o for o in self._collidable_objects if
-                                    o.obj != obj]
+                                    o[0] != obj]
 
     def update(self):
         # Get the new position of the ball.
@@ -231,7 +235,7 @@ class Ball(pygame.sprite.Sprite):
                     # Invoke the collision callbacks
                     on_collide = actions[i]
                     if on_collide:
-                        on_collide(rects[i], self.rect)
+                        on_collide(rects[i])
         else:
             # Ball has gone off the screen.
             # Invoke the callback if we have one.
@@ -314,46 +318,68 @@ def load_png(filename):
 
 def run_game():
     # TODO: turn this into an Arkenoid class with a main_loop()
-    # TODO: doc on initialisers
+    # TODO: doc on
 
-    # Initialise the screen
+    # TODO: Introduce concept of Level (or perhaps "Round").
+    # This will be a base class with
+    # specialisations for each concrete level. Levels will setup bricks
+    # in __init__(screen) and have attributes "lives" and "bricks". Common
+    # functionality can live in base class. Actually, "lives" will be a game
+    # attribute not a level attribute?
+
+    # Initialise the screen.
     pygame.init()
     screen = create_screen()
 
     # Create the background
     background = create_background(screen)
 
-    # Create the edges of the game area
+    # Create the edges of the game area.
     left, right, top = create_edges(background)
 
-    # Initialise the sprites
+    # Blit the background to the screen.
+    screen.blit(background, (0, 0))
+
+    # Initialise the sprites.
     paddle = Paddle()
     paddlesprite = pygame.sprite.RenderPlain(paddle)
+
     ball = Ball(start_pos=paddle.rect.midtop,
                 start_angle=BALL_START_ANGLE_RAD,
                 start_speed=BALL_START_SPEED,
                 off_screen_callback=off_screen)
-    # Let the ball know about the objects it might collide with
+
+    # Let the ball know about the objects it might collide with.
     ball.add_collidable_object(left)
     ball.add_collidable_object(right)
     ball.add_collidable_object(top)
     ball.add_collidable_object(paddle, bounce_strategy=paddle.bounce_strategy)
+
+    # Create the bricks.
+    bricks = create_bricks(screen)
+
+    def on_brick_collide(brick):
+        ball.remove_collidable_object(brick)
+        screen.blit(background, brick, brick)
+
+    for brick in bricks:
+        ball.add_collidable_object(brick, on_collide=on_brick_collide)
+
     ballsprite = pygame.sprite.RenderPlain(ball)
 
-    # Blit everything to the screen
-    screen.blit(background, (0, 0))
+    # Display all updates.
     pygame.display.flip()
 
-    # Initialise the clock
+    # Initialise the clock.
     clock = pygame.time.Clock()
 
     running = True
 
     while running:
-        # Clock runs at 60 fps
+        # Clock runs at 60 fps.
         clock.tick(60)
 
-        # Monitor for key presses
+        # Monitor for key presses.
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -366,11 +392,11 @@ def run_game():
                 if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
                     paddle.stop()
 
-        # Erase the previous location of the sprites
+        # Erase the previous location of the sprites.
         paddlesprite.clear(screen, background)
         ballsprite.clear(screen, background)
 
-        # Update the state of the sprites and redraw them
+        # Update the state of the sprites and redraw them.
         paddlesprite.update()
         paddlesprite.draw(screen)
         ballsprite.update()
@@ -395,27 +421,38 @@ def create_background(screen):
     return background
 
 
-def create_edges(background):
+def create_edges(screen):
     edge, _ = load_png('edge.png')
-    left_rect = background.blit(edge, (0, 0))
-    right_rect = background.blit(edge, (DISPLAY_SIZE[0] - edge.get_width(), 0))
+    left_rect = screen.blit(edge, (0, 0))
+    right_rect = screen.blit(edge, (DISPLAY_SIZE[0] - edge.get_width(), 0))
     top_edge, _ = load_png('top.png')
-    top_rect = background.blit(top_edge, (edge.get_width(), 0))
+    top_rect = screen.blit(top_edge, (edge.get_width(), 0))
     return left_rect, right_rect, top_rect
 
 
-def create_bricks(background):
+def create_bricks(screen):
+    # TODO: this will be moved into each level subclass called by __init__()
+    # to populate a level.bricks attribute. Adjust pixel dimensions for better
+    # graphics.
     bricks = []
-    colours = 'green',
+    colours = 'green', 'pink', 'blue', 'yellow', 'red', 'grey'
+    top = 260
+
     for colour in colours:
         brick, _ = load_png('brick_{}.png'.format(colour))
+        left = 15
         for i in range(13):
             # 13 bricks are added horizontally
-            rect = background.blit
+            rect = screen.blit(brick, (left, top))
+            left += 44
+            bricks.append(rect)
+        top -= 22
+
+    return bricks
 
 
 def off_screen():
-    LOG.debug('Ball gone off the screen!')
+    sys.exit()
 
 
 if __name__ == '__main__':
