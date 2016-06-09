@@ -15,7 +15,7 @@ LOG.setLevel(logging.DEBUG)
 
 DISPLAY_SIZE = 600, 650
 DISPLAY_CAPTION = 'Arkanoid'
-BALL_START_ANGLE_RAD = 5.5
+BALL_START_ANGLE_RAD = 5.0
 BALL_START_SPEED = 8
 
 
@@ -101,7 +101,7 @@ class Paddle(pygame.sprite.Sprite):
             segments.append(segment)
 
         # The bounce angles corresponding to each of the 8 segments.
-        angles = -150, -130, -115, -100, -80, -65, -50, -30
+        angles = -135, -120, -110, -100, -80, -70, -60, -45
 
         # Discover which segment the ball collided with. Just use the first.
         index = ball_rect.collidelist(segments)
@@ -286,11 +286,12 @@ class Ball(pygame.sprite.Sprite):
                 # Top of the ball has collided with the bottom of an object,
                 # or bottom of the ball has collided with the top of an object.
                 angle = -self._angle
-            elif any(points) and not any(points):
+            elif points.count(True) == 1:
                 # Ball has hit the corner of an object - bounce it back in
                 # the direction from which it originated.
                 angle = self._angle + math.pi
             else:
+                print(self._angle)
                 # Ball has hit the side of an object.
                 angle = math.pi - self._angle
 
@@ -323,7 +324,8 @@ def run_game():
     # TODO: Introduce concept of Level (or perhaps "Round").
     # This will be a base class with
     # specialisations for each concrete level. Levels will setup bricks
-    # in __init__(screen) and have attributes "lives" and "bricks". Common
+    # in __init__(screen) and have attributes "lives", "bricks",
+    # "background" (or possibly just "collidable_objects"). Common
     # functionality can live in base class. Actually, "lives" will be a game
     # attribute not a level attribute?
 
@@ -435,8 +437,8 @@ def create_bricks(screen):
     # to populate a level.bricks attribute. Adjust pixel dimensions for better
     # graphics.
     bricks = []
-    colours = 'green', 'pink', 'blue', 'yellow', 'red', 'grey'
-    top = 260
+    colours = 'green', 'blue', 'yellow', 'red', 'grey'
+    top = 220
 
     for colour in colours:
         brick, _ = load_png('brick_{}.png'.format(colour))

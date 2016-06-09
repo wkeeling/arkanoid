@@ -1,0 +1,13 @@
+
+bounce_strategy should return angle, speed
+
+_angle and _speed in ball should be public (not internal)
+
+collisions should speed ball up and no collisions cause ball to slow over time
+
+rename on_collide to collide_action? This is different to bounce strategy in args/return and intent.
+
+does ball hitting corner of object logic ever work?
+
+fix issue where ball gets stuck in wall/bricks
+
