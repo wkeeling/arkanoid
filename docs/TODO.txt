@@ -1,13 +1,13 @@
+ball speed increase/decrease should be exponential rather than linear
 
-bounce_strategy should return angle, speed
+ball will always gradually slow to base speed at pre-defined rate: x factor per frame (explain in Ball docstring)
 
 _angle and _speed in ball should be public (not internal)
 
 collisions should speed ball up and no collisions cause ball to slow over time
 
-rename on_collide to collide_action? This is different to bounce strategy in args/return and intent.
-
-does ball hitting corner of object logic ever work?
-
 fix issue where ball gets stuck in wall/bricks
 
+
+corner bouncing should only take effect when opposite corners are hit, so tr -> bl and tl -> br and br -> tl
+otherwise normal top/bottom collision should take effect

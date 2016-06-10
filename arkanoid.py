@@ -16,7 +16,11 @@ LOG.setLevel(logging.DEBUG)
 DISPLAY_SIZE = 600, 650
 DISPLAY_CAPTION = 'Arkanoid'
 BALL_START_ANGLE_RAD = 5.0
-BALL_START_SPEED = 8
+BALL_BASE_SPEED = 8  # pixels per-frame
+# Per-frame rate at which ball is brought back to base speed
+BALL_SPEED_NORMALISATION_RATE = 0.002
+# Increase in speed caused by colliding with a brick
+BRICK_SPEED_ADJUST = 0.2
 
 
 class Paddle(pygame.sprite.Sprite):
@@ -129,7 +133,7 @@ class Ball(pygame.sprite.Sprite):
     add_collidable_object() for further details.
     """
 
-    def __init__(self, start_pos, start_angle, start_speed,
+    def __init__(self, start_pos, start_angle, base_speed,
                  off_screen_callback=None):
         """
         Initialise a new Ball with the given arguments. If supplied,
@@ -142,15 +146,17 @@ class Ball(pygame.sprite.Sprite):
             start_angle:
                 The starting angle of the ball in radians taken against the
                 x axis.
-            start_speed:
-                The starting speed of the ball.
+            base_speed:
+                The baseline speed of the ball. Collisions with objects may
+                increase/decrease the speed of the ball, but the speed will
+                never fall below the base speed.
             off_screen_callback:
                 A no-args callable that will be called if the ball goes off
                 the edge of the screen.
         """
         super().__init__()
         self._angle = start_angle
-        self._speed = start_speed
+        self._speed = base_speed
         self.image, self.rect = load_png('ball.png')
         self.rect.midbottom = start_pos
         screen = pygame.display.get_surface()
@@ -159,7 +165,7 @@ class Ball(pygame.sprite.Sprite):
         self._off_screen_callback = off_screen_callback
 
     def add_collidable_object(self, obj, bounce_strategy=None,
-                              on_collide=None):
+                              speed_adjust=0.0, on_collide=None):
         """Add an object that the ball might collide with. The object should
         be a Rect for static objects, or a Sprite for animated objects.
 
@@ -183,11 +189,15 @@ class Ball(pygame.sprite.Sprite):
                 Optional callable that determines how the ball should bounce
                 when it collides with the object. It takes 2 arguments: the
                 Rect of the object and the Rect of the ball.
+            speed_adjust:
+                Optional numeric value that will be used to speed up or slow
+                down the the ball. Use a negative value to slow the ball down.
             on_collide:
                 Optional callable that will be called when a collision occurs.
                 It takes 1 argument: the Rect of the object struck.
         """
-        self._collidable_objects.append((obj, bounce_strategy, on_collide))
+        self._collidable_objects.append(
+            (obj, bounce_strategy, speed_adjust, on_collide))
 
     def remove_collidable_object(self, obj):
         """Remove an object so that the ball can no longer collide with it.
@@ -200,6 +210,10 @@ class Ball(pygame.sprite.Sprite):
                                     o[0] != obj]
 
     def update(self):
+        """Update the Ball sprite. Check whether the ball has collided with
+        anything and if so, update its angle and speed and invoke any
+        associated actions.
+        """
         # Get the new position of the ball.
         self.rect = self._calc_new_pos()
 
@@ -212,35 +226,21 @@ class Ball(pygame.sprite.Sprite):
 
             if indexes:
                 # There's been a collision - find out with what.
-                rects, actions = [], []
-                for i in indexes:
-                    rects.append(collidable_rects[i])
-                    actions.append(self._collidable_objects[i][2])
-
-                if len(rects) == 1:
-                    # Collision with a single object.
-                    bounce_strategy = self._collidable_objects[indexes[0]][1]
-                    if bounce_strategy:
-                        # We have a bounce strategy, so use that.
-                        self._angle = bounce_strategy(rects[0], self.rect)
-                    else:
-                        # Use the default calculation for the angle.
-                        self._angle = self._calc_new_angle(rects)
-                else:
-                    # Collision with more than one object.
-                    # Use the default calculation for the angle.
-                    self._angle = self._calc_new_angle(rects)
-
-                for i in range(len(actions)):
-                    # Invoke the collision callbacks
-                    on_collide = actions[i]
-                    if on_collide:
-                        on_collide(rects[i])
+                self._handle_collision(collidable_rects, indexes)
+            else:
+                # No collision. Bring speed back to base.
+                self._normalise_speed()
         else:
             # Ball has gone off the screen.
             # Invoke the callback if we have one.
             if self._off_screen_callback:
                 self._off_screen_callback()
+
+    def _calc_new_pos(self):
+        offset_x = self._speed * math.cos(self._angle)
+        offset_y = self._speed * math.sin(self._angle)
+
+        return self.rect.move(offset_x, offset_y)
 
     def _get_collidable_rects(self):
         """Get the Rects of the collidable objects. Note that these have to
@@ -248,7 +248,7 @@ class Ball(pygame.sprite.Sprite):
         are continually changing.
         """
         rects = []
-        for obj, _, _ in self._collidable_objects:
+        for obj, _, _, _ in self._collidable_objects:
             try:
                 # obj might be a Sprite with a rect attribute
                 rects.append(obj.rect)
@@ -257,11 +257,43 @@ class Ball(pygame.sprite.Sprite):
                 rects.append(obj)
         return rects
 
-    def _calc_new_pos(self):
-        offset_x = self._speed * math.cos(self._angle)
-        offset_y = self._speed * math.sin(self._angle)
+    def _handle_collision(self, collidable_rects, indexes):
+        rects, actions, speed_adjust = [], [], 0
 
-        return self.rect.move(offset_x, offset_y)
+        for i in indexes:
+            rects.append(collidable_rects[i])
+            actions.append(self._collidable_objects[i][3])
+            speed_adjust += self._collidable_objects[i][2]
+
+        if len(rects) == 1:
+            # Collision with a single object.
+            bounce_strategy = self._collidable_objects[indexes[0]][1]
+            if bounce_strategy:
+                # We have a bounce strategy, so use that.
+                self._angle = bounce_strategy(rects[0], self.rect)
+            else:
+                # Use the default calculation for the angle.
+                self._angle = self._calc_new_angle(rects)
+        else:
+            # Collision with more than one object.
+            # Use the default calculation for the angle.
+            self._angle = self._calc_new_angle(rects)
+
+        for i in range(len(actions)):
+            # Invoke the collision callbacks
+            on_collide = actions[i]
+            if on_collide:
+                on_collide(rects[i])
+
+        # Adjust the speed based on what we collided with.
+        self._speed += speed_adjust
+        LOG.debug('Ball speed: %s', self._speed)
+
+    def _normalise_speed(self):
+        if self._speed > BALL_BASE_SPEED:
+            self._speed -= BALL_SPEED_NORMALISATION_RATE
+        else:
+            self._speed += BALL_SPEED_NORMALISATION_RATE
 
     def _calc_new_angle(self, rects):
         """Calculate the default angle of bounce of the ball, given a
@@ -270,11 +302,12 @@ class Ball(pygame.sprite.Sprite):
         if len(rects) == 3:
             # Collision where 3 bricks join causes the ball to bounce back
             # in the direction it originated.
+            LOG.debug('3 brick collision')
             angle = self._angle + math.pi
         else:
             # Has to have collided with max 2 objects. Find out how
             # many points of the ball's rect are in contact.
-            points = tl, tr, bl, br = False, False, False, False
+            tl, tr, bl, br = False, False, False, False
 
             for rect in rects:
                 tl = tl or rect.collidepoint(self.rect.topleft)
@@ -285,15 +318,21 @@ class Ball(pygame.sprite.Sprite):
             if (tl and tr) or (bl and br):
                 # Top of the ball has collided with the bottom of an object,
                 # or bottom of the ball has collided with the top of an object.
+                LOG.debug('Top/bottom collision')
                 angle = -self._angle
-            elif points.count(True) == 1:
+            elif (tl, tr, bl, br).count(True) in (1, 3):
                 # Ball has hit the corner of an object - bounce it back in
                 # the direction from which it originated.
+                LOG.debug('Corner collision')
                 angle = self._angle + math.pi
             else:
-                print(self._angle)
                 # Ball has hit the side of an object.
+                LOG.debug('Side collision')
                 angle = math.pi - self._angle
+
+        # Add small amount of randomness +/-3 degrees (+/- 0.05 rad)
+        angle += random.uniform(-0.05, 0.05)
+        LOG.debug(angle)
 
         return angle
 
@@ -348,7 +387,7 @@ def run_game():
 
     ball = Ball(start_pos=paddle.rect.midtop,
                 start_angle=BALL_START_ANGLE_RAD,
-                start_speed=BALL_START_SPEED,
+                base_speed=BALL_BASE_SPEED,
                 off_screen_callback=off_screen)
 
     # Let the ball know about the objects it might collide with.
@@ -365,7 +404,10 @@ def run_game():
         screen.blit(background, brick, brick)
 
     for brick in bricks:
-        ball.add_collidable_object(brick, on_collide=on_brick_collide)
+        # Make the ball aware of the bricks it might collide with. Every
+        # brick collision slightly increases the speed of the ball.
+        ball.add_collidable_object(brick, speed_adjust=BRICK_SPEED_ADJUST,
+                                   on_collide=on_brick_collide)
 
     ballsprite = pygame.sprite.RenderPlain(ball)
 

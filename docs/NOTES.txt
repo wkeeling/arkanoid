@@ -39,6 +39,10 @@ allows the Ball to not have to depend upon all the sorts of objects it needs to 
 as the paddle, blocks, sides, etc. Didn't want to go the route of the tutorial and use globals.
 Callbacks better option, although bit more complex.
 
+- trying desperately hard not to let the ball become a god object, with all logic encoded into it.
+I want the objects the ball collides with to determine how the ball should bounce off them and at
+what speed. I don't want the ball to have all this knowledge.
+
 
 Issues
 ------
