@@ -17,11 +17,19 @@ GAME_SPEED = 60  # In fps
 DISPLAY_SIZE = 600, 650
 DISPLAY_CAPTION = 'Arkanoid'
 BALL_START_ANGLE_RAD = 5.0
+# The speed that the ball will always try to arrive at.
 BALL_BASE_SPEED = 8  # pixels per-frame
-# Per-frame rate at which ball is brought back to base speed
+# The max speed of the ball, prevents a runaway speed when lots of rapid
+# collisions.
+BALL_MAX_SPEED = 15  # pixels per-frame
+# Per-frame rate at which ball is brought back to base speed.
 BALL_SPEED_NORMALISATION_RATE = 0.02
-# Increase in speed caused by colliding with a brick
+# Increase in speed caused by colliding with a brick.
 BRICK_SPEED_ADJUST = 0.5
+# Increase in speed caused by colliding with a wall.
+WALL_SPEED_ADJUST = 0.2
+# The speed the paddle moves.
+PADDLE_SPEED = 10
 
 
 class Paddle(pygame.sprite.Sprite):
@@ -34,7 +42,7 @@ class Paddle(pygame.sprite.Sprite):
     # the ball).
     # TODO: offsets and speed should be passed via initialiser
 
-    def __init__(self):
+    def __init__(self, speed=10):
         super().__init__()
         self.image, self.rect = load_png('paddle.png')
         screen = pygame.display.get_surface()
@@ -42,7 +50,7 @@ class Paddle(pygame.sprite.Sprite):
         self.rect.midbottom = self._area.midbottom
         self.rect.top -= 50
         self._offset = 0
-        self._speed = 10
+        self._speed = speed
 
     def update(self):
         # Continuously move the paddle when the offset is non-zero.
@@ -134,7 +142,7 @@ class Ball(pygame.sprite.Sprite):
     add_collidable_object() for further details.
     """
 
-    def __init__(self, start_pos, start_angle, base_speed,
+    def __init__(self, start_pos, start_angle, base_speed, max_speed=15,
                  normalisation_rate=0.02,
                  off_screen_callback=None):
         """
@@ -152,6 +160,10 @@ class Ball(pygame.sprite.Sprite):
                 The baseline speed of the ball. Collisions with objects may
                 increase/decrease the speed of the ball, but the speed will
                 never fall below the base speed.
+            max_speed
+                The maximum permitted speed of the ball. Collisions with
+                objects may increase the speed of the ball, but the speed
+                will never go above the max_speed.
             normalisation_rate:
                 The per-frame rate at which the ball is brought back to base
                 speed, should the speed have changed by colliding with
@@ -163,6 +175,7 @@ class Ball(pygame.sprite.Sprite):
         super().__init__()
         self._angle = start_angle
         self._speed = base_speed
+        self._max_speed = max_speed
         self._normalisation_rate = normalisation_rate
         self.image, self.rect = load_png('ball.png')
         self.rect.midbottom = start_pos
@@ -293,7 +306,8 @@ class Ball(pygame.sprite.Sprite):
                 on_collide(rects[i])
 
         # Adjust the speed based on what we collided with.
-        self._speed += speed_adjust
+        if self._speed < self._max_speed:
+            self._speed += speed_adjust
         LOG.debug('Ball speed: %s', self._speed)
 
     def _normalise_speed(self):
@@ -389,19 +403,20 @@ def run_game():
     screen.blit(background, (0, 0))
 
     # Initialise the sprites.
-    paddle = Paddle()
+    paddle = Paddle(speed=PADDLE_SPEED)
     paddlesprite = pygame.sprite.RenderPlain(paddle)
 
     ball = Ball(start_pos=paddle.rect.midtop,
                 start_angle=BALL_START_ANGLE_RAD,
                 base_speed=BALL_BASE_SPEED,
+                max_speed=BALL_MAX_SPEED,
                 normalisation_rate=BALL_SPEED_NORMALISATION_RATE,
                 off_screen_callback=off_screen)
 
     # Let the ball know about the objects it might collide with.
-    ball.add_collidable_object(left)
-    ball.add_collidable_object(right)
-    ball.add_collidable_object(top)
+    ball.add_collidable_object(left, speed_adjust=WALL_SPEED_ADJUST)
+    ball.add_collidable_object(right, speed_adjust=WALL_SPEED_ADJUST)
+    ball.add_collidable_object(top, speed_adjust=WALL_SPEED_ADJUST)
     ball.add_collidable_object(paddle, bounce_strategy=paddle.bounce_strategy)
 
     # Create the bricks.
@@ -473,12 +488,12 @@ def create_background(screen):
     return background
 
 
-def create_edges(screen):
+def create_edges(background):
     edge, _ = load_png('edge.png')
-    left_rect = screen.blit(edge, (0, 0))
-    right_rect = screen.blit(edge, (DISPLAY_SIZE[0] - edge.get_width(), 0))
+    left_rect = background.blit(edge, (0, 0))
+    right_rect = background.blit(edge, (DISPLAY_SIZE[0] - edge.get_width(), 0))
     top_edge, _ = load_png('top.png')
-    top_rect = screen.blit(top_edge, (edge.get_width(), 0))
+    top_rect = background.blit(top_edge, (edge.get_width(), 0))
     return left_rect, right_rect, top_rect
 
 

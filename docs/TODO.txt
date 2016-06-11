@@ -8,6 +8,4 @@ fix issue where ball gets stuck in wall/bricks
 corner bouncing seems to increase speed on paddle/bricks
 
 original game starts off with ball slow, but eventually ball moves at quicker pace generally.
-
-bounce strategy should probably receive whole ball sprite, and whole collidable object (rect or whole sprite).
-Then has opportunity to pick up other attributes, such as speed, and other state that might affect the bounce?
+split start_speed and base_speed
