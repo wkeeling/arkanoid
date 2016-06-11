@@ -13,9 +13,13 @@ logging.basicConfig()
 LOG = logging.getLogger('arkanoid')
 LOG.setLevel(logging.DEBUG)
 
-GAME_SPEED = 60  # In fps
+# The speed the game runs at in FPS.
+GAME_SPEED = 60
+# The dimensions of the main game window in pixels.
 DISPLAY_SIZE = 600, 650
+# The title of the main window.
 DISPLAY_CAPTION = 'Arkanoid'
+# The angle the ball initially moves from the paddle, in radians.
 BALL_START_ANGLE_RAD = 5.0
 # The speed that the ball will always try to arrive at.
 BALL_BASE_SPEED = 8  # pixels per-frame
@@ -40,15 +44,38 @@ class Paddle(pygame.sprite.Sprite):
     # be less generic than the "collidable object" concept the ball has,
     # because the bonuses are the only thing to strike the paddle (apart from
     # the ball).
-    # TODO: offsets and speed should be passed via initialiser
 
-    def __init__(self, speed=10):
+    def __init__(self, left_offset=0, right_offset=0, bottom_offset=0,
+                 speed=10):
+        """
+        Create a new Paddle instance. A paddle travels from left to right
+        controlling the ball and keeping it within the screen.
+
+        The paddle will travel the entire width of the screen, unless the
+        left and right offsets are specified which can restrict its travel.
+        A bottom offset can also be supplied which defines how far from the
+        bottom of the screen the paddle floats.
+
+        Args:
+            left_offset:
+                Optional offset in pixels from the left of the screen that
+                will restrict the maximum travel of the paddle.
+            right_offset:
+                Optional offset in pixels from the right of the screen that
+                will restrict the maximum travel of the paddle.
+            bottom_offset:
+                The distance the paddle sits above the bottom of the screen.
+            speed: Optional speed of the paddle in pixels per frame.
+        """
         super().__init__()
+        # Create the area the paddle can move within.
         self.image, self.rect = load_png('paddle.png')
-        screen = pygame.display.get_surface()
-        self._area = screen.get_rect()
-        self.rect.midbottom = self._area.midbottom
-        self.rect.top -= 50
+        screen = pygame.display.get_surface().get_rect()
+        self._area = pygame.Rect(screen.left + left_offset,
+                                 screen.height - bottom_offset,
+                                 screen.width - left_offset - right_offset,
+                                 self.rect.height)
+        self.rect.center = self._area.center
         self._offset = 0
         self._speed = speed
 
@@ -403,7 +430,10 @@ def run_game():
     screen.blit(background, (0, 0))
 
     # Initialise the sprites.
-    paddle = Paddle(speed=PADDLE_SPEED)
+    paddle = Paddle(left_offset=left.width,
+                    right_offset=right.width,
+                    bottom_offset=50,
+                    speed=PADDLE_SPEED)
     paddlesprite = pygame.sprite.RenderPlain(paddle)
 
     ball = Ball(start_pos=paddle.rect.midtop,
@@ -520,7 +550,6 @@ def create_bricks(screen):
 
 def off_screen():
     sys.exit()
-
 
 if __name__ == '__main__':
     run_game()
