@@ -13,14 +13,15 @@ logging.basicConfig()
 LOG = logging.getLogger('arkanoid')
 LOG.setLevel(logging.DEBUG)
 
+GAME_SPEED = 60  # In fps
 DISPLAY_SIZE = 600, 650
 DISPLAY_CAPTION = 'Arkanoid'
 BALL_START_ANGLE_RAD = 5.0
 BALL_BASE_SPEED = 8  # pixels per-frame
 # Per-frame rate at which ball is brought back to base speed
-BALL_SPEED_NORMALISATION_RATE = 0.002
+BALL_SPEED_NORMALISATION_RATE = 0.02
 # Increase in speed caused by colliding with a brick
-BRICK_SPEED_ADJUST = 0.2
+BRICK_SPEED_ADJUST = 0.5
 
 
 class Paddle(pygame.sprite.Sprite):
@@ -127,13 +128,14 @@ class Ball(pygame.sprite.Sprite):
     objects to keep the Ball within the confines of the screen.
 
     A Ball will collide with objects that it is told about via
-    add_collidable_object(). It will follow normall physics when bouncing
+    add_collidable_object(). It will follow normal physics when bouncing
     off an object, but this can be overriden by passing a bounce strategy
     with a collidable object when it is added to the Ball. See
     add_collidable_object() for further details.
     """
 
     def __init__(self, start_pos, start_angle, base_speed,
+                 normalisation_rate=0.02,
                  off_screen_callback=None):
         """
         Initialise a new Ball with the given arguments. If supplied,
@@ -150,6 +152,10 @@ class Ball(pygame.sprite.Sprite):
                 The baseline speed of the ball. Collisions with objects may
                 increase/decrease the speed of the ball, but the speed will
                 never fall below the base speed.
+            normalisation_rate:
+                The per-frame rate at which the ball is brought back to base
+                speed, should the speed have changed by colliding with
+                something.
             off_screen_callback:
                 A no-args callable that will be called if the ball goes off
                 the edge of the screen.
@@ -157,6 +163,7 @@ class Ball(pygame.sprite.Sprite):
         super().__init__()
         self._angle = start_angle
         self._speed = base_speed
+        self._normalisation_rate = normalisation_rate
         self.image, self.rect = load_png('ball.png')
         self.rect.midbottom = start_pos
         screen = pygame.display.get_surface()
@@ -210,7 +217,7 @@ class Ball(pygame.sprite.Sprite):
                                     o[0] != obj]
 
     def update(self):
-        """Update the Ball sprite. Check whether the ball has collided with
+        """Update the ball. Check whether the ball has collided with
         anything and if so, update its angle and speed and invoke any
         associated actions.
         """
@@ -291,9 +298,9 @@ class Ball(pygame.sprite.Sprite):
 
     def _normalise_speed(self):
         if self._speed > BALL_BASE_SPEED:
-            self._speed -= BALL_SPEED_NORMALISATION_RATE
+            self._speed -= self._normalisation_rate
         else:
-            self._speed += BALL_SPEED_NORMALISATION_RATE
+            self._speed += self._normalisation_rate
 
     def _calc_new_angle(self, rects):
         """Calculate the default angle of bounce of the ball, given a
@@ -320,7 +327,7 @@ class Ball(pygame.sprite.Sprite):
                 # or bottom of the ball has collided with the top of an object.
                 LOG.debug('Top/bottom collision')
                 angle = -self._angle
-            elif (tl, tr, bl, br).count(True) in (1, 3):
+            elif sum((tl, tr, bl, br)) == 1:
                 # Ball has hit the corner of an object - bounce it back in
                 # the direction from which it originated.
                 LOG.debug('Corner collision')
@@ -388,6 +395,7 @@ def run_game():
     ball = Ball(start_pos=paddle.rect.midtop,
                 start_angle=BALL_START_ANGLE_RAD,
                 base_speed=BALL_BASE_SPEED,
+                normalisation_rate=BALL_SPEED_NORMALISATION_RATE,
                 off_screen_callback=off_screen)
 
     # Let the ball know about the objects it might collide with.
@@ -421,7 +429,7 @@ def run_game():
 
     while running:
         # Clock runs at 60 fps.
-        clock.tick(60)
+        clock.tick(GAME_SPEED)
 
         # Monitor for key presses.
         for event in pygame.event.get():
@@ -480,7 +488,7 @@ def create_bricks(screen):
     # graphics.
     bricks = []
     colours = 'green', 'blue', 'yellow', 'red', 'grey'
-    top = 220
+    top = 200
 
     for colour in colours:
         brick, _ = load_png('brick_{}.png'.format(colour))

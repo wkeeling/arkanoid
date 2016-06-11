@@ -1,13 +1,13 @@
-ball speed increase/decrease should be exponential rather than linear
 
 ball will always gradually slow to base speed at pre-defined rate: x factor per frame (explain in Ball docstring)
 
 _angle and _speed in ball should be public (not internal)
 
-collisions should speed ball up and no collisions cause ball to slow over time
-
 fix issue where ball gets stuck in wall/bricks
 
+corner bouncing seems to increase speed on paddle/bricks
 
-corner bouncing should only take effect when opposite corners are hit, so tr -> bl and tl -> br and br -> tl
-otherwise normal top/bottom collision should take effect
+original game starts off with ball slow, but eventually ball moves at quicker pace generally.
+
+bounce strategy should probably receive whole ball sprite, and whole collidable object (rect or whole sprite).
+Then has opportunity to pick up other attributes, such as speed, and other state that might affect the bounce?
