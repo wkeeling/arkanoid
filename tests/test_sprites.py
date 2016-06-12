@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import pygame
 
-import arkanoid
+from arkanoid.sprites import Paddle
 
 
 class TestPaddle(TestCase):
@@ -14,7 +14,7 @@ class TestPaddle(TestCase):
 
         for i in range(103, 163, 10):
             ball = pygame.Rect(i, 602, 5, 5)
-            angle = arkanoid.Paddle.bounce_strategy(paddle, ball)
+            angle = Paddle.bounce_strategy(paddle, ball)
             angles.append(int(math.degrees(angle)))
 
         self.assertTrue(angles[0], -130)
