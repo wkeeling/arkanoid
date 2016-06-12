@@ -19,10 +19,10 @@ GAME_SPEED = 60
 DISPLAY_SIZE = 600, 650
 # The title of the main window.
 DISPLAY_CAPTION = 'Arkanoid'
-# The angle the ball initially moves from the paddle, in radians.
+# The angle the ball initially moves off the paddle, in radians.
 BALL_START_ANGLE_RAD = 5.0
 # The speed that the ball will always try to arrive at.
-BALL_BASE_SPEED = 9  # pixels per-frame
+BALL_BASE_SPEED = 8  # pixels per-frame
 # The max speed of the ball, prevents a runaway speed when lots of rapid
 # collisions.
 BALL_MAX_SPEED = 15  # pixels per-frame
@@ -117,40 +117,32 @@ class Paddle(pygame.sprite.Sprite):
         Returns:
             The angle of bounce in radians.
         """
-        # TODO: this may need to return a tuple of (angle, speed_level) where
-        # speed_level is say, SLOW, NORMAL or FAST, and the Ball will then
-        # interpret that by modifying the actual speed appropriately.
-        # TODO: angles are too oblique at the ends. Reduce overall angle range
-
-        # Break the paddle into 8 segments. Each segment triggers a different
-        # angle of bounce.
-        segment_size = paddle_rect.width // 8
+        # Logically break the paddle into 6 segments.
+        # Each segment triggers a different angle of bounce.
+        segment_size = paddle_rect.width // 6
         segments = []
 
-        for i in range(8):
-            # Create rectangles for the first 7 segments.
+        for i in range(6):
+            # Create rectangles for all segments bar the last.
             left = paddle_rect.left + segment_size * i
-            if i < 7:
-                # The first 7 segments are a fixed size.
+            if i < 5:
+                # These segments are a fixed size.
                 segment = pygame.Rect(left, paddle_rect.top, segment_size,
                                       paddle_rect.height)
             else:
                 # The last segment makes up what is left of the paddle width.
                 segment = pygame.Rect(left, paddle_rect.top,
-                                      paddle_rect.width - (segment_size * 7),
+                                      paddle_rect.width - (segment_size * 5),
                                       paddle_rect.height)
             segments.append(segment)
 
         # The bounce angles corresponding to each of the 8 segments.
-        angles = -135, -120, -110, -100, -80, -70, -60, -45
+        angles = -130, -115, -100, -80, -65, -50
 
         # Discover which segment the ball collided with. Just use the first.
         index = ball_rect.collidelist(segments)
 
-        # Return the angle adding a small amount of randomness.
-        # The randomness prevents the ball from getting stuck in a
-        # repeating bounce pattern off the paddle.
-        return math.radians(angles[index] + random.randint(-5, 5))
+        return math.radians(angles[index])
 
 
 class Ball(pygame.sprite.Sprite):
