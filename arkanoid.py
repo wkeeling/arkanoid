@@ -22,7 +22,7 @@ DISPLAY_CAPTION = 'Arkanoid'
 # The angle the ball initially moves from the paddle, in radians.
 BALL_START_ANGLE_RAD = 5.0
 # The speed that the ball will always try to arrive at.
-BALL_BASE_SPEED = 8  # pixels per-frame
+BALL_BASE_SPEED = 9  # pixels per-frame
 # The max speed of the ball, prevents a runaway speed when lots of rapid
 # collisions.
 BALL_MAX_SPEED = 15  # pixels per-frame
@@ -65,7 +65,8 @@ class Paddle(pygame.sprite.Sprite):
                 will restrict the maximum travel of the paddle.
             bottom_offset:
                 The distance the paddle sits above the bottom of the screen.
-            speed: Optional speed of the paddle in pixels per frame.
+            speed:
+                Optional speed of the paddle in pixels per frame.
         """
         super().__init__()
         # Create the area the paddle can move within.
@@ -464,9 +465,6 @@ def run_game():
 
     ballsprite = pygame.sprite.RenderPlain(ball)
 
-    # Display all updates.
-    pygame.display.flip()
-
     # Initialise the clock.
     clock = pygame.time.Clock()
 
@@ -499,6 +497,7 @@ def run_game():
         ballsprite.update()
         ballsprite.draw(screen)
 
+        # Display all updates.
         pygame.display.flip()
 
     LOG.info('Exiting')

@@ -9,3 +9,39 @@ corner bouncing seems to increase speed on paddle/bricks
 
 original game starts off with ball slow, but eventually ball moves at quicker pace generally.
 split start_speed and base_speed
+
+paddle needs to be predictable. remove randomness (this is provided by walls and bricks anyway).
+reduce number of sections to 6
+
+classes:
+
+Arkanoid
+    main class with main_loop
+
+Game
+    created when a game is started
+    interacts and keeps track of current level, keeps track of number of lives, score
+    has update() method called repeatedly by Arkanoid.main_loop()
+    has attribute "over" which is checked by main_loop to determine whether to update or throw away
+    if not game.over:
+        game.update()
+
+Round
+    RoundOne
+    RoundTwo
+    etc.
+    creates sprites, background, layout (may need base Round for common logic such as creating sprites - TemplatePattern here perhaps?)
+    determines layout, keeps track of active power up
+    brought into play when a person starts to play the game. ends when complete, or when lives fall below zero
+    the Game keeps track of the Round
+    has attribute "complete" which is checked by Game.update() to determine whether to move to next round
+    if not round.complete:
+        round.update()
+    Game keeps track of lives. If lives < 0, then calls round.end() to notify Round to clean up.
+
+PowerUp
+    has activate() and deactivate() methods
+
+LaserPaddle extends Paddle and is initialised with an instance of one
+    assumes current state of existing paddle and changes image, extends with laser functionality
+    laser bullets need to do collision detection with bricks (like ball does). bricks need not know about bullets.
