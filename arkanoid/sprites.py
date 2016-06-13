@@ -352,3 +352,21 @@ class Ball(pygame.sprite.Sprite):
 
         return angle
 
+
+class PowerUp:
+
+    # TODO: create concrete implementations. Probably don't need this base class.
+
+    def __init__(self, game):
+        """Apply the powerup to the running game and change the game's state
+        as appropriate.
+
+        Args:
+            game:
+                The current game instance.
+        """
+
+    def deactivate(self):
+        """Deactivate the current powerup by returning the game state back
+        to what it was prior to the powerup taking effect.
+        """

@@ -3,6 +3,7 @@ import sys
 
 import pygame
 
+from arkanoid.rounds import RoundOne
 from arkanoid.sprites import Ball
 from arkanoid.sprites import Paddle
 from arkanoid.utils import load_png
@@ -164,4 +165,27 @@ class Arkanoid:
 
     def _off_screen(self):
         sys.exit()
+
+
+class Game:
+
+    def __init__(self, screen, lives=3):
+        # Initialise the sprites.
+        self.lives = lives
+        self.round = RoundOne(screen)
+        self.paddle = None
+        self.ball = None
+        self.score = 0
+        self.active_powerup = None
+        self.over = False
+
+    def _initialise_paddle(self):
+        paddle = Paddle(left_offset=self.round.edges[0].width,
+                        right_offset=self.round.edges[1].width,
+                        bottom_offset=50,
+                        speed=PADDLE_SPEED)
+        paddlesprite = pygame.sprite.RenderPlain(paddle)
+
+    def update(self, event):
+        pass
 

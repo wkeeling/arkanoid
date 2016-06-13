@@ -3,15 +3,14 @@ ball will always gradually slow to base speed at pre-defined rate: x factor per 
 
 _angle and _speed in ball should be public (not internal)
 
-fix issue where ball gets stuck in wall/bricks
+fix issue where ball gets stuck in wall
 
 corner bouncing seems to increase speed on paddle/bricks
 
 original game starts off with ball slow, but eventually ball moves at quicker pace generally.
 split start_speed and base_speed
 
-paddle needs to be predictable. remove randomness (this is provided by walls and bricks anyway).
-reduce number of sections to 6
+Get the game as it currently runs, into the new class structure.
 
 classes:
 
