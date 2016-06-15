@@ -44,3 +44,9 @@ PowerUp
 LaserPaddle extends Paddle and is initialised with an instance of one
     assumes current state of existing paddle and changes image, extends with laser functionality
     laser bullets need to do collision detection with bricks (like ball does). bricks need not know about bullets.
+
+Need a better eventing system. Perhaps some sort of callback approach? Rather than passing event_list to game.update()
+
+Multiple balls could be MultiBall() object switched out with game.ball.
+
+How to handle grey bricks that take 2 hits?

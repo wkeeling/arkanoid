@@ -224,6 +224,10 @@ class Ball(pygame.sprite.Sprite):
         self._collidable_objects = [o for o in self._collidable_objects if
                                     o[0] != obj]
 
+    def remove_all_collidable_objects(self):
+        """Remove all collidable objects from the ball."""
+        self._collidable_objects.clear()
+
     def update(self):
         """Update the ball. Check whether the ball has collided with
         anything and if so, update its angle and speed and invoke any
