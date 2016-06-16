@@ -50,3 +50,5 @@ Need a better eventing system. Perhaps some sort of callback approach? Rather th
 Multiple balls could be MultiBall() object switched out with game.ball.
 
 How to handle grey bricks that take 2 hits?
+
+Merge back create_basic_structure back to master.
