@@ -66,8 +66,10 @@ class Arkanoid:
             if not self._game:
                 self._game = Game(self._screen)
 
-            if self._game:
-                self._game.update(event_list)
+            self._game.update(event_list)
+
+            if self._game.over:
+                running = False
 
             # Display all updates.
             pygame.display.flip()
@@ -90,6 +92,11 @@ class Game:
         self.score = 0
         self.lives = lives
 
+        # The number of lives displayed on the screen.
+        self._life_rects = []
+        # The life graphic.
+        self._life_img, _ = load_png('paddle_life.png')
+
         # The raw unblitted edges are loaded once and held by the game.
         self._edges = self._create_edges()
 
@@ -99,7 +106,7 @@ class Game:
         # The sprites.
         self.paddle = Paddle(left_offset=self._edges.side.get_width(),
                              right_offset=self._edges.side.get_width(),
-                             bottom_offset=50,
+                             bottom_offset=60,
                              speed=PADDLE_SPEED)
 
         self.ball = Ball(start_pos=self.paddle.rect.midtop,
@@ -116,19 +123,37 @@ class Game:
         self.over = False
 
     def _create_edges(self):
+        """Create the surfaces that represent the edges of the playable area,
+        namely the top and sides.
+
+        Returns:
+            A named tuple with attributes 'side' and 'top' corresponding to
+            the sides and top edges (surfaces) accordingly.
+        """
         edges = collections.namedtuple('edges', 'side top')
         side_edge, _ = load_png('edge.png')
         top_edge, _ = load_png('top.png')
         return edges(side_edge, top_edge)
 
     def update(self, events):
+        """Update the state of the running game.
+
+        Args:
+            events:
+                The EventList containing the events captured since the last
+                frame.
+        """
         if not self._round or self._round.complete:
             self._new_round()
 
         self._handle_events(events)
         self._update_sprites()
+        self._update_lives()
 
     def _new_round(self):
+        """Obtain the next round and configure the ball with all the objects
+        from the round that it could potentially collide with.
+        """
         # Get the next round.
         if self._round is None:
             self._round = RoundOne(self._screen, self._edges)
@@ -168,6 +193,8 @@ class Game:
                     self.paddle.stop()
 
     def _update_sprites(self):
+        """Erase the sprites, update their state, and then redraw them
+        on the screen."""
         # Erase the previous location of the sprites.
         self._screen.blit(self._round.background, self.paddle.rect,
                           self.paddle.rect)
@@ -181,6 +208,12 @@ class Game:
         self._screen.blit(self.ball.image, self.ball.rect)
 
     def _on_brick_collide(self, brick):
+        """Callback called by the ball when it collides with a brick.
+
+        Args:
+            brick;
+                The Brick instance the ball collided with.
+        """
         # Tell the ball that the brick has gone.
         self.ball.remove_collidable_object(brick)
 
@@ -196,7 +229,31 @@ class Game:
         # passing in the game instance (self). Also need to amend above calls
         # to use brick.rect
 
+    def _update_lives(self):
+        """Update the number of remaining lives displayed on the screen."""
+        # Erase the existing lives.
+        for rect in self._life_rects:
+            self._screen.blit(self._round.background, rect, rect)
+        self._life_rects.clear()
+
+        # Display the remaining lives.
+        left = self._edges.side.get_width()
+        top = self._screen.get_height() - self._life_img.get_height() - 10
+
+        for life in range(self.lives - 1):
+            self._life_rects.append(
+                self._screen.blit(self._life_img, (left, top)))
+            left += self._life_img.get_width() + 10
+
     def _off_screen(self):
-        # TODO: check number of lives > 0, and set game.over flag
-        # appropriately.
-        sys.exit()
+        """Callback called by the ball when it goes offscreen. This carries
+        out the actions to reduce the lives/reinitialise the sprites, or
+        end the game, if there are no lives left.
+        """
+        if self.lives > 0:
+            self.lives -= 1
+
+        if self.lives == 0:
+            self.over = True
+        else:
+            self.ball.reinit()

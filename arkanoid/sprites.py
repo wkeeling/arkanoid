@@ -167,6 +167,8 @@ class Ball(pygame.sprite.Sprite):
                 the edge of the screen.
         """
         super().__init__()
+        self._start_pos = start_pos
+        self._start_angle = start_angle
         self._angle = start_angle
         self._base_speed = base_speed
         self._speed = base_speed
@@ -355,6 +357,11 @@ class Ball(pygame.sprite.Sprite):
         LOG.debug(angle)
 
         return angle
+
+    def reinit(self):
+        self.rect.midbottom = self._start_pos
+        self._angle = self._start_angle
+        self._speed = self._base_speed
 
 
 class PowerUp:
