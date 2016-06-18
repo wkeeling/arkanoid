@@ -9,7 +9,9 @@ class RoundOne:
     # How far down the screen the bottom row of bricks starts
     _BOTTOM_ROW_START = 200
 
-    def __init__(self, screen, edges):
+    def __init__(self, edges):
+        screen = pygame.display.get_surface().get_rect()
+
         # The round specific background.
         self.background = self._initialise_background(screen)
 

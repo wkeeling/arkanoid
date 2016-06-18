@@ -4,6 +4,10 @@ import os
 import pygame
 
 
+# Initialise the clock.
+clock = pygame.time.Clock()
+
+
 @functools.lru_cache()
 def load_png(filename):
     """Load a png image with the specified filename from the

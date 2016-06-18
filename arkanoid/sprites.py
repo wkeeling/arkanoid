@@ -4,6 +4,7 @@ import random
 
 import pygame
 
+from arkanoid.utils import clock
 from arkanoid.utils import load_png
 
 
@@ -55,6 +56,7 @@ class Paddle(pygame.sprite.Sprite):
         self._speed = speed
 
     def update(self):
+        """Update the position of the paddle when an arrow key is held down."""
         # Continuously move the paddle when the offset is non-zero.
         newpos = self.rect.move(self._offset, 0)
         if self._area.contains(newpos):
@@ -63,15 +65,29 @@ class Paddle(pygame.sprite.Sprite):
             self.rect = newpos
 
     def move_left(self):
+        """Tell the paddle to move to the left by the speed set when the
+        paddle was initialised."""
         # Set the offset to negative to move left.
         self._offset = -self._speed
 
     def move_right(self):
+        """Tell the paddle to move to the right by the speed set when the
+        paddle was initialised."""
         # A positive offset to move right.
         self._offset = self._speed
 
     def stop(self):
+        """Tell the paddle to stop moving."""
         self._offset = 0
+
+    def reinit(self):
+        """Reinitialise the paddle."""
+        self.stop()
+        self.rect.center = self._area.center
+
+    def explode(self):
+        """Trigger the exploding paddle animation."""
+        pass
 
     @staticmethod
     def bounce_strategy(paddle_rect, ball_rect):
@@ -136,7 +152,12 @@ class Ball(pygame.sprite.Sprite):
     add_collidable_object() for further details.
     """
 
-    def __init__(self, start_pos, start_angle, base_speed, max_speed=15,
+    # The initial angle of the ball in radians.
+    _START_ANGLE_RAD = 5.0
+
+    _GRACE_PERIOD_SECS = 3
+
+    def __init__(self, paddle, base_speed, max_speed=15,
                  normalisation_rate=0.02,
                  off_screen_callback=None):
         """
@@ -145,11 +166,9 @@ class Ball(pygame.sprite.Sprite):
         the screen. This is a no-args callable.
 
         Args:
-            start_pos:
-                The starting position of the ball (coordinates).
-            start_angle:
-                The starting angle of the ball in radians taken against the
-                x axis.
+            paddle:
+                The Paddle sprite, which the ball uses to initially position
+                itself.
             base_speed:
                 The baseline speed of the ball. Collisions with objects may
                 increase/decrease the speed of the ball, but the speed will
@@ -167,19 +186,32 @@ class Ball(pygame.sprite.Sprite):
                 the edge of the screen.
         """
         super().__init__()
-        self._start_pos = start_pos
-        self._start_angle = start_angle
-        self._angle = start_angle
+        self.image, self.rect = load_png('ball.png')
+        self._paddle = paddle
         self._base_speed = base_speed
-        self._speed = base_speed
         self._max_speed = max_speed
         self._normalisation_rate = normalisation_rate
-        self.image, self.rect = load_png('ball.png')
-        self.rect.midbottom = start_pos
+        self._off_screen_callback = off_screen_callback
+
+        # The ball's current speed.
+        self._speed = 0
+
+        # The ball's current angle.
+        self._angle = self._START_ANGLE_RAD
+
+        # The area within which the ball is in play.
         screen = pygame.display.get_surface()
         self._area = screen.get_rect()
+
+        # The objects the ball can collide with.
         self._collidable_objects = []
-        self._off_screen_callback = off_screen_callback
+
+        # Indicates whether the ball is within the grace period. During
+        # this period the ball is not moving and is anchored to the paddle.
+        self._grace_period = True
+
+        # When the grace period started.
+        self._grace_period_start = clock.get_time()
 
     def add_collidable_object(self, obj, bounce_strategy=None,
                               speed_adjust=0.0, on_collide=None):
@@ -235,27 +267,42 @@ class Ball(pygame.sprite.Sprite):
         anything and if so, update its angle and speed and invoke any
         associated actions.
         """
-        # Get the new position of the ball.
-        self.rect = self._calc_new_pos()
+        if self._grace_period:
+            # Anchor the ball to the paddle when in the grace period.
+            self.rect = self._paddle.rect.midtop
+            self._speed = 0
 
-        if self._area.contains(self.rect):
-            # The ball is still on the screen.
-            # Find out if the ball has collided with anything.
-            # We have to get these on the fly, as the rects of sprites change.
-            collidable_rects = self._get_collidable_rects()
-            indexes = self.rect.collidelistall(collidable_rects)
-
-            if indexes:
-                # There's been a collision - find out with what.
-                self._handle_collision(collidable_rects, indexes)
-            else:
-                # No collision. Bring speed back to base.
-                self._normalise_speed()
+            if self._grace_period_elapsed():
+                # Grace period over, normal speed/position take effect.
+                self._speed = self._base_speed
+                self._grace_period = False
         else:
-            # Ball has gone off the screen.
-            # Invoke the callback if we have one.
-            if self._off_screen_callback:
-                self._off_screen_callback()
+            # Get the new position of the ball.
+            self.rect = self._calc_new_pos()
+
+            if self._area.contains(self.rect):
+                # The ball is still on the screen.
+                # Find out if the ball has collided with anything.
+                # We have to get these on the fly, as the rects of sprites
+                #  change.
+                collidable_rects = self._get_collidable_rects()
+                indexes = self.rect.collidelistall(collidable_rects)
+
+                if indexes:
+                    # There's been a collision - find out with what.
+                    self._handle_collision(collidable_rects, indexes)
+                else:
+                    # No collision. Bring speed back to base.
+                    self._normalise_speed()
+            else:
+                # Ball has gone off the screen.
+                # Invoke the callback if we have one.
+                if self._off_screen_callback:
+                    self._off_screen_callback()
+
+    def _grace_period_elapsed(self):
+        return (clock.get_time() - self._grace_period_start) > (
+            self._GRACE_PERIOD_SECS * 1000)
 
     def _calc_new_pos(self):
         offset_x = self._speed * math.cos(self._angle)
@@ -359,8 +406,16 @@ class Ball(pygame.sprite.Sprite):
         return angle
 
     def reinit(self):
-        self.rect.midbottom = self._start_pos
-        self._angle = self._start_angle
+        """Reinitialise the ball."""
+        self._grace_period = True
+        self._grace_period_start = clock.get_time()
+
+    def stop(self):
+        """Stop the ball moving."""
+        self._speed = 0
+
+    def start(self):
+        """Start the ball moving."""
         self._speed = self._base_speed
 
 
