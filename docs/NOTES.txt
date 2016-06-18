@@ -43,6 +43,29 @@ Callbacks better option, although bit more complex.
 I want the objects the ball collides with to determine how the ball should bounce off them and at
 what speed. I don't want the ball to have all this knowledge.
 
+Restructring
+------------
+
+- The game has a fairly clean object model - the paddle, the ball, the bricks, the walls,
+the powerups. Fully understanding how these objects interact and coming up with a flexible
+object model that can accommodate it quite a challenge.
+
+- Objects themselves and key functionality.
+
+- Dealing with global objects such as the screen, clock, fonts etc. that need to be available
+to all modules. Don't want to create circular module dependencies.
+
+- Areas of difficulty - e.g. things that don't fit too cleanly into the model. For example,
+the start sequence of the game, or when the game restarts after losing a life. Here, a series
+of steps happen - which are still technically inside the game - but are outside of normal
+gameplay.
+
+- Introduce concept of "Game Sequence" which is an object that implements a fixed series of
+steps (such as game start/resume). When in play, these steps override the normal gameplay
+until they have completed, after which the game resumes.
+
+- Anchoring/releasing the ball.
+
 
 Issues
 ------
