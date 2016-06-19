@@ -159,7 +159,11 @@ class Game:
         # self.paddle.explode()
         # TODO: Need to check the number of lives before doing this.
         # Should be RoundRestartState()
-        self.state = RoundRestartState(self)
+        if self.lives - 1 > 0:
+            self.state = RoundRestartState(self)
+        else:
+            # TODO: possible lose "over" and transition to a GameEndState.
+            self.over = True
 
 
 class BaseState:
@@ -360,6 +364,10 @@ class RoundRestartState(RoundStartState):
     def __init__(self, game):
         super().__init__(game)
 
+        # The new number of lives since restarting.
+        self._lives = game.lives - 1
+
+        # Whether we've reset the paddle.
         self._paddle_reset = False
 
     def _configure_ball(self):
@@ -371,7 +379,12 @@ class RoundRestartState(RoundStartState):
     def _do_update(self):
         super()._do_update()
 
+        if self._time_elapsed() > 1000:
+            # Update the number of lives when we display the caption.
+            self.game.lives = self._lives
+
         if not self._paddle_reset:
+            # Reset the paddle's position.
             self.game.paddle.reset()
             self._paddle_reset = True
 
