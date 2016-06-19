@@ -3,14 +3,14 @@ import pygame
 from arkanoid.utils import load_png
 
 
-class RoundOne:
+class Round1:
     """Initialises the background, brick layout and powerups for round one."""
 
     # How far down the screen the bottom row of bricks starts
     _BOTTOM_ROW_START = 200
 
     def __init__(self, edges):
-        screen = pygame.display.get_surface().get_rect()
+        screen = pygame.display.get_surface()
 
         # The round specific background.
         self.background = self._initialise_background(screen)
@@ -23,8 +23,8 @@ class RoundOne:
         screen.blit(self.background, (0, 0))
 
         self.bricks = self._initialise_bricks(screen)
-        self.caption = 'Round One'
-        self.next_round = None
+        self.caption = 'Round 1'
+        self.next_round = None  # Class of next round
 
         # Keep track of the number of destroyed bricks.
         self._bricks_destroyed = 0

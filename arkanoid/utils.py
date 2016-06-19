@@ -22,3 +22,18 @@ def load_png(filename):
     else:
         image = image.convert_alpha()
     return image, image.get_rect()
+
+
+@functools.lru_cache()
+def font(name, size):
+    """Get the named font at given size. This will load the font if it hasn't
+    previously been loaded.
+
+    Args:
+        name:
+            The filename of the font.
+        size:
+            The size of the font.
+    """
+    return pygame.font.Font(
+        os.path.join(os.path.dirname(__file__), 'data', 'fonts', name), size)

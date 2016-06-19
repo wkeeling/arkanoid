@@ -297,15 +297,18 @@ class Ball(pygame.sprite.Sprite):
 
     def _calc_new_pos(self):
         if self._anchor:
+            pos, rel_pos = self._anchor
             try:
-                rect = self._anchor[0].rect
+                rect = pos.rect
             except AttributeError:
                 # A fixed position.
-                return pygame.Rect(self._anchor[0])
+                return pygame.Rect(pos)
             # We're anchored to another sprite.
-            if self._anchor[2]:
-                # Use the relative position.
-                return pygame.Rect(rect.left + [1][0], rect.top + [1][1])
+            if rel_pos:
+                # Use the relative position from the sprite's left/top.
+                return pygame.Rect(rect.left + rel_pos[0],
+                                   rect.top + rel_pos[1], self.rect.width,
+                                   self.rect.height)
             # Use the centre.
             return rect.center
         else:

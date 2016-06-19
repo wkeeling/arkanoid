@@ -4,9 +4,10 @@ import os
 
 import pygame
 
-from arkanoid.rounds import RoundOne
+from arkanoid.rounds import Round1
 from arkanoid.sprites import Ball
 from arkanoid.sprites import Paddle
+from arkanoid.utils import font
 from arkanoid.utils import load_png
 
 LOG = logging.getLogger(__name__)
@@ -32,13 +33,11 @@ BRICK_SPEED_ADJUST = 0.5
 WALL_SPEED_ADJUST = 0.2
 # The speed the paddle moves.
 PADDLE_SPEED = 10
+# The main font.
+MAIN_FONT = 'emulogic.ttf'
 
 # Initialise the pygame modules.
 pygame.init()
-# Initialise the main font
-MAIN_FONT = pygame.font.Font(
-    os.path.join(os.path.dirname(__file__), 'data', 'fonts', 'emulogic.ttf'),
-    14)
 
 
 class Arkanoid:
@@ -97,18 +96,17 @@ class Game:
     being when a player begins a game.
     """
 
-    def __init__(self, lives=3):
-        """Initialise a new Game with an optional number of lives.
+    def __init__(self, round_class=Round1, lives=3):
+        """Initialise a new Game with an optional level (aka 'round'), and
+        optional number of lives.
 
         Args:
+            round_class: The class of the round to start, default Round1.
             lives: Optional number of lives for the player, default 3.
         """
         # Keep track of the score and lives throughout the game.
         self.score = 0
         self.lives = lives
-
-        # The current round.
-        self.round = None
 
         # Reference to the screen.
         self._screen = pygame.display.get_surface()
@@ -128,6 +126,9 @@ class Game:
                          max_speed=BALL_MAX_SPEED,
                          normalisation_rate=BALL_SPEED_NORMALISATION_RATE,
                          off_screen_callback=self._off_screen)
+
+        # The current round.
+        self.round = self._new_round(round_class)
 
         # The current powerup, if any.
         self.active_powerup = None
@@ -165,27 +166,28 @@ class Game:
                 The EventList containing the events captured since the last
                 frame.
         """
-        if not self.round or self.round.complete:
-            self._new_round()
+        if self.round.complete:
+            self.round = self._new_round(self.round.next_round)
+
+        if self.sequence:
+            # If there is a game sequence set, delegate to it.
+            self.sequence.update()
 
         self._handle_events(events)
         self._update_sprites()
         self._update_lives()
 
-    def _new_round(self):
-        """Obtain the next round and configure the ball with all the objects
-        from the round that it could potentially collide with.
+    def _new_round(self, round_class):
+        """Create a new round from the supplied round_class and configure the
+        ball with all the objects from the round that it could potentially
+        collide with.
         """
-        # Get the next round.
-        if self.round is None:
-            self.round = RoundOne(self._edges)
-        else:
-            self.round = self.round.next_round
+        round_ = round_class(self._edges)
 
         # Re-populate the ball with the collidable objects it needs
         # to know about.
         self.ball.remove_all_collidable_objects()
-        for edge in self.round.edges:
+        for edge in round_.edges:
             # Every collision with a wall momentarily increases the speed
             # of the ball.
             self.ball.add_collidable_object(edge,
@@ -194,7 +196,7 @@ class Game:
             self.paddle,
             bounce_strategy=self.paddle.bounce_strategy)
 
-        for brick in self.round.bricks:
+        for brick in round_.bricks:
             # Make the ball aware of the bricks it might collide with.
             # Every brick collision momentarily increases the speed of
             # the ball.
@@ -202,6 +204,8 @@ class Game:
                 brick,
                 speed_adjust=BRICK_SPEED_ADJUST,
                 on_collide=self._on_brick_collide)
+
+        return round_
 
     def _handle_events(self, event_list):
         for event in event_list:
@@ -256,6 +260,7 @@ class Game:
 
     def _update_lives(self):
         """Update the number of remaining lives displayed on the screen."""
+        # TODO: this should now be part of the GameStartSequence(restart=True)
         # Erase the existing lives.
         for rect in self._life_rects:
             self._screen.blit(self.round.background, rect, rect)
@@ -275,10 +280,10 @@ class Game:
         out the actions to reduce the lives/reinitialise the sprites, or
         end the game, if there are no lives left.
         """
-        # Explode the paddle immediately.
-        self.paddle.explode()
-        # TODO: Need to check the number of lives before doing this.
-        self._sequence_coordinator = GameStartSequence(self, restart=True)
+        # # Explode the paddle immediately.
+        # self.paddle.explode()
+        # # TODO: Need to check the number of lives before doing this.
+        # self.sequence = GameStartSequence(self, restart=True)
 
 
 class GameStartSequence:
@@ -302,16 +307,27 @@ class GameStartSequence:
         # Reference to the screen.
         self._screen = pygame.display.get_surface()
 
-        # Initialise the sprite's start state.
+        # Initialise the sprites' start state.
         self._game.paddle.visible = False
         self._game.ball.visible = False
+        paddle_width = self._game.paddle.rect.width
+        paddle_height = self._game.paddle.rect.height
+        # Anchor the ball to the paddle.
         self._game.ball.anchor(self._game.paddle,
-                               self._game.paddle.rect.midtop)
+                               (paddle_width // 2, -paddle_height))
+
+        # Initialise the text.
+        self._caption = font(MAIN_FONT, 18).render(self._game.round.caption,
+                                                   False, (255, 255, 255))
+        self._caption_pos = (self._screen.get_width() // 3,
+                             self._screen.get_height() // 2)
+        self._ready = font(MAIN_FONT, 18).render('Ready', False,
+                                                 (255, 255, 255))
 
     def update(self):
         if self._time_elapsed() > 1000:
             # Display the caption after a second.
-            LOG.debug('Display caption')
+            caption = self._screen.blit(self._caption, self._caption_pos)
         if self._time_elapsed() > 3000:
             # Display the "Ready" message.
             LOG.debug('Display ready message')
@@ -321,7 +337,7 @@ class GameStartSequence:
             self._game.ball.visible = True
         if self._time_elapsed() > 5500:
             # Hide the text.
-            LOG.debug('Hide the text and resume')
+            self._screen.blit(self._game.round.background, caption, caption)
             # Release the anchor.
             self._game.ball.release(BALL_START_ANGLE_RAD)
             # Normal gameplay resumes - unset ourselves.
@@ -340,42 +356,5 @@ class GameIntroSequence:
         # TODO: this sequence will hand off to the GameStartSequence once
         # completed.
         pass
-
-
-# class EndOfLifeCoordinator:
-#     """An implementation of a "sequence coordinator" responsible for
-#     coordinating the sequence of actions that happen when a player loses
-#     a life.
-#     """
-#     def __init__(self, game):
-#         self._game = game
-#         self._start_time = clock.get_time()
-#
-#     def update(self):
-#         # Explode the paddle immediately.
-#         self._game.paddle.explode()
-#
-#         # Wait for the animation to complete.
-#         if clock.get_time() - self._start_time > 5000:
-#             # Lose a life.
-#             if self._game.lives > 0:
-#                 self._game.lives -= 1
-#
-#             if self._game.lives == 0:
-#                 # Game over.
-#                 self._game.over = True
-#             else:
-#                 # Display the caption for the current round.
-#                 # TODO: workout the correct position for the text on the screen.
-#                 self._screen.blit(MAIN_FONT.render(self._game.round.caption),
-#                             (100, 100))
-#                 if clock.get_time() - self._start_time > 6000:
-#                     # Display the ready message and regenerated sprites.
-#                     self._screen.blit(MAIN_FONT.render('Ready'), (100, 100))
-#                     self._game.paddle.reinit()
-#                     self._game.ball.reinit()
-
-
-
 
 
