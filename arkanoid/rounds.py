@@ -1,15 +1,20 @@
+import collections
+
 import pygame
 
 from arkanoid.utils import load_png
 
 
 class Round1:
-    """Initialises the background, brick layout and powerups for round one."""
+    """Initialises the background, brick layout and powerups for round one.
+    TODO: define the attributes that make a round (e.g. background, edges
+    named tuple, etc.)
+    """
 
     # How far down the screen the bottom row of bricks starts
     _BOTTOM_ROW_START = 200
 
-    def __init__(self, edges):
+    def __init__(self):
         screen = pygame.display.get_surface()
 
         # The round specific background.
@@ -17,14 +22,19 @@ class Round1:
 
         # These edges have been blitted to the background and are used
         # as the sides of the game area.
-        self.edges = self._initialise_edges(edges)
+        self.edges = self._initialise_edges()
 
         # Background (plus edges) are blitted to the screen.
         screen.blit(self.background, (0, 0))
 
+        # Create the Bricks that the ball can collide with.
         self.bricks = self._initialise_bricks(screen)
+
+        # The caption of the round, displayed on screen.
         self.caption = 'Round 1'
-        self.next_round = None  # Class of next round
+
+        # The class of the next round after this.
+        self.next_round = None
 
         # Keep track of the number of destroyed bricks.
         self._bricks_destroyed = 0
@@ -48,13 +58,16 @@ class Round1:
         background.fill((0, 0, 0))
         return background
 
-    def _initialise_edges(self, edges):
+    def _initialise_edges(self):
         # The edges are blitted to the background.
-        left_rect = self.background.blit(edges.side, (0, 0))
-        right_rect = self.background.blit(edges.side, (
-            self.background.get_rect().width - edges.side.get_width(), 0))
-        top_rect = self.background.blit(edges.top, (edges.side.get_width(), 0))
-        return left_rect, right_rect, top_rect
+        edges = collections.namedtuple('edge', 'left right top')
+        side_edge, _ = load_png('edge.png')
+        top_edge, _ = load_png('top.png')
+        left_rect = self.background.blit(side_edge, (0, 0))
+        right_rect = self.background.blit(side_edge, (
+            self.background.get_rect().width - side_edge.get_width(), 0))
+        top_rect = self.background.blit(top_edge, (side_edge.get_width(), 0))
+        return edges(left_rect, right_rect, top_rect)
 
     def _initialise_bricks(self, screen):
         # TODO bricks should be sprites.Brick that have rect and powerup attrs

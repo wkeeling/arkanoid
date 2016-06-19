@@ -90,6 +90,10 @@ class Paddle(pygame.sprite.Sprite):
         """Tell the paddle to stop moving."""
         self._move = 0
 
+    def reset(self):
+        """Reset the position of the paddle to its start position."""
+        self.rect.center = self._area.center
+
     def explode(self):
         """Trigger the exploding paddle animation."""
         pass

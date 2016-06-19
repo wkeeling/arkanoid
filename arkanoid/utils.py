@@ -37,3 +37,19 @@ def font(name, size):
     """
     return pygame.font.Font(
         os.path.join(os.path.dirname(__file__), 'data', 'fonts', name), size)
+
+
+def h_centre_pos(surface):
+    """Get the left coordinate needed to centre the supplied surface
+    horizontally in the centre of the screen.
+
+    Args:
+        surface:
+            The surface to get the left coordinate for.
+
+    Returns:
+        The left coordinate which can be used to centre the surface
+        horizontally in the screen.
+    """
+    screen = pygame.display.get_surface()
+    return (screen.get_width() / 2) - (surface.get_width() / 2)
