@@ -118,7 +118,7 @@ class Game:
         # The current round.
         self.round = round_class()
 
-        # The sprites.
+        # The "permanent" sprites.
         self.paddle = Paddle(left_offset=self.round.edges.left.width,
                              right_offset=self.round.edges.right.width,
                              bottom_offset=60,
@@ -130,6 +130,9 @@ class Game:
                          max_speed=BALL_MAX_SPEED,
                          normalisation_rate=BALL_SPEED_NORMALISATION_RATE,
                          off_screen_callback=self._off_screen)
+
+        # Other sprites that can enter the game.
+        self.other_sprites = []
 
         # The current powerup, if any.
         self.active_powerup = None
@@ -216,6 +219,9 @@ class BaseState:
         self.screen.blit(self.game.round.background,
                          self.game.ball.rect,
                          self.game.ball.rect)
+        for sprite in self.game.other_sprites:
+            self.screen.blit(self.game.round.background,
+                             sprite.rect, sprite.rect)
 
         # Update the state of the sprites and redraw them, assuming
         # they're visible.
@@ -225,6 +231,9 @@ class BaseState:
         self.game.ball.update()
         if self.game.ball.visible:
             self.screen.blit(self.game.ball.image, self.game.ball.rect)
+        for sprite in self.game.other_sprites:
+            sprite.update()
+            self.screen.blit(sprite.image, sprite.rect)
 
     def _update_lives(self):
         """Update the number of remaining lives displayed on the screen."""
