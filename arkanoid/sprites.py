@@ -283,7 +283,7 @@ class Ball(pygame.sprite.Sprite):
             # The ball is still on the screen.
             # Find out if the ball has collided with anything.
             # We have to get these on the fly, as the rects of sprites
-            #  change.
+            # change.
             collidable_rects = self._get_collidable_rects()
             indexes = self.rect.collidelistall(collidable_rects)
 

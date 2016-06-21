@@ -165,6 +165,13 @@ class Game:
             # TODO: possible lose "over" and transition to a GameEndState.
             self.over = True
 
+    def __repr__(self):
+        class_name = type(self).__name__
+        return '{}(round_class={}, lives={})'.format(
+            class_name,
+            type(self.round).__name__,
+            self.lives)
+
 
 class BaseState:
     """Abstract base class holding behaviour common to all states."""
@@ -239,6 +246,10 @@ class BaseState:
         implement to perform their state specific behaviour.
         """
         raise NotImplementedError('Subclasses must implement do_update()')
+
+    def __repr__(self):
+        class_name = type(self).__name__
+        return '{}({})'.format(class_name, self.game)
 
 
 class RoundStartState(BaseState):
