@@ -6,6 +6,7 @@ import pygame
 
 from arkanoid.rounds import Round1
 from arkanoid.sprites import Ball
+from arkanoid.sprites import ExplodingPaddle
 from arkanoid.sprites import Paddle
 from arkanoid.utils import font
 from arkanoid.utils import h_centre_pos
@@ -375,29 +376,44 @@ class RoundRestartState(RoundStartState):
     def __init__(self, game):
         super().__init__(game)
 
+        # Whether to update our state.
+        self._update = False
+
         # The new number of lives since restarting.
         self._lives = game.lives - 1
 
-        # Whether we've reset the paddle.
+        # Keep track of the existing paddle.
+        self._paddle = game.paddle
         self._paddle_reset = False
 
+        # Temporarily substitute the exploding paddle into the game.
+        game.paddle = ExplodingPaddle(game.paddle,
+                                      on_complete=self._on_explosion_finished)
+
     def _configure_ball(self):
-        """When restarting a round, this method is just a no-op, as the ball
-        is not reconfigured.
+        """When restarting a round, we override _configure_ball to do nothing,
+        as the ball is not reconfigured on restarts.
         """
         pass
 
     def _do_update(self):
-        super()._do_update()
+        if self._update:
+            super()._do_update()
 
-        if self._time_elapsed() > 1000:
-            # Update the number of lives when we display the caption.
-            self.game.lives = self._lives
+            if self._time_elapsed() > 1000:
+                # Update the number of lives when we display the caption.
+                self.game.lives = self._lives
 
-        if not self._paddle_reset:
-            # Reset the paddle's position.
-            self.game.paddle.reset()
-            self._paddle_reset = True
+            if not self._paddle_reset:
+                self.game.paddle.reset()
+                self._paddle_reset = True
+
+    def _on_explosion_finished(self):
+        # Put back the real paddle.
+        self.game.paddle = self._paddle
+
+        # Allow the rest of this restart state to execute.
+        self._update = True
 
 
 class GameStartState(BaseState):

@@ -94,10 +94,6 @@ class Paddle(pygame.sprite.Sprite):
         """Reset the position of the paddle to its start position."""
         self.rect.center = self._area.center
 
-    def explode(self):
-        """Trigger the exploding paddle animation."""
-        pass
-
     @staticmethod
     def bounce_strategy(paddle_rect, ball_rect):
         """Implementation of a ball bounce strategy used to calculate
@@ -449,6 +445,45 @@ class Ball(pygame.sprite.Sprite):
             self._angle = angle
         self._speed = self._base_speed
         self._anchor = None
+
+
+class ExplodingPaddle(pygame.sprite.Sprite):
+    """Used to animate a paddle explosion when the paddle misses the ball."""
+
+    def __init__(self, paddle, on_complete=None):
+        """Initialise a new ExplodingPaddle using an existing Paddle sprite,
+        and a no-args callback which notifies the caller when the explosion
+        has finished.
+
+        Args:
+            paddle:
+                The existing Paddle instance.
+            on_complete:
+                Optional no-args callback which is called when the explosion
+                has finished.
+        """
+        self.image, _ = load_png('paddle_explode.png')
+        self.rect = paddle.rect
+        self.visible = True
+
+        self._on_complete = on_complete
+        self._explosion_start = 0
+
+    def update(self):
+        LOG.debug('Paddle explosion')
+        if self._explosion_start > 120:
+            if self._on_complete:
+                self._on_complete()
+        self._explosion_start += 1
+
+    def move_left(self):
+        pass
+
+    def move_right(self):
+        pass
+
+    def stop(self):
+        pass
 
 
 class PowerUp:
