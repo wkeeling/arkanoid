@@ -2,6 +2,7 @@ import collections
 
 import pygame
 
+from arkanoid.sprites import Brick
 from arkanoid.utils import load_png
 
 
@@ -15,20 +16,20 @@ class Round1:
     _BOTTOM_ROW_START = 200
 
     def __init__(self):
-        screen = pygame.display.get_surface()
+        self._screen = pygame.display.get_surface()
 
         # The round specific background.
-        self.background = self._initialise_background(screen)
+        self.background = self._initialise_background()
 
         # These edges have been blitted to the background and are used
         # as the sides of the game area.
         self.edges = self._initialise_edges()
 
         # Background (plus edges) are blitted to the screen.
-        screen.blit(self.background, (0, 0))
+        self._screen.blit(self.background, (0, 0))
 
         # Create the Bricks that the ball can collide with.
-        self.bricks = self._initialise_bricks(screen)
+        self.bricks = self._initialise_bricks()
 
         # The caption of the round, displayed on screen.
         self.caption = 'Round 1'
@@ -51,8 +52,8 @@ class Round1:
         """Conveys to the Round that a brick has been destroyed in the game."""
         self._bricks_destroyed += 1
 
-    def _initialise_background(self, screen):
-        background = pygame.Surface(screen.get_size())
+    def _initialise_background(self):
+        background = pygame.Surface(self._screen.get_size())
         background = background.convert()
         # TODO: background image should be loaded from a file.
         background.fill((0, 0, 0))
@@ -69,21 +70,26 @@ class Round1:
         top_rect = self.background.blit(top_edge, (side_edge.get_width(), 0))
         return edges(left_rect, right_rect, top_rect)
 
-    def _initialise_bricks(self, screen):
-        # TODO bricks should be sprites.Brick that have rect and powerup attrs
+    def _initialise_bricks(self):
         bricks = []
         colours = 'green', 'blue', 'yellow', 'red', 'grey'
         top = self._BOTTOM_ROW_START
 
         for colour in colours:
             # Each coloured brick forms a new layer.
-            brick, rect = load_png('brick_{}.png'.format(colour))
+            destroy_after = 1
+            if colour == 'grey':
+                # Grey bricks take 2 strikes to destroy.
+                destroy_after = 2
             left = self.edges[0].width
             for i in range(13):
+                brick = Brick(colour, destroy_after=destroy_after)
                 # Each layer consists of 13 bricks added horizontally.
-                rect = screen.blit(brick, (left, top))
+                rect = self._screen.blit(brick.image, (left, top))
+                # Update the brick's rect with the new position
+                brick.rect = rect
                 left += rect.width+1
-                bricks.append(rect)
+                bricks.append(brick)
             top -= rect.height
 
         return bricks

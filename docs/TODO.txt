@@ -51,10 +51,6 @@ Multiple balls could be MultiBall() object switched out with game.ball.
 
 How to handle grey bricks that take 2 hits?
 
-Create ExplodingPaddle that is initialsed with a Paddle instance (for its position).
-The RoundRestartState swaps the game.paddle for the ExplodingPaddleInstance which then animates the
-explosion. The ExplodingPaddleInitialiser could take a callback which would be notified when the
-animation completes, so don't have to rely on time.
-
-Introduce other_sprites which can be added/removed from the game in addition to the "permanent"
-paddle and ball sprites.
+The Brick objects should be sprites although most are non-animated. The top row are animated and
+can be added to the other_sprites in the game. Bricks have 'collide_count_down' which is set at
+2 for top row bricks and decremented in on_brick_collide.

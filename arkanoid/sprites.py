@@ -232,8 +232,8 @@ class Ball(pygame.sprite.Sprite):
 
         In addition, an optional collision callable can be supplied together
         with the object being added. This will  be invoked to perform an
-        action whenever the ball strikes the object. The callable takes two
-        arguments: the Rect of the object and the Rect of the ball.
+        action whenever the ball strikes the object. The callable takes one
+        argument: the object that the ball struck.
 
         Args:
             obj:
@@ -248,7 +248,7 @@ class Ball(pygame.sprite.Sprite):
                 down the the ball. Use a negative value to slow the ball down.
             on_collide:
                 Optional callable that will be called when a collision occurs.
-                It takes 1 argument: the Rect of the object struck.
+                It takes 1 argument: the object the ball struck.
         """
         self._collidable_objects.append(
             (obj, bounce_strategy, speed_adjust, on_collide))
@@ -309,7 +309,7 @@ class Ball(pygame.sprite.Sprite):
                 return pygame.Rect(rect.left + rel_pos[0],
                                    rect.top + rel_pos[1], self.rect.width,
                                    self.rect.height)
-            # Use the centre.
+            # Use the centre of the sprite.
             return rect.center
         else:
             # Move the ball normally based on angle and speed.
@@ -334,12 +334,14 @@ class Ball(pygame.sprite.Sprite):
         return rects
 
     def _handle_collision(self, collidable_rects, indexes):
-        rects, actions, speed_adjust = [], [], 0
+        objs, rects, actions, speed_adjust = [], [], [], 0
 
         for i in indexes:
+            # Gather up the objects that we've collided with.
+            objs.append(self._collidable_objects[i][0])
             rects.append(collidable_rects[i])
-            actions.append(self._collidable_objects[i][3])
             speed_adjust += self._collidable_objects[i][2]
+            actions.append(self._collidable_objects[i][3])
 
         if len(rects) == 1:
             # Collision with a single object.
@@ -359,7 +361,7 @@ class Ball(pygame.sprite.Sprite):
             # Invoke the collision callbacks
             on_collide = actions[i]
             if on_collide:
-                on_collide(rects[i])
+                on_collide(objs[i])
 
         # Adjust the speed based on what we collided with.
         if self._speed < self._max_speed:
@@ -484,6 +486,61 @@ class ExplodingPaddle(pygame.sprite.Sprite):
 
     def stop(self):
         pass
+
+
+class Brick(pygame.sprite.Sprite):
+    """A Brick is hit and destroyed by the ball."""
+
+    def __init__(self, colour, destroy_after=1, powerup_cls=None):
+        """Initialise a new brick in the specified colour. Optionally specify
+        the number of strikes by the ball that it takes to destroy the brick
+        (default 1). Also optionally specify the class of a powerup which
+        will fall from the brick when the brick is destroyed by the ball.
+
+        Args:
+            colour:
+                The colour of the brick. Note that a png file named
+                'brick_<colour>.png' must exist in the graphics folder.
+            destroy_after:
+                The number of strikes by the ball necessary to destroy the
+                brick (default 1).
+            powerup_cls:
+                Optional class of a PowerUp that will be used when the ball
+                destroys this brick (default None).
+        """
+        super().__init__()
+        # Load the brick graphic.
+        self.image, self.rect = load_png('brick_{}.png'.format(colour))
+
+        self._destroy_after = destroy_after
+
+        # The number of ball collisions with this brick.
+        self.collision_count = 0
+
+        # The class of the powerup.
+        self.powerup_cls = powerup_cls
+
+        # Whether to animate the brick
+        self._animate = None
+
+    def update(self):
+        if self._animate is not None:
+            if self._animate < 60:
+                pass
+            else:
+                self._animate = None
+
+    def is_destroyed(self):
+        """Whether the brick is now destroyed and should be removed from the
+        game.
+
+        Returns:
+            True if the brick is destroyed. False otherwise.
+        """
+        return self.collision_count >= self._destroy_after
+
+    def animate(self):
+        self._animate = 0
 
 
 class PowerUp:

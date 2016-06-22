@@ -3,12 +3,12 @@ import logging
 import pygame
 
 from arkanoid.rounds import Round1
-from arkanoid.sprites import Ball
-from arkanoid.sprites import ExplodingPaddle
-from arkanoid.sprites import Paddle
-from arkanoid.utils import font
-from arkanoid.utils import h_centre_pos
-from arkanoid.utils import load_png
+from arkanoid.sprites import (Ball,
+                              ExplodingPaddle,
+                              Paddle,)
+from arkanoid.utils import (font,
+                            h_centre_pos,
+                            load_png)
 
 LOG = logging.getLogger(__name__)
 
@@ -157,8 +157,6 @@ class Game:
         out the actions to reduce the lives/reinitialise the sprites, or
         end the game, if there are no lives left.
         """
-        # # Explode the paddle immediately.
-        # self.paddle.explode()
         # TODO: Need to check the number of lives before doing this.
         # Should be RoundRestartState()
         if self.lives - 1 > 0:
@@ -268,7 +266,7 @@ class RoundStartState(BaseState):
         # Set the ball up with the round's collidable objects.
         self._configure_ball()
 
-        self._start_time = pygame.time.get_ticks()
+        self._start_time = None
         self._screen = pygame.display.get_surface()
 
         # Initialise the sprites' start state.
@@ -296,12 +294,14 @@ class RoundStartState(BaseState):
         that it could potentially collide with.
         """
         self.game.ball.remove_all_collidable_objects()
+
         for edge in self.game.round.edges:
             # Every collision with a wall momentarily increases the speed
             # of the ball.
             self.game.ball.add_collidable_object(
                 edge,
                 speed_adjust=WALL_SPEED_ADJUST)
+
         self.game.ball.add_collidable_object(
             self.game.paddle,
             bounce_strategy=self.game.paddle.bounce_strategy)
@@ -314,23 +314,34 @@ class RoundStartState(BaseState):
                 brick,
                 speed_adjust=BRICK_SPEED_ADJUST,
                 on_collide=self._on_brick_collide)
+            # The bricks are sprites, so add them as sprites to the game.
+            self.game.other_sprites.append(brick)
 
     def _on_brick_collide(self, brick):
         """Callback called by the ball when it collides with a brick.
 
         Args:
-            brick;
+            brick:
                 The Brick instance the ball collided with.
         """
-        # Tell the ball that the brick has gone.
-        self.game.ball.remove_collidable_object(brick)
+        # Increment the collision count.
+        brick.collision_count += 1
 
-        # Tell the round that a brick has gone, so that it can decide
-        # whether the round is completed.
-        self.game.round.brick_destroyed()
+        # Should the brick be destroyed?
+        if brick.is_destroyed():
+            # Tell the ball that the brick has gone.
+            self.game.ball.remove_collidable_object(brick)
 
-        # Erase the brick from the screen.
-        self._screen.blit(self.game.round.background, brick, brick)
+            # Tell the round that a brick has gone, so that it can decide
+            # whether the round is completed.
+            self.game.round.brick_destroyed()
+
+            # Erase the brick from the screen.
+            self._screen.blit(self.game.round.background, brick.rect,
+                              brick.rect)
+
+            # Remove the brick sprite from the game.
+            self.game.other_sprites.remove(brick)
 
         # TODO: we need to check the brick's powerup attribiute (once brick
         # becomes a real object). If it has a powerup, initialise the powerup
@@ -340,19 +351,23 @@ class RoundStartState(BaseState):
     def _do_update(self):
         caption, ready = None, None
 
+        if not self._start_time:
+            self._start_time = pygame.time.get_ticks()
+
         if self._time_elapsed() > 1000:
             # Display the caption after a second.
             caption = self._screen.blit(self._caption, self._caption_pos)
-        if self._time_elapsed() > 3000:
+        if self._time_elapsed() > 2500:
             # Display the "Ready" message.
             ready = self._screen.blit(self._ready, self._ready_pos)
             # Display the sprites.
             self.game.paddle.visible = True
             self.game.ball.visible = True
-        if self._time_elapsed() > 5500:
+        if self._time_elapsed() > 4500:
             # Erase the text.
             self._screen.blit(self.game.round.background, caption, caption)
             self._screen.blit(self.game.round.background, ready, ready)
+        if self._time_elapsed() > 5000:
             # Release the anchor.
             self.game.ball.release(BALL_START_ANGLE_RAD)
             # Normal gameplay begins.
