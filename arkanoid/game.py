@@ -210,18 +210,15 @@ class BaseState:
     def _update_sprites(self):
         """Erase the sprites, update their state, and then redraw them
         on the screen."""
-        # Erase the previous location of the sprites.
+        # Erase the previous location of the paddle and ball.
         self.screen.blit(self.game.round.background,
                          self.game.paddle.rect,
                          self.game.paddle.rect)
         self.screen.blit(self.game.round.background,
                          self.game.ball.rect,
                          self.game.ball.rect)
-        for sprite in self.game.other_sprites:
-            self.screen.blit(self.game.round.background,
-                             sprite.rect, sprite.rect)
 
-        # Update the state of the sprites and redraw them, assuming
+        # Update the state of the paddle and ball and redraw them, assuming
         # they're visible.
         self.game.paddle.update()
         if self.game.paddle.visible:
@@ -229,9 +226,14 @@ class BaseState:
         self.game.ball.update()
         if self.game.ball.visible:
             self.screen.blit(self.game.ball.image, self.game.ball.rect)
+
+        # Erase and update the other sprites in the game.
         for sprite in self.game.other_sprites:
+            self.screen.blit(self.game.round.background,
+                             sprite.rect, sprite.rect)
             sprite.update()
-            self.screen.blit(sprite.image, sprite.rect)
+            if sprite.visible:
+                self.screen.blit(sprite.image, sprite.rect)
 
     def _update_lives(self):
         """Update the number of remaining lives displayed on the screen."""
@@ -331,6 +333,13 @@ class RoundStartState(BaseState):
 
         # Should the brick be destroyed?
         if brick.is_destroyed():
+            if brick.powerup_cls:
+                # There is a powerup in the brick.
+                powerup = brick.powerup_cls(self.game, brick)
+
+                # Display the powerup.
+                self.game.other_sprites.append(powerup)
+
             # Tell the ball that the brick has gone.
             self.game.ball.remove_collidable_object(brick)
 

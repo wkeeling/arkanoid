@@ -546,6 +546,9 @@ class Brick(pygame.sprite.Sprite):
         # Whether to animate the brick.
         self._animate = None
 
+        # Visibility toggle.
+        self.visible = True
+
     def update(self):
         if self._animation and self._animate is not None:
             if self._animate < 30:
@@ -572,20 +575,60 @@ class Brick(pygame.sprite.Sprite):
         self._animate = 0
 
 
-class PowerUp:
+class ExtraLifePowerUp(pygame.sprite.Sprite):
+    """This PowerUp applies an extra life to the game when it's struck by the
+    paddle.
+    """
 
-    # TODO: create concrete implementations. Probably don't need this base class.
-
-    def __init__(self, game):
-        """Apply the powerup to the running game and change the game's state
-        as appropriate.
+    def __init__(self, game, brick, speed=3):
+        """Apply the powerup to the running game by adding an extra life.
 
         Args:
             game:
                 The current game instance.
+            brick:
+                The brick that triggered the powerup to drop.
+            speed:
+                Optional speed at which the powerup drops. Default 3 pixels
+                per frame.
         """
+        self._game = game
+        self._speed = speed
+        self.image, _ = load_png('powerup_extra_life.png')
+
+        # Position the powerup by the position of the brick which contained it.
+        self.rect = pygame.Rect(brick.rect.midbottom,
+                                (brick.rect.width, brick.rect.height))
+
+        # The area within which the powerup falls.
+        screen = pygame.display.get_surface()
+        self._area = screen.get_rect()
+
+        # Visibility toggle.
+        self.visible = True
+
+    def update(self):
+        # Move down by the specified speed.
+        self.rect = self.rect.move(0, self._speed)
+
+        if self._area.contains(self.rect):
+            # Check whether the powerup has collided with the paddle.
+            if self.rect.colliderect(self._game.paddle.rect):
+                # Apply the powerup.
+                self._game.lives += 1
+                # The game holds a reference to us so that we can deactivate.
+                self._game.active_powerup = self
+                # No need to display ourself anymore.
+                self._game.other_sprites.remove(self)
+                self.visible = False
+        else:
+            # We're no longer on the screen.
+            self._game.other_sprites.remove(self)
+            self.visible = False
 
     def deactivate(self):
         """Deactivate the current powerup by returning the game state back
-        to what it was prior to the powerup taking effect.
+        to what it was prior to the powerup taking effect. For the
+        ExtraLifePowerUp, this is a no-op.
         """
+        pass

@@ -2,7 +2,8 @@ import collections
 
 import pygame
 
-from arkanoid.sprites import Brick
+from arkanoid.sprites import (Brick,
+                              ExtraLifePowerUp)
 from arkanoid.utils import load_png
 
 
@@ -83,7 +84,8 @@ class Round1:
                 destroy_after = 2
             left = self.edges[0].width
             for i in range(13):
-                brick = Brick(colour, destroy_after=destroy_after)
+                brick = Brick(colour, destroy_after=destroy_after,
+                              powerup_cls=ExtraLifePowerUp)
                 # Each layer consists of 13 bricks added horizontally.
                 rect = self._screen.blit(brick.image, (left, top))
                 # Update the brick's rect with the new position
