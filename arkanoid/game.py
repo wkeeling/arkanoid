@@ -55,8 +55,9 @@ class Arkanoid:
 
     def main_loop(self):
         """Starts the main loop of the program which manages the screen
-        interactions and game play. Pretty much everything takes place within
-        this loop.
+        interactions and game play.
+
+        Pretty much everything takes place within this loop.
         """
         running = True
 
@@ -153,9 +154,10 @@ class Game:
         self.state.update(events)
 
     def _off_screen(self):
-        """Callback called by the ball when it goes offscreen. This carries
-        out the actions to reduce the lives/reinitialise the sprites, or
-        end the game, if there are no lives left.
+        """Callback called by the ball when it goes offscreen.
+
+        This carries out the actions to reduce the lives/reinitialise the
+        sprites, or end the game, if there are no lives left.
         """
         # TODO: Need to check the number of lives before doing this.
         # Should be RoundRestartState()
@@ -342,6 +344,9 @@ class RoundStartState(BaseState):
 
             # Remove the brick sprite from the game.
             self.game.other_sprites.remove(brick)
+        else:
+            # Brick not destroyed, so animate it to indicate strike.
+            brick.animate()
 
         # TODO: we need to check the brick's powerup attribiute (once brick
         # becomes a real object). If it has a powerup, initialise the powerup

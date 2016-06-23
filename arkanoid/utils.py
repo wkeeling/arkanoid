@@ -14,9 +14,13 @@ def load_png(filename):
             The filename of the image.
     Returns:
         A 2-tuple of the image and its Rect.
+    Raises:
+        FileNotFoundError if the image filename was not found.
     """
-    image = pygame.image.load(
-        os.path.join(os.path.dirname(__file__), 'data', 'graphics', filename))
+    q_filename = os.path.join(os.path.dirname(__file__), 'data', 'graphics', filename)
+    if not os.path.exists(q_filename):
+        raise FileNotFoundError('File not found: {}'.format(q_filename))
+    image = pygame.image.load(q_filename)
     if image.get_alpha is None:
         image = image.convert()
     else:
