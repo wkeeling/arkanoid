@@ -521,6 +521,7 @@ class Brick(pygame.sprite.Sprite):
                 destroys this brick (default None).
         """
         super().__init__()
+        self.colour = colour
         # Load the brick graphic.
         self.image, self.rect = load_png('brick_{}.png'.format(colour))
         self.image_orig = self.image
@@ -545,9 +546,6 @@ class Brick(pygame.sprite.Sprite):
 
         # Whether to animate the brick.
         self._animate = None
-
-        # Visibility toggle.
-        self.visible = True
 
     def update(self):
         if self._animation and self._animate is not None:
@@ -619,11 +617,11 @@ class ExtraLifePowerUp(pygame.sprite.Sprite):
                 # The game holds a reference to us so that we can deactivate.
                 self._game.active_powerup = self
                 # No need to display ourself anymore.
-                self._game.other_sprites.remove(self)
+                self._game.powerups.remove(self)
                 self.visible = False
         else:
             # We're no longer on the screen.
-            self._game.other_sprites.remove(self)
+            self._game.powerups.remove(self)
             self.visible = False
 
     def deactivate(self):

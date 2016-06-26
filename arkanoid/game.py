@@ -117,7 +117,7 @@ class Game:
         # The current round.
         self.round = round_class()
 
-        # The "permanent" sprites.
+        # The paddle and ball sprites.
         self.paddle = Paddle(left_offset=self.round.edges.left.width,
                              right_offset=self.round.edges.right.width,
                              bottom_offset=60,
@@ -130,10 +130,10 @@ class Game:
                          normalisation_rate=BALL_SPEED_NORMALISATION_RATE,
                          off_screen_callback=self._off_screen)
 
-        # Other sprites that can enter the game.
-        self.other_sprites = []
+        # The powerup sprites that drop from the bricks.
+        self.powerups = []
 
-        # The current powerup, if any.
+        # The currently applied powerup, if any.
         self.active_powerup = None
 
         # Whether the game is finished.
@@ -210,30 +210,41 @@ class BaseState:
     def _update_sprites(self):
         """Erase the sprites, update their state, and then redraw them
         on the screen."""
-        # Erase the previous location of the paddle and ball.
+        # Erase the previous location of the sprites.
         self.screen.blit(self.game.round.background,
                          self.game.paddle.rect,
                          self.game.paddle.rect)
         self.screen.blit(self.game.round.background,
                          self.game.ball.rect,
                          self.game.ball.rect)
+        for brick in self.game.round.bricks:
+            self.screen.blit(self.game.round.background,
+                             brick.rect,
+                             brick.rect)
+        for powerup in self.game.powerups:
+            self.screen.blit(self.game.round.background,
+                             powerup.rect,
+                             powerup.rect)
 
-        # Update the state of the paddle and ball and redraw them, assuming
+        # Update the state of the sprites and redraw them, assuming
         # they're visible.
         self.game.paddle.update()
         if self.game.paddle.visible:
             self.screen.blit(self.game.paddle.image, self.game.paddle.rect)
+
         self.game.ball.update()
         if self.game.ball.visible:
             self.screen.blit(self.game.ball.image, self.game.ball.rect)
 
-        # Erase and update the other sprites in the game.
-        for sprite in self.game.other_sprites:
-            self.screen.blit(self.game.round.background,
-                             sprite.rect, sprite.rect)
-            sprite.update()
-            if sprite.visible:
-                self.screen.blit(sprite.image, sprite.rect)
+        for brick in self.game.round.bricks:
+            brick.update()
+            if not brick.is_destroyed():
+                self.screen.blit(brick.image, brick.rect)
+
+        for powerup in self.game.powerups:
+            powerup.update()
+            if powerup.visible:
+                self.screen.blit(powerup.image, powerup.rect)
 
     def _update_lives(self):
         """Update the number of remaining lives displayed on the screen."""
@@ -318,8 +329,6 @@ class RoundStartState(BaseState):
                 brick,
                 speed_adjust=BRICK_SPEED_ADJUST,
                 on_collide=self._on_brick_collide)
-            # The bricks are sprites, so add them as sprites to the game.
-            self.game.other_sprites.append(brick)
 
     def _on_brick_collide(self, brick):
         """Callback called by the ball when it collides with a brick.
@@ -338,7 +347,7 @@ class RoundStartState(BaseState):
                 powerup = brick.powerup_cls(self.game, brick)
 
                 # Display the powerup.
-                self.game.other_sprites.append(powerup)
+                self.game.powerups.append(powerup)
 
             # Tell the ball that the brick has gone.
             self.game.ball.remove_collidable_object(brick)
@@ -350,9 +359,6 @@ class RoundStartState(BaseState):
             # Erase the brick from the screen.
             self._screen.blit(self.game.round.background, brick.rect,
                               brick.rect)
-
-            # Remove the brick sprite from the game.
-            self.game.other_sprites.remove(brick)
         else:
             # Brick not destroyed, so animate it to indicate strike.
             brick.animate()

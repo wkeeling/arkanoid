@@ -49,8 +49,8 @@ Need a better eventing system. Perhaps some sort of callback approach? Rather th
 
 Multiple balls could be MultiBall() object switched out with game.ball.
 
-How to handle grey bricks that take 2 hits?
-
-The Brick objects should be sprites although most are non-animated. The top row are animated and
-can be added to the other_sprites in the game. Bricks have 'collide_count_down' which is set at
-2 for top row bricks and decremented in on_brick_collide.
+The edges should not be collidable objects, because sometimes the ball when at speed, bounces straight
+over them and outside the screen. May not be a problem when they're wider. They could have custom
+bounce strategies that handle invalid bouncing and always put the ball back in play.
+- or -
+the screen left/right/top needs to know when the ball has gone off and put it back in play

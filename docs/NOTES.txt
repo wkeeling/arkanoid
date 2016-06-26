@@ -10,7 +10,8 @@ Project
 pygame
 ------
 Install pygame in the virtual environment.
-(see http://askubuntu.com/questions/299950/how-do-i-install-pygame-in-virtualenv)
+(see http://askubuntu.com/questions/299950/how-do-i-install-pygame-in-virtualenv,
+http://stackoverflow.com/questions/17869101/unable-to-install-pygame-using-pip)
 
 - Install system-wide build dependencies (Ubuntu 14.04):
     sudo apt-get build-dep python-pygame
