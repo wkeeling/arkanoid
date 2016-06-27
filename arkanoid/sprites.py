@@ -469,15 +469,18 @@ class ExplodingPaddle(pygame.sprite.Sprite):
         self.rect = paddle.rect
         self.visible = True
 
+        self._animation = itertools.cycle((self.image, paddle.image))
         self._on_complete = on_complete
         self._explosion_start = 0
 
     def update(self):
-        LOG.debug('Paddle explosion')
-        if self._explosion_start > 120:
+        if self._explosion_start < 90:
+            if self._explosion_start % 2 == 0:
+                self.image = next(self._animation)
+            self._explosion_start += 1
+        else:
             if self._on_complete:
                 self._on_complete()
-        self._explosion_start += 1
 
     def move_left(self):
         pass
@@ -595,7 +598,7 @@ class ExtraLifePowerUp(pygame.sprite.Sprite):
         self.image, _ = load_png('powerup_extra_life.png')
 
         # Position the powerup by the position of the brick which contained it.
-        self.rect = pygame.Rect(brick.rect.midbottom,
+        self.rect = pygame.Rect(brick.rect.bottomleft,
                                 (brick.rect.width, brick.rect.height))
 
         # The area within which the powerup falls.

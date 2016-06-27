@@ -54,3 +54,5 @@ over them and outside the screen. May not be a problem when they're wider. They 
 bounce strategies that handle invalid bouncing and always put the ball back in play.
 - or -
 the screen left/right/top needs to know when the ball has gone off and put it back in play
+
+Need RoundEndState that handles exploding paddle.

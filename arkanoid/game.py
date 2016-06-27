@@ -154,18 +154,9 @@ class Game:
         self.state.update(events)
 
     def _off_screen(self):
-        """Callback called by the ball when it goes offscreen.
-
-        This carries out the actions to reduce the lives/reinitialise the
-        sprites, or end the game, if there are no lives left.
-        """
-        # TODO: Need to check the number of lives before doing this.
-        # Should be RoundRestartState()
-        if self.lives - 1 > 0:
-            self.state = RoundRestartState(self)
-        else:
-            # TODO: possible lose "over" and transition to a GameEndState.
-            self.over = True
+        """Callback called by the ball when it goes offscreen."""
+        if not isinstance(self.state, RoundEndState):
+            self.state = RoundEndState(self)
 
     def __repr__(self):
         class_name = type(self).__name__
@@ -181,6 +172,8 @@ class BaseState:
     def __init__(self, game):
         self.game = game
         self.screen = pygame.display.get_surface()
+
+        LOG.debug('Entered {}'.format(type(self).__name__))
 
     def update(self, events):
         """Update the state. This method is called repeatedly by the main
@@ -271,6 +264,16 @@ class BaseState:
     def __repr__(self):
         class_name = type(self).__name__
         return '{}({})'.format(class_name, self.game)
+
+
+class GameStartState(BaseState):
+
+    def __init__(self, game):
+        super().__init__(game)
+
+    def _do_update(self):
+        # TODO: implement the game intro sequence (animation).
+        pass
 
 
 class RoundStartState(BaseState):
@@ -413,7 +416,7 @@ class RoundPlayState(BaseState):
             self.game.state = RoundStartState(self.game)
 
 
-class RoundRestartState(RoundStartState):
+class RoundEndState(BaseState):
 
     def __init__(self, game):
         super().__init__(game)
@@ -421,16 +424,38 @@ class RoundRestartState(RoundStartState):
         # Whether to update our state.
         self._update = False
 
-        # The new number of lives since restarting.
-        self._lives = game.lives - 1
-
         # Keep track of the existing paddle.
         self._paddle = game.paddle
-        self._paddle_reset = False
 
         # Temporarily substitute the exploding paddle into the game.
         game.paddle = ExplodingPaddle(game.paddle,
                                       on_complete=self._on_explosion_finished)
+
+    def _do_update(self):
+        if self._update:
+            if self.game.lives - 1 > 0:
+                self.game.state = RoundRestartState(self.game)
+            else:
+                self.game.state = GameEndState(self.game)
+
+    def _on_explosion_finished(self):
+        # Put back the real paddle.
+        self.game.paddle = self._paddle
+
+        # Allow the rest of this state to execute.
+        self._update = True
+
+
+class RoundRestartState(RoundStartState):
+
+    def __init__(self, game):
+        super().__init__(game)
+
+        # The new number of lives since restarting.
+        self._lives = game.lives - 1
+
+        # Whether we've reset the paddle.
+        self._paddle_reset = False
 
     def _configure_ball(self):
         """When restarting a round, we override _configure_ball to do nothing,
@@ -439,30 +464,23 @@ class RoundRestartState(RoundStartState):
         pass
 
     def _do_update(self):
-        if self._update:
-            super()._do_update()
+        # Run the logic in the RoundStartState first.
+        super()._do_update()
 
-            if self._time_elapsed() > 1000:
-                # Update the number of lives when we display the caption.
-                self.game.lives = self._lives
+        if self._time_elapsed() > 1000:
+            # Update the number of lives when we display the caption.
+            self.game.lives = self._lives
 
-            if not self._paddle_reset:
-                self.game.paddle.reset()
-                self._paddle_reset = True
-
-    def _on_explosion_finished(self):
-        # Put back the real paddle.
-        self.game.paddle = self._paddle
-
-        # Allow the rest of this restart state to execute.
-        self._update = True
+        if not self._paddle_reset:
+            self.game.paddle.reset()
+            self._paddle_reset = True
 
 
-class GameStartState(BaseState):
+class GameEndState(BaseState):
 
     def __init__(self, game):
         super().__init__(game)
 
     def _do_update(self):
-        # TODO: implement the game intro sequence (animation).
-        pass
+        self.game.over = True
+
