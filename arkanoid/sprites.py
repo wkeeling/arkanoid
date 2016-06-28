@@ -193,14 +193,16 @@ class Ball(pygame.sprite.Sprite):
         # This toggles visibility of the ball.
         self.visible = True
 
+        # The speed that the ball will always try to settle to.
+        self.base_speed = base_speed
+
+        # The ball's current speed, initialised at the base speed.
+        self.speed = self.base_speed
+
         self._start_angle = start_angle
-        self._base_speed = base_speed
         self._max_speed = max_speed
         self._normalisation_rate = normalisation_rate
         self._off_screen_callback = off_screen_callback
-
-        # The ball's current speed, initialised at the base speed.
-        self._speed = self._base_speed
 
         # The ball's current angle, initialised to the start angle.
         self._angle = start_angle
@@ -312,8 +314,8 @@ class Ball(pygame.sprite.Sprite):
             return rect.center
         else:
             # Move the ball normally based on angle and speed.
-            offset_x = self._speed * math.cos(self._angle)
-            offset_y = self._speed * math.sin(self._angle)
+            offset_x = self.speed * math.cos(self._angle)
+            offset_y = self.speed * math.sin(self._angle)
 
             return self.rect.move(offset_x, offset_y)
 
@@ -363,16 +365,16 @@ class Ball(pygame.sprite.Sprite):
                 on_collide(objs[i])
 
         # Adjust the speed based on what we collided with.
-        if self._speed < self._max_speed:
-            self._speed += speed_adjust
-        LOG.debug('Ball speed: %s', self._speed)
+        if self.speed < self._max_speed:
+            self.speed += speed_adjust
+        LOG.debug('Ball speed: %s', self.speed)
 
     def _normalise_speed(self):
         """Gradually bring the ball's speed down to the base speed."""
-        if self._speed > self._base_speed:
-            self._speed -= self._normalisation_rate
+        if self.speed > self.base_speed:
+            self.speed -= self._normalisation_rate
         else:
-            self._speed += self._normalisation_rate
+            self.speed += self._normalisation_rate
 
     def _calc_new_angle(self, rects):
         """Calculate the default angle of bounce of the ball, given a
@@ -445,7 +447,7 @@ class Ball(pygame.sprite.Sprite):
         """
         if angle:
             self._angle = angle
-        self._speed = self._base_speed
+        self.speed = self.base_speed
         self._anchor = None
 
 
@@ -592,7 +594,10 @@ class PowerUp(pygame.sprite.Sprite):
     powerup specific action.
     """
 
-    def __init__(self, game, brick, pngs, speed=3):
+    # The speed the powerup falls from a brick.
+    _DEFAULT_FALL_SPEED = 3
+
+    def __init__(self, game, brick, pngs, speed=_DEFAULT_FALL_SPEED):
         """
         Initialise a new PowerUp.
 
@@ -638,10 +643,13 @@ class PowerUp(pygame.sprite.Sprite):
 
             # Check whether the powerup has collided with the paddle.
             if self.rect.colliderect(self.game.paddle.rect):
-                # We've collided so activate the powerup.
+                # We've collided, so first check whether there is an
+                # existing active powerup in the game, and deactivate if so.
+                if self.game.active_powerup:
+                    self.game.active_powerup.deactivate()
+                # Activate ourselves.
                 self._activate()
-                # The game holds a reference to us so that we can be
-                # deactivated.
+                # Set ourselves as the active powerup in the game.
                 self.game.active_powerup = self
                 # No need to display ourself anymore.
                 self.game.powerups.remove(self)
@@ -676,7 +684,7 @@ class ExtraLifePowerUp(PowerUp):
 
     _PNG_FILES = 'powerup_extra_life.png',
 
-    def __init__(self, game, brick, speed=3):
+    def __init__(self, game, brick, speed=PowerUp._DEFAULT_FALL_SPEED):
         super().__init__(game, brick, self._PNG_FILES, speed)
 
     def _activate(self):
@@ -691,6 +699,24 @@ class ExtraLifePowerUp(PowerUp):
         pass
 
 
-class SlowBallPowerUp:
-    pass
+class SlowBallPowerUp(PowerUp):
+    """This PowerUp causes the ball to move more slowly."""
 
+    _PNG_FILES = 'powerup_slow_ball.png',
+    # The ball will assume this base speed when the powerup is activated.
+    _SLOW_BALL_SPEED = 5  # Pixels per frame.
+
+    def __init__(self, game, brick, speed=PowerUp._DEFAULT_FALL_SPEED):
+        super().__init__(game, brick, self._PNG_FILES, speed=speed)
+
+        self._orig_speed = self.game.ball.base_speed
+
+    def _activate(self):
+        # Slow the ball down.
+        self.game.ball.speed = self._SLOW_BALL_SPEED
+        self.game.ball.base_speed = self._SLOW_BALL_SPEED
+
+    def deactivate(self):
+        # Set the original speed back on the ball.
+        self.game.ball.speed = self._orig_speed
+        self.game.ball.base_speed = self._orig_speed

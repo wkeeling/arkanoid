@@ -21,10 +21,10 @@ DISPLAY_CAPTION = 'Arkanoid'
 # The angle the ball initially moves off the paddle, in radians.
 BALL_START_ANGLE_RAD = 5.0
 # The speed that the ball will always try to arrive at.
-BALL_BASE_SPEED = 8  # pixels per-frame
+BALL_BASE_SPEED = 8  # pixels per frame
 # The max speed of the ball, prevents a runaway speed when lots of rapid
 # collisions.
-BALL_MAX_SPEED = 15  # pixels per-frame
+BALL_MAX_SPEED = 15  # pixels per frame
 # Per-frame rate at which ball is brought back to base speed.
 BALL_SPEED_NORMALISATION_RATE = 0.02
 # Increase in speed caused by colliding with a brick.
@@ -432,6 +432,9 @@ class BallOffScreenState(BaseState):
 
     def __init__(self, game):
         super().__init__(game)
+
+        # Deactivate any active powerup.
+        game.active_powerup.deactivate()
 
         # Whether to update our state.
         self._update = False
