@@ -55,4 +55,6 @@ bounce strategies that handle invalid bouncing and always put the ball back in p
 - or -
 the screen left/right/top needs to know when the ball has gone off and put it back in play
 
-Need RoundEndState that handles exploding paddle.
+Expanding paddle/laser powerup will increase ball speed.
+
+Need better event mechanism.

@@ -94,7 +94,7 @@ class Arkanoid:
 
 class Game:
     """Represents a running Arkanoid game. An instance of a Game comes into
-    being when a player begins a game.
+    being when a player starts a new game.
     """
 
     def __init__(self, round_class=Round1, lives=3):
@@ -155,8 +155,8 @@ class Game:
 
     def _off_screen(self):
         """Callback called by the ball when it goes offscreen."""
-        if not isinstance(self.state, RoundEndState):
-            self.state = RoundEndState(self)
+        if not isinstance(self.state, BallOffScreenState):
+            self.state = BallOffScreenState(self)
 
     def __repr__(self):
         class_name = type(self).__name__
@@ -256,7 +256,7 @@ class BaseState:
             left += self.game.life_img.get_width() + 10
 
     def _do_update(self):
-        """Abstract hook method called by update() that sub states must
+        """Abstract hook method called by update() that sub-states must
         implement to perform their state specific behaviour.
         """
         raise NotImplementedError('Subclasses must implement do_update()')
@@ -267,6 +267,10 @@ class BaseState:
 
 
 class GameStartState(BaseState):
+    """This state handles the behaviour after the user has begun a new game,
+    but before they actually start playing it, e.g. showing an animation
+    sequence.
+    """
 
     def __init__(self, game):
         super().__init__(game)
@@ -277,6 +281,8 @@ class GameStartState(BaseState):
 
 
 class RoundStartState(BaseState):
+    """This state handles the behaviour that happens at the very beginning of
+    a round and just before the real gameplay begins."""
 
     def __init__(self, game):
         super().__init__(game)
@@ -366,12 +372,10 @@ class RoundStartState(BaseState):
             # Brick not destroyed, so animate it to indicate strike.
             brick.animate()
 
-        # TODO: we need to check the brick's powerup attribiute (once brick
-        # becomes a real object). If it has a powerup, initialise the powerup
-        # passing in the game instance (self). Also need to amend above calls
-        # to use brick.rect
-
     def _do_update(self):
+        """Handle the sequence of events that happen at the beginning of a
+        round just before gameplay starts.
+        """
         caption, ready = None, None
 
         if not self._start_time:
@@ -406,6 +410,9 @@ class RoundStartState(BaseState):
 
 
 class RoundPlayState(BaseState):
+    """This state handles actual gameplay itself, when the user is controlling
+    the paddle and ball.
+    """
 
     def __init__(self, game):
         super().__init__(game)
@@ -413,10 +420,15 @@ class RoundPlayState(BaseState):
     def _do_update(self):
         if self.game.round.complete:
             self.game.round = self.game.round.next_round()
+            # TODO: do we need a RoundEndState for specific behaviour when a
+            # round is ended (completed)?
             self.game.state = RoundStartState(self.game)
 
 
-class RoundEndState(BaseState):
+class BallOffScreenState(BaseState):
+    """This state handles what happens when gameplay stops due to the
+    ball going offscreen.
+    """
 
     def __init__(self, game):
         super().__init__(game)
@@ -447,6 +459,9 @@ class RoundEndState(BaseState):
 
 
 class RoundRestartState(RoundStartState):
+    """Specialisation of RoundStartState that handles the behaviour when a
+    round is restarted due to the ball going off screen.
+    """
 
     def __init__(self, game):
         super().__init__(game)
@@ -477,6 +492,9 @@ class RoundRestartState(RoundStartState):
 
 
 class GameEndState(BaseState):
+    """This state handles the behaviour when the game ends, either due to all
+    lives being lost, or when the player successfully reaches the very end.
+    """
 
     def __init__(self, game):
         super().__init__(game)

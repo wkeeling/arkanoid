@@ -1,4 +1,5 @@
 import collections
+import random
 
 import pygame
 
@@ -8,10 +9,9 @@ from arkanoid.utils import load_png
 
 
 class Round1:
-    """Initialises the background, brick layout and powerups for round one.
-    TODO: define the attributes that make a round (e.g. background, edges
-    named tuple, etc.)
-    """
+    """Initialises the background, brick layout and powerups for round one."""
+
+    _POWERUP_CLASSES = ExtraLifePowerUp,
 
     # How far down the screen the bottom row of bricks starts
     _BOTTOM_ROW_START = 200
@@ -80,12 +80,22 @@ class Round1:
 
         # Each coloured brick forms a new layer.
         for colour in colours:
+            # Randomly select 3 indexes in this row that will contain
+            # a powerup.
+            powerup_indexes = random.sample(range(13), 3)
             # Grey bricks take 2 hits to destroy.
             destroy_after = 2 if colour == 'grey' else 1
 
             for i in range(13):
+                powerup = None
+
+                if i in powerup_indexes:
+                    powerup_indexes.remove(i)
+                    powerup = random.choice(self._POWERUP_CLASSES)
+
                 brick = Brick(colour, destroy_after=destroy_after,
-                              powerup_cls=ExtraLifePowerUp)
+                              powerup_cls=powerup)
+
                 bricks.append(brick)
 
         return bricks
@@ -109,39 +119,4 @@ class Round1:
 
             left += rect.width+1
 
-    def _initialise_bricks(self):
-        bricks = []
-        colours = 'green', 'blue', 'yellow', 'red', 'grey'
-        top = self._BOTTOM_ROW_START
 
-        for colour in colours:
-            # Each coloured brick forms a new layer.
-            destroy_after = 1
-            if colour == 'grey':
-                # Grey bricks take 2 strikes to destroy.
-                destroy_after = 2
-            left = self.edges[0].width
-            for i in range(13):
-                brick = Brick(colour, destroy_after=destroy_after,
-                              powerup_cls=ExtraLifePowerUp)
-                # Each layer consists of 13 bricks added horizontally.
-                rect = self._screen.blit(brick.image, (left, top))
-                # Update the brick's rect with the new position
-                brick.rect = rect
-                left += rect.width+1
-                bricks.append(brick)
-            top -= rect.height
-
-        return bricks
-
-
-    # TODO: when initialised, blits the background to the screen and exposes
-    # it as a background attribute. Blits the bricks to the screen and exposes
-    # them as a bricks attribute. This is a list of Brick objects. Each one
-    # has a rect attribute and a powerup attribute - which may be None.
-    # A Brick object
-    # has a powerup attribute which references the CLASS of the powerup. All
-    # powerup classes take the Game instance as an argument to their initialiser
-    # and thus have access to the ball, paddle, lives as necessary.
-        # The game should powerup.deactivate() existing powerup
-        # before initialising new one.

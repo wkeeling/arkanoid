@@ -12,13 +12,7 @@ LOG = logging.getLogger(__name__)
 
 
 class Paddle(pygame.sprite.Sprite):
-    """The movable paddle used to control the ball."""
-
-    # TODO: Need a "bonus collision action" which can be added to the paddle
-    # and the paddle invokes the callback when a bonus is struck. This can
-    # be less generic than the "collidable object" concept the ball has,
-    # because the bonuses are the only thing to strike the paddle (apart from
-    # the ball).
+    """The movable paddle (a.k.a the "Vaus") used to control the ball."""
 
     def __init__(self, left_offset=0, right_offset=0, bottom_offset=0,
                  speed=10):
@@ -147,15 +141,15 @@ class Ball(pygame.sprite.Sprite):
 
     A Ball is aware of the screen, and any collidable objects in the screen
     that have been added via add_collidable_object(). Where no collidable
-    objects have been added, a Ball will just travel from its start point
+    objects have been added, a ball will just travel from its start point
     straight off the edge of the screen calling an off_screen_callback if
     one has been set. It is up to clients to add the necessary collidable
-    objects to keep the Ball within the confines of the screen.
+    objects to keep the ball within the confines of the screen.
 
     A Ball will collide with objects that it is told about via
     add_collidable_object(). It will follow normal physics when bouncing
     off an object, but this can be overriden by passing a bounce strategy
-    with a collidable object when it is added to the Ball. See
+    with a collidable object when it is added to the ball. See
     add_collidable_object() for further details.
     """
 
@@ -163,9 +157,10 @@ class Ball(pygame.sprite.Sprite):
                  normalisation_rate=0.02,
                  off_screen_callback=None):
         """
-        Initialise a new Ball with the given arguments. If supplied,
-        the off_screen_callback will be invoked whenever the Ball leaves
-        the screen. This is a no-args callable.
+        Initialise a new Ball with the given arguments.
+
+        If supplied, the off_screen_callback will be invoked whenever the
+        ball leaves the screen. This is a no-args callable.
 
         Args:
             start_pos:
@@ -222,8 +217,10 @@ class Ball(pygame.sprite.Sprite):
 
     def add_collidable_object(self, obj, bounce_strategy=None,
                               speed_adjust=0.0, on_collide=None):
-        """Add an object that the ball might collide with. The object should
-        be a Rect for static objects, or a Sprite for animated objects.
+        """Add an object that the ball might collide with.
+
+        The object should be a Rect for static objects, or a Sprite for
+        animated objects.
 
         A bounce strategy can be supplied to override the default bouncing
         behaviour of the ball whenever it strikes the object being added.
@@ -414,7 +411,7 @@ class Ball(pygame.sprite.Sprite):
 
         # Add small amount of randomness +/-3 degrees (+/- 0.05 rad)
         angle += random.uniform(-0.05, 0.05)
-        LOG.debug(angle)
+        LOG.debug('Angle: %s', angle)
 
         return angle
 
@@ -453,7 +450,11 @@ class Ball(pygame.sprite.Sprite):
 
 
 class ExplodingPaddle(pygame.sprite.Sprite):
-    """Used to animate a paddle explosion when the paddle misses the ball."""
+    """Used to animate a paddle explosion when the paddle misses the ball.
+
+    Note that this does not behave like a normal paddle. It's just an
+    animation.
+    """
 
     def __init__(self, paddle, on_complete=None):
         """Initialise a new ExplodingPaddle using an existing Paddle sprite,
@@ -498,7 +499,7 @@ class Brick(pygame.sprite.Sprite):
     """A Brick is hit and destroyed by the ball."""
 
     def __init__(self, colour, destroy_after=1, powerup_cls=None):
-        """Initialise a new brick in the specified colour.
+        """Initialise a new Brick in the specified colour.
 
         When a Brick is initialised with the specified colour, a file named
         'brick_<colour>.png' will be loaded from the graphics folder and must
@@ -581,27 +582,40 @@ class Brick(pygame.sprite.Sprite):
         self._animate = 0
 
 
-class ExtraLifePowerUp(pygame.sprite.Sprite):
-    """This PowerUp applies an extra life to the game when it collides with
-    the Paddle.
+class PowerUp(pygame.sprite.Sprite):
+    """A PowerUp represents the capsule that falls from a brick and enhances
+    the game in some way when it collides with the paddle.
+
+    This is an abstract base class that holds functionality common to all
+    concrete powerups. It uses the template pattern with concrete powerup
+    subclasses being required to implement _activate() to perform the
+    powerup specific action.
     """
 
-    def __init__(self, game, brick, speed=3):
-        """Apply the powerup to the running game by adding an extra life.
+    def __init__(self, game, brick, pngs, speed=3):
+        """
+        Initialise a new PowerUp.
 
         Args:
             game:
                 The current game instance.
             brick:
                 The brick that triggered the powerup to drop.
+            pngs:
+                Iterator of png filenames used to animate the powerup. These
+                will be loaded from the data/graphics directory and must be
+                in the correct order.
             speed:
                 Optional speed at which the powerup drops. Default 3 pixels
                 per frame.
         """
-        self._game = game
+        super().__init__()
+        self.game = game
         self._speed = speed
-        self.image, _ = load_png('powerup_extra_life.png')
+        self._animation = itertools.cycle([load_png(png)[0] for png in pngs])
+        self._animation_start = 0
 
+        self.image = None
         # Position the powerup by the position of the brick which contained it.
         self.rect = pygame.Rect(brick.rect.bottomleft,
                                 (brick.rect.width, brick.rect.height))
@@ -618,19 +632,56 @@ class ExtraLifePowerUp(pygame.sprite.Sprite):
         self.rect = self.rect.move(0, self._speed)
 
         if self._area.contains(self.rect):
+            if self._animation_start % 2 == 0:
+                # Animate the powerup.
+                self.image = next(self._animation)
+
             # Check whether the powerup has collided with the paddle.
-            if self.rect.colliderect(self._game.paddle.rect):
-                # Apply the powerup.
-                self._game.lives += 1
-                # The game holds a reference to us so that we can deactivate.
-                self._game.active_powerup = self
+            if self.rect.colliderect(self.game.paddle.rect):
+                # We've collided so activate the powerup.
+                self._activate()
+                # The game holds a reference to us so that we can be
+                # deactivated.
+                self.game.active_powerup = self
                 # No need to display ourself anymore.
-                self._game.powerups.remove(self)
+                self.game.powerups.remove(self)
                 self.visible = False
+            else:
+                # Keep track of the number of update cycles for animation
+                # purposes.
+                self._animation_start += 1
+
         else:
             # We're no longer on the screen.
-            self._game.powerups.remove(self)
+            self.game.powerups.remove(self)
             self.visible = False
+
+    def _activate(self):
+        """Abstract hook method which should be overriden by concrete
+        powerup subclasses to perform the powerup specific action.
+        """
+        raise NotImplementedError('Subclasses must implement _activate()')
+
+    def deactivate(self):
+        """Deactivate the current powerup by returning the game state back
+        to what it was prior to the powerup taking effect.
+        """
+        raise NotImplementedError('Subclasses must implement deactivate()')
+
+
+class ExtraLifePowerUp(PowerUp):
+    """This PowerUp applies an extra life to the game when it collides with
+    the Paddle.
+    """
+
+    _PNG_FILES = 'powerup_extra_life.png',
+
+    def __init__(self, game, brick, speed=3):
+        super().__init__(game, brick, self._PNG_FILES, speed)
+
+    def _activate(self):
+        # Add an extra life to the game.
+        self.game.lives += 1
 
     def deactivate(self):
         """Deactivate the current powerup by returning the game state back
@@ -638,3 +689,8 @@ class ExtraLifePowerUp(pygame.sprite.Sprite):
         ExtraLifePowerUp, this is a no-op.
         """
         pass
+
+
+class SlowBallPowerUp:
+    pass
+
