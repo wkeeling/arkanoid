@@ -138,6 +138,7 @@ class Paddle(pygame.sprite.Sprite):
         # Discover which segment the ball collided with. Just use the first.
         index = ball_rect.collidelist(segments)
 
+        # Look up the angle and convert it to radians, before returning.
         return math.radians(angles[index])
 
 
@@ -370,6 +371,7 @@ class Ball(pygame.sprite.Sprite):
         LOG.debug('Ball speed: %s', self._speed)
 
     def _normalise_speed(self):
+        """Gradually bring the ball's speed down to the base speed."""
         if self._speed > self._base_speed:
             self._speed -= self._normalisation_rate
         else:
@@ -527,6 +529,8 @@ class Brick(pygame.sprite.Sprite):
         self.colour = colour
         # Load the brick graphic.
         self.image, self.rect = load_png('brick_{}.png'.format(colour))
+        
+        # Remember the original brick graphic.
         self.image_orig = self.image
 
         try:
@@ -573,12 +577,13 @@ class Brick(pygame.sprite.Sprite):
         return self.collision_count >= self._destroy_after
 
     def animate(self):
+        """Trigger animation of this brick."""
         self._animate = 0
 
 
 class ExtraLifePowerUp(pygame.sprite.Sprite):
-    """This PowerUp applies an extra life to the game when it's struck by the
-    paddle.
+    """This PowerUp applies an extra life to the game when it collides with
+    the Paddle.
     """
 
     def __init__(self, game, brick, speed=3):
