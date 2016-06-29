@@ -109,10 +109,13 @@ class Game:
         self.score = 0
         self.lives = lives
 
+        # Reference to the main screen.
+        self._screen = pygame.display.get_surface()
+
         # The life graphic.
-        self.life_img, _ = load_png('paddle_life.png')
+        self._life_img, _ = load_png('paddle_life.png')
         # The life graphic positions.
-        self.life_rects = []
+        self._life_rects = []
 
         # The current round.
         self.round = round_class()
@@ -150,8 +153,79 @@ class Game:
                 The EventList containing the events captured since the last
                 frame.
         """
-        # We just delegate to the active state.
-        self.state.update(events)
+        # Common updates.
+        self._handle_events(events)
+        self._update_sprites()
+        self._update_lives()
+
+        # Delegate to the active state for specific behaviour.
+        self.state.update()
+
+    def _handle_events(self, event_list):
+        for event in event_list:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    self.paddle.move_left()
+                elif event.key == pygame.K_RIGHT:
+                    self.paddle.move_right()
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                    self.paddle.stop()
+
+    def _update_sprites(self):
+        """Erase the sprites, update their state, and then redraw them
+        on the screen."""
+        # Erase the previous location of the sprites.
+        self._screen.blit(self.round.background,
+                          self.paddle.rect,
+                          self.paddle.rect)
+        self._screen.blit(self.round.background,
+                          self.ball.rect,
+                          self.ball.rect)
+        for brick in self.round.bricks:
+            self._screen.blit(self.round.background,
+                              brick.rect,
+                              brick.rect)
+        for powerup in self.powerups:
+            self._screen.blit(self.round.background,
+                              powerup.rect,
+                              powerup.rect)
+
+        # Update the state of the sprites and redraw them, assuming
+        # they're visible.
+        self.paddle.update()
+        if self.paddle.visible:
+            self._screen.blit(self.paddle.image, self.paddle.rect)
+
+        self.ball.update()
+        if self.ball.visible:
+            self._screen.blit(self.ball.image, self.ball.rect)
+
+        for brick in self.round.bricks:
+            brick.update()
+            if not brick.is_destroyed():
+                self._screen.blit(brick.image, brick.rect)
+
+        for powerup in self.powerups:
+            powerup.update()
+            if powerup.visible:
+                self._screen.blit(powerup.image, powerup.rect)
+
+    def _update_lives(self):
+        """Update the number of remaining lives displayed on the screen."""
+        # Erase the existing lives.
+        for rect in self._life_rects:
+            self._screen.blit(self.round.background, rect, rect)
+        self._life_rects.clear()
+
+        # Display the remaining lives.
+        left = self.round.edges.left.width
+        top = self._screen.get_height() - self._life_img.get_height() - 10
+
+        for life in range(self.lives - 1):
+            self._life_rects.append(
+                self._screen.blit(self._life_img, (left, top)))
+            left += self._life_img.get_width() + 10
 
     def _off_screen(self):
         """Callback called by the ball when it goes offscreen."""
@@ -171,95 +245,16 @@ class BaseState:
 
     def __init__(self, game):
         self.game = game
-        self.screen = pygame.display.get_surface()
 
         LOG.debug('Entered {}'.format(type(self).__name__))
 
-    def update(self, events):
-        """Update the state. This method is called repeatedly by the main
-        game loop.
+    def update(self):
+        """Update the state.
 
-        Args:
-            events:
-                The EventList containing the events captured since the last
-                frame.
+        Sub-states must implement this to perform their state specific
+        behaviour. This method is called repeatedly by the main game loop.
         """
-        self._handle_events(events)
-        self._update_sprites()
-        self._update_lives()
-        self._do_update()
-
-    def _handle_events(self, event_list):
-        for event in event_list:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    self.game.paddle.move_left()
-                elif event.key == pygame.K_RIGHT:
-                    self.game.paddle.move_right()
-            elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                    self.game.paddle.stop()
-
-    def _update_sprites(self):
-        """Erase the sprites, update their state, and then redraw them
-        on the screen."""
-        # Erase the previous location of the sprites.
-        self.screen.blit(self.game.round.background,
-                         self.game.paddle.rect,
-                         self.game.paddle.rect)
-        self.screen.blit(self.game.round.background,
-                         self.game.ball.rect,
-                         self.game.ball.rect)
-        for brick in self.game.round.bricks:
-            self.screen.blit(self.game.round.background,
-                             brick.rect,
-                             brick.rect)
-        for powerup in self.game.powerups:
-            self.screen.blit(self.game.round.background,
-                             powerup.rect,
-                             powerup.rect)
-
-        # Update the state of the sprites and redraw them, assuming
-        # they're visible.
-        self.game.paddle.update()
-        if self.game.paddle.visible:
-            self.screen.blit(self.game.paddle.image, self.game.paddle.rect)
-
-        self.game.ball.update()
-        if self.game.ball.visible:
-            self.screen.blit(self.game.ball.image, self.game.ball.rect)
-
-        for brick in self.game.round.bricks:
-            brick.update()
-            if not brick.is_destroyed():
-                self.screen.blit(brick.image, brick.rect)
-
-        for powerup in self.game.powerups:
-            powerup.update()
-            if powerup.visible:
-                self.screen.blit(powerup.image, powerup.rect)
-
-    def _update_lives(self):
-        """Update the number of remaining lives displayed on the screen."""
-        # Erase the existing lives.
-        for rect in self.game.life_rects:
-            self.screen.blit(self.game.round.background, rect, rect)
-        self.game.life_rects.clear()
-
-        # Display the remaining lives.
-        left = self.game.round.edges.left.width
-        top = self.screen.get_height() - self.game.life_img.get_height() - 10
-
-        for life in range(self.game.lives - 1):
-            self.game.life_rects.append(
-                self.screen.blit(self.game.life_img, (left, top)))
-            left += self.game.life_img.get_width() + 10
-
-    def _do_update(self):
-        """Abstract hook method called by update() that sub-states must
-        implement to perform their state specific behaviour.
-        """
-        raise NotImplementedError('Subclasses must implement do_update()')
+        raise NotImplementedError('Subclasses must implement update()')
 
     def __repr__(self):
         class_name = type(self).__name__
@@ -275,7 +270,7 @@ class GameStartState(BaseState):
     def __init__(self, game):
         super().__init__(game)
 
-    def _do_update(self):
+    def update(self):
         # TODO: implement the game intro sequence (animation).
         pass
 
@@ -376,7 +371,7 @@ class RoundStartState(BaseState):
             # Brick not destroyed, so animate it to indicate strike.
             brick.animate()
 
-    def _do_update(self):
+    def update(self):
         """Handle the sequence of events that happen at the beginning of a
         round just before gameplay starts.
         """
@@ -421,7 +416,7 @@ class RoundPlayState(BaseState):
     def __init__(self, game):
         super().__init__(game)
 
-    def _do_update(self):
+    def update(self):
         if self.game.round.complete:
             self.game.round = self.game.round.next_round()
             # TODO: do we need a RoundEndState for specific behaviour when a
@@ -447,7 +442,7 @@ class BallOffScreenState(BaseState):
         game.paddle = ExplodingPaddle(game.paddle,
                                       on_complete=self._on_explosion_finished)
 
-    def _do_update(self):
+    def update(self):
         if self._update:
             if self.game.lives - 1 > 0:
                 self.game.state = RoundRestartState(self.game)
@@ -482,9 +477,9 @@ class RoundRestartState(RoundStartState):
         """
         pass
 
-    def _do_update(self):
+    def update(self):
         # Run the logic in the RoundStartState first.
-        super()._do_update()
+        super().update()
 
         if self._time_elapsed() > 1000:
             # Update the number of lives when we display the caption.
@@ -503,6 +498,6 @@ class GameEndState(BaseState):
     def __init__(self, game):
         super().__init__(game)
 
-    def _do_update(self):
+    def update(self):
         self.game.over = True
 
