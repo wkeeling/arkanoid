@@ -589,9 +589,11 @@ class PowerUp(pygame.sprite.Sprite):
     the game in some way when it collides with the paddle.
 
     This is an abstract base class that holds functionality common to all
-    concrete powerups. It uses the template pattern with concrete powerup
-    subclasses being required to implement _activate() to perform the
-    powerup specific action.
+    concrete powerups. Concrete subclasses must implement _activate() to
+    perform the powerup specific action and also deactivate() to undo the
+    action. It is important that all powerup initialisation takes place in
+    _activate() and not in the __init__() method to ensure that actions
+    happen at the right time.
     """
 
     # The speed the powerup falls from a brick.
@@ -709,9 +711,12 @@ class SlowBallPowerUp(PowerUp):
     def __init__(self, game, brick, speed=PowerUp._DEFAULT_FALL_SPEED):
         super().__init__(game, brick, self._PNG_FILES, speed=speed)
 
-        self._orig_speed = self.game.ball.base_speed
+        self._orig_speed = None
 
     def _activate(self):
+        # Remember the original speed of the ball.
+        self._orig_speed = self.game.ball.base_speed
+
         # Slow the ball down.
         self.game.ball.speed = self._SLOW_BALL_SPEED
         self.game.ball.base_speed = self._SLOW_BALL_SPEED

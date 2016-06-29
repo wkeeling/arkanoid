@@ -313,6 +313,10 @@ class RoundStartState(BaseState):
         self._ready_pos = (h_centre_pos(self._ready),
                            self._caption_pos[1] + 50)
 
+        # Deactivate any active powerup.
+        if game.active_powerup:
+            game.active_powerup.deactivate()
+
     def _configure_ball(self):
         """Configure the ball with all the objects from the current round
         that it could potentially collide with.
@@ -432,9 +436,6 @@ class BallOffScreenState(BaseState):
 
     def __init__(self, game):
         super().__init__(game)
-
-        # Deactivate any active powerup.
-        game.active_powerup.deactivate()
 
         # Whether to update our state.
         self._update = False
