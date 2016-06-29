@@ -38,6 +38,14 @@ class Paddle(pygame.sprite.Sprite):
                 Optional speed of the paddle in pixels per frame.
         """
         super().__init__()
+        # The offsets.
+        self.left_offset = left_offset
+        self.right_offset = right_offset
+        self.bottom_offset = bottom_offset
+
+        # The speed of the paddle movement in pixels per frame.
+        self.speed = speed
+
         # Load the paddle image and its rect.
         self.image, self.rect = load_png('paddle.png')
 
@@ -57,9 +65,6 @@ class Paddle(pygame.sprite.Sprite):
         # paddle to move left, a positive value to move right.
         self._move = 0
 
-        # The speed of the paddle movement in pixels per frame.
-        self._speed = speed
-
     def update(self):
         """Update the position of the paddle when an arrow key is held down."""
         # Continuously move the paddle when the offset is non-zero.
@@ -73,13 +78,13 @@ class Paddle(pygame.sprite.Sprite):
         """Tell the paddle to move to the left by the speed set when the
         paddle was initialised."""
         # Set the offset to negative to move left.
-        self._move = -self._speed
+        self._move = -self.speed
 
     def move_right(self):
         """Tell the paddle to move to the right by the speed set when the
         paddle was initialised."""
         # A positive offset to move right.
-        self._move = self._speed
+        self._move = self.speed
 
     def stop(self):
         """Tell the paddle to stop moving."""
@@ -497,6 +502,50 @@ class ExplodingPaddle(pygame.sprite.Sprite):
         pass
 
 
+class ExpandingPaddle(Paddle):
+    """Paddle that is wider than the normal Paddle, and expands to this
+    wider size using an animation."""
+
+    _PADDLE_IMAGES = ('paddle_expand_1.png',
+                      'paddle_expand_2.png',
+                      'paddle_expand_3.png')
+
+    def __init__(self, paddle):
+        """Initialise a new ExpandingPaddle based on the supplied Paddle
+        instance.
+
+        The supplied paddle will be used to position the expanding paddle.
+
+        Args:
+            paddle:
+                The original smaller paddle used to position the expanding
+                paddle with.
+        """
+        super().__init__(paddle.left_offset, paddle.right_offset,
+                         paddle.bottom_offset, paddle.speed)
+
+        # Position the expanded paddle.
+        self.rect.center = paddle.rect.center
+
+        # Hide the original paddle.
+        paddle.visible = False
+
+        # Load the images required for the animation.
+        self._animation = [load_png(img)[0] for img in self._PADDLE_IMAGES]
+
+        self._animation_start = 0
+        self._animation_index = -1
+
+    def update(self):
+        """Animate the paddle expanding from normal to wide."""
+        super().update()
+
+        if self._animation_index < len(self._animation):
+            if self._animation_start % 20 == 0:
+                self.image = self._animation[self._animation_index]
+                self._animation_index += 1
+
+
 class Brick(pygame.sprite.Sprite):
     """A Brick is hit and destroyed by the ball."""
 
@@ -611,7 +660,7 @@ class PowerUp(pygame.sprite.Sprite):
             pngs:
                 Iterator of png filenames used to animate the powerup. These
                 will be loaded from the data/graphics directory and must be
-                in the correct order.
+                supplied in the correct order.
             speed:
                 Optional speed at which the powerup drops. Default 3 pixels
                 per frame.
@@ -686,8 +735,8 @@ class ExtraLifePowerUp(PowerUp):
 
     _PNG_FILES = 'powerup_extra_life.png',
 
-    def __init__(self, game, brick, speed=PowerUp._DEFAULT_FALL_SPEED):
-        super().__init__(game, brick, self._PNG_FILES, speed)
+    def __init__(self, game, brick):
+        super().__init__(game, brick, self._PNG_FILES)
 
     def _activate(self):
         # Add an extra life to the game.
@@ -708,8 +757,8 @@ class SlowBallPowerUp(PowerUp):
     # The ball will assume this base speed when the powerup is activated.
     _SLOW_BALL_SPEED = 5  # Pixels per frame.
 
-    def __init__(self, game, brick, speed=PowerUp._DEFAULT_FALL_SPEED):
-        super().__init__(game, brick, self._PNG_FILES, speed=speed)
+    def __init__(self, game, brick):
+        super().__init__(game, brick, self._PNG_FILES)
 
         self._orig_speed = None
 
@@ -722,6 +771,30 @@ class SlowBallPowerUp(PowerUp):
         self.game.ball.base_speed = self._SLOW_BALL_SPEED
 
     def deactivate(self):
-        # Set the original speed back on the ball.
+        """Deactivate the SlowBallPowerUp by returning the ball back to
+        its original speed."""
         self.game.ball.speed = self._orig_speed
         self.game.ball.base_speed = self._orig_speed
+
+
+class ExpandPowerUp(PowerUp):
+    """This PowerUp expands the paddle."""
+
+    _PNG_FILES = 'powerup_expand.png',
+
+    def __init__(self, game, brick):
+        super().__init__(game, brick, self._PNG_FILES)
+
+        self._orig_paddle = None
+
+    def _activate(self):
+        # Remember the original paddle.
+        self._orig_paddle = self.game.paddle
+
+        # Substitute the expanding paddle into the game.
+        self.game.paddle = ExpandingPaddle(self.game.paddle)
+
+    def deactivate(self):
+        """Deactivate the ExpandPowerUp by returning the paddle back to
+        its original size."""
+        self.game.paddle = self._orig_paddle
