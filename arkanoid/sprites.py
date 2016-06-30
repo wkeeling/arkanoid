@@ -524,26 +524,35 @@ class ExpandingPaddle(Paddle):
         super().__init__(paddle.left_offset, paddle.right_offset,
                          paddle.bottom_offset, paddle.speed)
 
-        # Position the expanded paddle.
-        self.rect.center = paddle.rect.center
+        # Save the position of the original paddle.
+        self._position = paddle.rect.center
 
         # Hide the original paddle.
         paddle.visible = False
 
-        # Load the images required for the animation.
-        self._animation = [load_png(img)[0] for img in self._PADDLE_IMAGES]
+        # Load the images/rects required for the animation.
+        self._images = [load_png(img) for img in self._PADDLE_IMAGES]
 
-        self._animation_start = 0
-        self._animation_index = -1
+        # Keep track of the number of times we're updated, in order to
+        # animate.
+        self._update_count = 0
 
     def update(self):
         """Animate the paddle expanding from normal to wide."""
         super().update()
 
-        if self._animation_index < len(self._animation):
-            if self._animation_start % 20 == 0:
-                self.image = self._animation[self._animation_index]
-                self._animation_index += 1
+        # TODO: how about moving this whole concept into the Paddle? Makes
+        # life easier when asking for paddle.expanded. Also, once
+        # ExpandedPaddle in the game, will never be replaced anyway...
+        if len(self._images) > 0:
+            if self._update_count % 5 == 0:
+                self.image, self.rect = self._images.pop(0)
+                self.rect.center = self._position
+            self._update_count += 1
+
+    def shrink(self):
+        """Animate the paddle back to its normal size."""
+        LOG.debug('Shrinking...')
 
 
 class Brick(pygame.sprite.Sprite):
@@ -785,16 +794,25 @@ class ExpandPowerUp(PowerUp):
     def __init__(self, game, brick):
         super().__init__(game, brick, self._PNG_FILES)
 
-        self._orig_paddle = None
-
     def _activate(self):
-        # Remember the original paddle.
-        self._orig_paddle = self.game.paddle
+        # TODO: below test won't work, because ExpandingPaddle left in the
+        # game after deactivation (but still the sprite). Need to test for
+        # paddle.expanded or something.
+        if not isinstance(self.game.paddle, ExpandingPaddle):
+            # Remove the original paddle as a collidable object.
+            self.game.ball.remove_collidable_object(self.game.paddle)
 
-        # Substitute the expanding paddle into the game.
-        self.game.paddle = ExpandingPaddle(self.game.paddle)
+            # Substitute the expanding paddle into the game.
+            self.game.paddle = ExpandingPaddle(self.game.paddle)
+
+            # Add it as a collidable object.
+            # TODO: might need it's own bounce strategy.
+            self.game.ball.add_collidable_object(
+                self.game.paddle,
+                self.game.paddle.bounce_strategy)
 
     def deactivate(self):
         """Deactivate the ExpandPowerUp by returning the paddle back to
         its original size."""
-        self.game.paddle = self._orig_paddle
+        self.game.paddle.shrink()
+

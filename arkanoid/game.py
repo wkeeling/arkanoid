@@ -498,6 +498,13 @@ class GameEndState(BaseState):
     def __init__(self, game):
         super().__init__(game)
 
-    def update(self):
-        self.game.over = True
+        # Bring the ball back onto the screen, but hide it.
+        # This prevents the offscreen callback from being called again.
+        game.ball.anchor(game.paddle.rect.top)
+        game.ball.visible = True
 
+        # Indicate that the game is over.
+        game.over = True
+
+    def update(self):
+        pass
