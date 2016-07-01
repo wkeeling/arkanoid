@@ -312,7 +312,6 @@ class RoundStartState(BaseState):
         # Deactivate any active powerup.
         if game.active_powerup:
             game.active_powerup.deactivate()
-            game.paddle.next_state = NormalState
 
     def _configure_ball(self):
         """Configure the ball with all the objects from the current round
@@ -441,6 +440,7 @@ class BallOffScreenState(BaseState):
         self._paddle = game.paddle
 
         # Temporarily substitute the exploding paddle into the game.
+        # TODO: use game.paddle.next_state = ExplodingState
         game.paddle = ExplodingPaddle(game.paddle,
                                       on_complete=self._on_explosion_finished)
 

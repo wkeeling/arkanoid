@@ -149,11 +149,11 @@ class Paddle(pygame.sprite.Sprite):
 class PaddleState:
     """Abstract base class for all paddle states.
 
-    Sub-states should implement both the do_update() and exit() abstract
-    methods. The do_update() method is where the guts of the state specific
+    Sub-states should implement both the _do_update() and _do_exit() abstract
+    methods. The _do_update() method is where the guts of the state specific
     behaviour is performed.
 
-    In the exit() method, states should perform any exit specific behaviour
+    In the _do_exit() method, states should perform any exit specific behaviour
     and then set the 'complete' instance attribute to True, to permit the
     transition to a new state.
     """
@@ -196,13 +196,24 @@ class PaddleState:
         raise NotImplementedError('Subclasses must implement update()')
 
     def exit(self):
+        """Perform any behaviour that should take place before transitioning
+        to a new state.
+        """
+        # By default we always set the next state to NormalState. This might
+        # be overriden externally.
+        self.paddle.next_state = NormalState
+
+        # Delegate to the sub-state.
+        self._do_exit()
+
+    def _do_exit(self):
         """Sub-states must implement this to perform any behaviour that should
         happen just before the state transitions to some other state.
 
         Sub-states should set the 'complete' instance attribute to True once
         this behaviour is completed.
         """
-        raise NotImplementedError('Subclasses must implement exit()')
+        raise NotImplementedError('Subclasses must implement _do_exit()')
 
 
 class NormalState(PaddleState):
@@ -219,7 +230,7 @@ class NormalState(PaddleState):
         # Nothing specific to do in normal state.
         pass
 
-    def exit(self):
+    def _do_exit(self):
         pass
 
 
@@ -255,7 +266,7 @@ class WideState(PaddleState):
                 self.rect.center = self._position
             self._update_count += 1
 
-    def exit(self):
+    def _do_exit(self):
         """Animate the paddle back to its normal size."""
         LOG.debug('Shrinking...')
         self.complete = True

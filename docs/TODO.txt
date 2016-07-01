@@ -53,6 +53,8 @@ Going to need a RoundEndState that does:
         # Deactivate any active powerup.
         if game.active_powerup:
             game.active_powerup.deactivate()
-            game.paddle.next_state = NormalState
 
 (that's currently in RoundStartState but that's no good for when game completely ends)
+
+Need to have user friendly way of switching paddle states - not interacting directly with them?
+paddle.WideState  --> Paddle.WIDE_STATE (constants that save clients having to import the state classes)
