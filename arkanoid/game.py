@@ -3,9 +3,10 @@ import logging
 import pygame
 
 from arkanoid.rounds import Round1
-from arkanoid.sprites import (Ball,
-                              ExplodingPaddle,
-                              Paddle,)
+from arkanoid.sprites.ball import Ball
+from arkanoid.sprites.paddle import (ExplodingPaddle,
+                                     NormalState,
+                                     Paddle)
 from arkanoid.utils import (font,
                             h_centre_pos,
                             load_png)
@@ -311,6 +312,7 @@ class RoundStartState(BaseState):
         # Deactivate any active powerup.
         if game.active_powerup:
             game.active_powerup.deactivate()
+            game.paddle.next_state = NormalState
 
     def _configure_ball(self):
         """Configure the ball with all the objects from the current round

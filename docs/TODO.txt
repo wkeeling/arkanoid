@@ -7,11 +7,6 @@ fix issue where ball gets stuck in wall
 
 corner bouncing seems to increase speed on paddle/bricks
 
-original game starts off with ball slow, but eventually ball moves at quicker pace generally.
-split start_speed and base_speed
-
-Get the game as it currently runs, into the new class structure.
-
 classes:
 
 Arkanoid
@@ -38,14 +33,6 @@ Round
         round.update()
     Game keeps track of lives. If lives < 0, then calls round.end() to notify Round to clean up.
 
-PowerUp
-    has activate() and deactivate() methods
-
-LaserPaddle extends Paddle and is initialised with an instance of one
-    assumes current state of existing paddle and changes image, extends with laser functionality
-    laser bullets need to do collision detection with bricks (like ball does). bricks need not know about bullets.
-
-Need a better eventing system. Perhaps some sort of callback approach? Rather than passing event_list to game.update()
 
 Multiple balls could be MultiBall() object switched out with game.ball.
 
@@ -58,3 +45,14 @@ the screen left/right/top needs to know when the ball has gone off and put it ba
 Expanding paddle/laser powerup will increase ball speed.
 
 Need better event mechanism.
+Possibly create decorator for registering event handlers?  @event_handler
+also, @collidable_object(on_collide=arkanoid.game.collision_handler)
+
+Going to need a RoundEndState that does:
+
+        # Deactivate any active powerup.
+        if game.active_powerup:
+            game.active_powerup.deactivate()
+            game.paddle.next_state = NormalState
+
+(that's currently in RoundStartState but that's no good for when game completely ends)
