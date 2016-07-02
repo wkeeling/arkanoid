@@ -48,13 +48,9 @@ Need better event mechanism.
 Possibly create decorator for registering event handlers?  @event_handler
 also, @collidable_object(on_collide=arkanoid.game.collision_handler)
 
-Going to need a RoundEndState that does:
 
-        # Deactivate any active powerup.
-        if game.active_powerup:
-            game.active_powerup.deactivate()
+Paddle should not move when in explode state (perhaps introduce paddle.freeze() undone by reset())
+When paddle expands into wall it won't move
+The powerups should be more intelligent. Don't drop loads of the same when the powerup is already active?
+Powerups are falling behind the bricks (when brick above a brick releases a powerup)
 
-(that's currently in RoundStartState but that's no good for when game completely ends)
-
-Need to have user friendly way of switching paddle states - not interacting directly with them?
-paddle.WideState  --> Paddle.WIDE_STATE (constants that save clients having to import the state classes)

@@ -4,8 +4,8 @@ import pygame
 
 from arkanoid.rounds import Round1
 from arkanoid.sprites.ball import Ball
-from arkanoid.sprites.paddle import (ExplodingPaddle,
-                                     NormalState,
+from arkanoid.sprites.paddle import (EXPLODE,
+                                     NORMAL,
                                      Paddle)
 from arkanoid.utils import (font,
                             h_centre_pos,
@@ -309,10 +309,6 @@ class RoundStartState(BaseState):
         self._ready_pos = (h_centre_pos(self._ready),
                            self._caption_pos[1] + 50)
 
-        # Deactivate any active powerup.
-        if game.active_powerup:
-            game.active_powerup.deactivate()
-
     def _configure_ball(self):
         """Configure the ball with all the objects from the current round
         that it could potentially collide with.
@@ -433,30 +429,33 @@ class BallOffScreenState(BaseState):
     def __init__(self, game):
         super().__init__(game)
 
-        # Whether to update our state.
-        self._update = False
+        # Track the number of update cycles.
+        self._start = 0
 
-        # Keep track of the existing paddle.
-        self._paddle = game.paddle
-
-        # Temporarily substitute the exploding paddle into the game.
-        # TODO: use game.paddle.next_state = ExplodingState
-        game.paddle = ExplodingPaddle(game.paddle,
-                                      on_complete=self._on_explosion_finished)
+        self._deactivated = False
+        self._exploded = False
 
     def update(self):
-        if self._update:
+        # Deactivate the active powerup if set.
+        if not self._deactivated and self.game.active_powerup:
+            self.game.active_powerup.deactivate()
+            self._deactivated = True
+
+        # Wait for any deactivation animation to complete.
+        if not self._exploded and self._start > 20:
+            # Tell the paddle to explode.
+            self.game.paddle.transition(EXPLODE)
+            self._exploded = True
+
+        # Wait for the explosion animation to complete.
+        if self._start > 100:
             if self.game.lives - 1 > 0:
+                self.game.paddle.transition(NORMAL)
                 self.game.state = RoundRestartState(self.game)
             else:
                 self.game.state = GameEndState(self.game)
 
-    def _on_explosion_finished(self):
-        # Put back the real paddle.
-        self.game.paddle = self._paddle
-
-        # Allow the rest of this state to execute.
-        self._update = True
+        self._start += 1
 
 
 class RoundRestartState(RoundStartState):

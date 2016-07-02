@@ -45,20 +45,20 @@ class Paddle(pygame.sprite.Sprite):
         # The speed of the paddle movement in pixels per frame.
         self.speed = speed
 
-        # Load the paddle image and its rect.
-        self.image, self.rect = load_png('paddle.png')
-
         # This toggles visibility of the paddle.
         self.visible = True
 
+        # Load the paddle image and its rect.
+        self.image, self.rect = load_png('paddle.png')
+
         # Create the area the paddle can move within.
         screen = pygame.display.get_surface().get_rect()
-        self.area = pygame.Rect(screen.left + left_offset,
-                                screen.height - bottom_offset,
-                                screen.width - left_offset - right_offset,
-                                self.rect.height)
+        self._area = pygame.Rect(screen.left + left_offset,
+                                 screen.height - bottom_offset,
+                                 screen.width - left_offset - right_offset,
+                                 self.rect.height)
         # Position the paddle.
-        self.rect.center = self.area.center
+        self.rect.center = self._area.center
 
         # The current movement in pixels. A negative value will trigger the
         # paddle to move left, a positive value to move right.
@@ -72,6 +72,14 @@ class Paddle(pygame.sprite.Sprite):
 
     def update(self):
         """Update the state of the paddle."""
+        # Continuously move the paddle when the offset is non-zero.
+        newpos = self.rect.move(self.move, 0)
+
+        if self._area.contains(newpos):
+            # But only update the position of the paddle if it's within
+            # the screen area.
+            self.rect = newpos
+
         if self._state.complete and self._next_state:
             # Transition to the next state when current state complete.
             self._state = self._next_state(self)
@@ -84,7 +92,8 @@ class Paddle(pygame.sprite.Sprite):
         """Transition to the specified state.
 
         Note that this is a request to transition, notifying an existing state
-        to exit, before applying the new state.
+        to exit, before applying the new state. If the state being transitioned
+        to is the same as the current state, this method does nothing.
 
         Args:
             state:
@@ -111,7 +120,7 @@ class Paddle(pygame.sprite.Sprite):
 
     def reset(self):
         """Reset the position of the paddle to its start position."""
-        self.rect.center = self.area.center
+        self.rect.center = self._area.center
 
     @staticmethod
     def bounce_strategy(paddle_rect, ball_rect):
@@ -191,21 +200,8 @@ class PaddleState:
     def update(self):
         """Update the state of the paddle.
 
+        Sub-states must implement this to perform state specific behaviour.
         This method is designed to be called repeatedly.
-        """
-        # Continuously move the paddle when the offset is non-zero.
-        newpos = self.paddle.rect.move(self.paddle.move, 0)
-
-        if self.paddle.area.contains(newpos):
-            # But only update the position of the paddle if it's within
-            # the screen area.
-            self.paddle.rect = newpos
-
-        # Delegate to the sub-state.
-        self._do_update()
-
-    def _do_update(self):
-        """Sub-states must implement this to perform state specific behaviour.
         """
         raise NotImplementedError('Subclasses must implement update()')
 
@@ -228,11 +224,16 @@ class NormalState(PaddleState):
     def __init__(self, paddle):
         super().__init__(paddle)
 
+        # Put back the standard paddle graphic.
+        pos = self.paddle.rect.center
+        self.paddle.image, self.paddle.rect = load_png('paddle.png')
+        self.paddle.rect.center = pos
+
         # We're always in a completed state, ready to transition to
         # a new state.
         self.complete = True
 
-    def _do_update(self):
+    def update(self):
         # Nothing specific to do in normal state.
         pass
 
@@ -248,8 +249,7 @@ class WideState(PaddleState):
     the state exits.
     """
 
-    _PADDLE_IMAGES = ('paddle.png',
-                      'paddle_expand_1.png',
+    _PADDLE_IMAGES = ('paddle_expand_1.png',
                       'paddle_expand_2.png',
                       'paddle_expand_3.png')
 
@@ -267,13 +267,13 @@ class WideState(PaddleState):
         # animate.
         self._update_count = 0
 
-        # Whether we're fully expanded.
-        self._wide, self._shrink = False, False
+        # Whether we're to expand or to shrink.
+        self._expand, self._shrink = True, False
 
-    def _do_update(self):
-        """Animate the paddle expanding from normal to wide."""
-        if not self._wide:
-            LOG.debug('Expanding...')
+    def update(self):
+        """Animate the paddle expanding from normal to wide or shrinking
+        from wide to normal."""
+        if self._expand:
             try:
                 if self._update_count % 5 == 0:
                     pos = self.paddle.rect.center
@@ -281,11 +281,10 @@ class WideState(PaddleState):
                         self._expand_anim)
                     self.paddle.rect.center = pos
             except StopIteration:
-                self._wide = True
+                self._expand = False
             else:
                 self._update_count += 1
         elif self._shrink:
-            LOG.debug('Shrinking...')
             try:
                 if self._update_count % 5 == 0:
                     pos = self.paddle.rect.center
@@ -293,13 +292,14 @@ class WideState(PaddleState):
                         self._shrink_anim)
                     self.paddle.rect.center = pos
             except StopIteration:
+                # State ends.
                 self._shrink = False
                 self.complete = True
             else:
                 self._update_count += 1
 
     def exit(self):
-        """Animate the paddle back to its normal size."""
+        """Trigger the animation to shrink the paddle."""
         self._shrink = True
 
 
@@ -307,49 +307,31 @@ class LaserState:
     pass
 
 
-class ExplodingPaddle(pygame.sprite.Sprite):
-    """Used to animate a paddle explosion when the paddle misses the ball.
+class ExplodingState(PaddleState):
+    """This state animates the paddle exploding when it misses the ball."""
 
-    Note that this does not behave like a normal paddle. It's just an
-    animation.
-    """
+    def __init__(self, paddle):
+        super().__init__(paddle)
 
-    def __init__(self, paddle, on_complete=None):
-        """Initialise a new ExplodingPaddle using an existing Paddle sprite,
-        and a no-args callback which notifies the caller when the explosion
-        has finished.
-
-        Args:
-            paddle:
-                The existing Paddle instance.
-            on_complete:
-                Optional no-args callback which is called when the explosion
-                has finished.
-        """
-        self.image, _ = load_png('paddle_explode.png')
+        image_explode, _ = load_png('paddle_explode.png')
         self.rect = paddle.rect
-        self.visible = True
+        self._image_orig = paddle.image
 
-        self._animation = itertools.cycle((self.image, paddle.image))
-        self._on_complete = on_complete
-        self._explosion_start = 0
+        self._animation = itertools.cycle((image_explode, paddle.image))
+        self._explode_start = 0
 
     def update(self):
-        if self._explosion_start < 90:
-            if self._explosion_start % 2 == 0:
-                self.image = next(self._animation)
-            self._explosion_start += 1
+        """Animate the paddle explosion."""
+        if not self.complete and self._explode_start < 90:
+            if self._explode_start % 2 == 0:
+                self.paddle.image = next(self._animation)
+            self._explode_start += 1
         else:
-            if self._on_complete:
-                self._on_complete()
+            self.paddle.image = self._image_orig
+            self.complete = True
 
-    def move_left(self):
-        pass
-
-    def move_right(self):
-        pass
-
-    def stop(self):
+    def exit(self):
+        # No specific exit behaviour.
         pass
 
 
@@ -357,3 +339,4 @@ class ExplodingPaddle(pygame.sprite.Sprite):
 NORMAL = NormalState
 WIDE = WideState
 LASER = LaserState
+EXPLODE = ExplodingState
