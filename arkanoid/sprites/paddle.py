@@ -65,19 +65,33 @@ class Paddle(pygame.sprite.Sprite):
         self.move = 0
 
         # The current paddle state.
-        self.state = NormalState(self)
+        self._state = NormalState(self)
 
         # The next state to transition to.
-        self.next_state = None
+        self._next_state = None
 
     def update(self):
-        if self.state.complete and self.next_state:
+        """Update the state of the paddle."""
+        if self._state.complete and self._next_state:
             # Transition to the next state when current state complete.
-            self.state = self.next_state(self)
-            self.next_state = None
+            self._state = self._next_state(self)
+            self._next_state = None
 
         # Delegate to our active state.
-        self.state.update()
+        self._state.update()
+
+    def transition(self, state):
+        """Transition to the specified state.
+
+        Note that this is a request to transition, notifying an existing state
+        to exit, before applying the new state.
+
+        Args:
+            state:
+                The state to transition to.
+        """
+        self._state.exit()
+        self._next_state = state
 
     def move_left(self):
         """Tell the paddle to move to the left by the speed set when the
@@ -198,26 +212,18 @@ class PaddleState:
     def exit(self):
         """Perform any behaviour that should take place before transitioning
         to a new state.
-        """
-        # By default we always set the next state to NormalState. This might
-        # be overriden externally.
-        self.paddle.next_state = NormalState
 
-        # Delegate to the sub-state.
-        self._do_exit()
-
-    def _do_exit(self):
-        """Sub-states must implement this to perform any behaviour that should
+        Sub-states must implement this to perform any behaviour that should
         happen just before the state transitions to some other state.
 
         Sub-states should set the 'complete' instance attribute to True once
         this behaviour is completed.
         """
-        raise NotImplementedError('Subclasses must implement _do_exit()')
+        raise NotImplementedError('Subclasses must implement exit()')
 
 
 class NormalState(PaddleState):
-    """This is the default state of the paddle."""
+    """This represents the default state of the paddle."""
 
     def __init__(self, paddle):
         super().__init__(paddle)
@@ -230,7 +236,8 @@ class NormalState(PaddleState):
         # Nothing specific to do in normal state.
         pass
 
-    def _do_exit(self):
+    def exit(self):
+        # No specific exit behaviour.
         pass
 
 
@@ -241,35 +248,63 @@ class WideState(PaddleState):
     the state exits.
     """
 
-    _PADDLE_IMAGES = ('paddle_expand_1.png',
+    _PADDLE_IMAGES = ('paddle.png',
+                      'paddle_expand_1.png',
                       'paddle_expand_2.png',
                       'paddle_expand_3.png')
 
     def __init__(self, paddle):
         super().__init__(paddle)
 
-        # Save the current position of the paddle.
-        self._position = paddle.rect.center
+        # Load the images/rects required for the expanding animation.
+        self._expand_anim = iter(load_png(img) for img in self._PADDLE_IMAGES)
 
-        # Load the images/rects required for the animation.
-        self._images = [load_png(img) for img in self._PADDLE_IMAGES]
+        # Load the images/rects required for the expanding animation.
+        self._shrink_anim = iter(
+            load_png(img) for img in reversed(self._PADDLE_IMAGES))
 
         # Keep track of the number of times we're updated, in order to
         # animate.
         self._update_count = 0
 
+        # Whether we're fully expanded.
+        self._wide, self._shrink = False, False
+
     def _do_update(self):
         """Animate the paddle expanding from normal to wide."""
-        if len(self._images) > 0:
-            if self._update_count % 5 == 0:
-                self.image, self.rect = self._images.pop(0)
-                self.rect.center = self._position
-            self._update_count += 1
+        if not self._wide:
+            LOG.debug('Expanding...')
+            try:
+                if self._update_count % 5 == 0:
+                    pos = self.paddle.rect.center
+                    self.paddle.image, self.paddle.rect = next(
+                        self._expand_anim)
+                    self.paddle.rect.center = pos
+            except StopIteration:
+                self._wide = True
+            else:
+                self._update_count += 1
+        elif self._shrink:
+            LOG.debug('Shrinking...')
+            try:
+                if self._update_count % 5 == 0:
+                    pos = self.paddle.rect.center
+                    self.paddle.image, self.paddle.rect = next(
+                        self._shrink_anim)
+                    self.paddle.rect.center = pos
+            except StopIteration:
+                self._shrink = False
+                self.complete = True
+            else:
+                self._update_count += 1
 
-    def _do_exit(self):
+    def exit(self):
         """Animate the paddle back to its normal size."""
-        LOG.debug('Shrinking...')
-        self.complete = True
+        self._shrink = True
+
+
+class LaserState:
+    pass
 
 
 class ExplodingPaddle(pygame.sprite.Sprite):
@@ -316,3 +351,9 @@ class ExplodingPaddle(pygame.sprite.Sprite):
 
     def stop(self):
         pass
+
+
+# The different paddle states.
+NORMAL = NormalState
+WIDE = WideState
+LASER = LaserState
