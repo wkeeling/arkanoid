@@ -37,10 +37,6 @@ class Paddle(pygame.sprite.Sprite):
                 Optional speed of the paddle in pixels per frame.
         """
         super().__init__()
-        # The offsets.
-        self.left_offset = left_offset
-        self.right_offset = right_offset
-        self.bottom_offset = bottom_offset
 
         # The speed of the paddle movement in pixels per frame.
         self.speed = speed
@@ -53,12 +49,12 @@ class Paddle(pygame.sprite.Sprite):
 
         # Create the area the paddle can move within.
         screen = pygame.display.get_surface().get_rect()
-        self._area = pygame.Rect(screen.left + left_offset,
-                                 screen.height - bottom_offset,
-                                 screen.width - left_offset - right_offset,
-                                 self.rect.height)
+        self.area = pygame.Rect(screen.left + left_offset,
+                                screen.height - bottom_offset,
+                                screen.width - left_offset - right_offset,
+                                self.rect.height)
         # Position the paddle.
-        self.rect.center = self._area.center
+        self.rect.center = self.area.center
 
         # The current movement in pixels. A negative value will trigger the
         # paddle to move left, a positive value to move right.
@@ -71,7 +67,7 @@ class Paddle(pygame.sprite.Sprite):
         self._next_state = None
 
         # Used when the paddle needs to explode.
-        self._exploding_animation = None
+        self.exploding_animation = None
 
     def update(self):
         """Update the state of the paddle."""
@@ -84,15 +80,15 @@ class Paddle(pygame.sprite.Sprite):
         # Delegate to our active state.
         self._state.update()
 
-        if self._exploding_animation:
+        if self.exploding_animation:
             # Do the exploding animation.
-            self._exploding_animation.update()
+            self.exploding_animation.update()
         else:
             # We're not exploding, so continuously move the paddle when the
             # offset is non-zero.
             newpos = self.rect.move(self.move, 0)
 
-            if self._area.contains(newpos):
+            if self.area.contains(newpos):
                 # But only update the position of the paddle if it's within
                 # the screen area.
                 self.rect = newpos
@@ -129,7 +125,7 @@ class Paddle(pygame.sprite.Sprite):
 
     def reset(self):
         """Reset the position of the paddle to its start position."""
-        self.rect.center = self._area.center
+        self.rect.center = self.area.center
 
     def explode(self, on_complete):
         """Animate a paddle explosion.
@@ -139,7 +135,7 @@ class Paddle(pygame.sprite.Sprite):
                 No-args callable that will be called when the explosion
                 animation has finished.
         """
-        self._exploding_animation = ExplodingAnimation(self, on_complete)
+        self.exploding_animation = ExplodingAnimation(self, on_complete)
 
     @staticmethod
     def bounce_strategy(paddle_rect, ball_rect):
@@ -192,8 +188,8 @@ class ExplodingAnimation:
     """Houses the logic to animate a paddle explosion."""
 
     def __init__(self, paddle, on_complete):
-        """Initialise a new ExplodingPaddle with the paddle itself and a
-        no-args callback which gets called once the animation is complete.
+        """Initialise a new ExplodingPaddle with the paddle and a no-args
+        callback which gets called once the animation is complete.
 
         Args:
             paddle:
@@ -216,34 +212,37 @@ class ExplodingAnimation:
 
     def update(self):
         """Run the exploding animation."""
+        # Run the animation after a short delay.
         if 20 < self._cycles < 110:
-            # Run the animation after a short delay.
             if self._cycles % 2 == 0:
                 self._paddle.image = next(self._exploding_animation)
         elif self._cycles > 110:
             # Animation finished.
             self._paddle.image = self._image_orig
             # Unset ourselves.
-            self._paddle._exploding_animation = None
+            self._paddle.exploding_animation = None
             # Notify the client that we're done.
             self._on_explode_complete()
         self._cycles += 1
 
 
 class PaddleState:
-    """Abstract base class for all paddle states.
+    """A PaddleState represents a particular state of the paddle, in terms
+    of its graphics and behaviour.
 
-    Sub-states should implement both the _do_update() and _do_exit() abstract
-    methods. The _do_update() method is where the guts of the state specific
-    behaviour is performed.
-
-    In the _do_exit() method, states should perform any exit specific behaviour
-    and then set the 'complete' instance attribute to True, to permit the
-    transition to a new state.
+    This base class is abstract and concrete sub-states should implement
+    both the update() and exit() abstract methods. The update() method is
+    called repeatedly and is where much of the state specific logic will
+    reside. With the exit() method, states should perform any exit specific
+    behaviour and then set the 'complete' instance attribute to True, to
+    permit the transition to a new state.
     """
 
     def __init__(self, paddle):
         """Initialise the PaddleState with the paddle instance.
+
+        The paddle instance is made available as an instance level attribute
+        and can be accessed by concrete sub-states to change paddle attriubtes.
 
         Args:
             paddle:
@@ -267,10 +266,7 @@ class PaddleState:
         raise NotImplementedError('Subclasses must implement update()')
 
     def exit(self):
-        """Perform any behaviour that should take place before transitioning
-        to a new state.
-
-        Sub-states must implement this to perform any behaviour that should
+        """Sub-states must implement this to perform any behaviour that should
         happen just before the state transitions to some other state.
 
         Sub-states should set the 'complete' instance attribute to True once
@@ -304,10 +300,10 @@ class NormalState(PaddleState):
 
 
 class WideState(PaddleState):
-    """This state increases the width of the normal paddle.
+    """This state represents the wider state of the paddle.
 
-    Animation is used to increase the width, and also to decrease it when
-    the state exits.
+    Animation is used to increase the width when the state is created, and
+    also to decrease it when the state exits.
     """
 
     _PADDLE_IMAGES = ('paddle_expand_1.png',
@@ -335,32 +331,46 @@ class WideState(PaddleState):
         """Animate the paddle expanding from normal to wide or shrinking
         from wide to normal."""
         if self._expand:
-            try:
-                if self._update_count % 5 == 0:
-                    pos = self.paddle.rect.center
-                    self.paddle.image, self.paddle.rect = next(
-                        self._expand_anim)
-                    self.paddle.rect.center = pos
-            except StopIteration:
-                self._expand = False
-            else:
-                self._update_count += 1
+            self._expand_paddle()
         elif self._shrink:
-            try:
-                if self._update_count % 5 == 0:
-                    pos = self.paddle.rect.center
-                    self.paddle.image, self.paddle.rect = next(
-                        self._shrink_anim)
-                    self.paddle.rect.center = pos
-            except StopIteration:
-                # State ends.
-                self._shrink = False
-                self.complete = True
-            else:
-                self._update_count += 1
+            self._shrink_paddle()
+
+    def _expand_paddle(self):
+        try:
+            if self._update_count % 5 == 0:
+                pos = self.paddle.rect.center
+                self.paddle.image, self.paddle.rect = next(
+                    self._expand_anim)
+                self.paddle.rect.center = pos
+                while (not self.paddle.area.collidepoint(
+                        self.paddle.rect.midleft)):
+                    # Nudge the paddle back inside the game area.
+                    self.paddle.rect = self.paddle.rect.move(1, 0)
+                while (not self.paddle.area.collidepoint(
+                        self.paddle.rect.midright)):
+                    # Nudge the paddle back inside the game area.
+                    self.paddle.rect = self.paddle.rect.move(-1, 0)
+        except StopIteration:
+            self._expand = False
+        else:
+            self._update_count += 1
+
+    def _shrink_paddle(self):
+        try:
+            if self._update_count % 5 == 0:
+                pos = self.paddle.rect.center
+                self.paddle.image, self.paddle.rect = next(
+                    self._shrink_anim)
+                self.paddle.rect.center = pos
+        except StopIteration:
+            # State ends.
+            self._shrink = False
+            self.complete = True
+        else:
+            self._update_count += 1
 
     def exit(self):
-        """Trigger the animation to shrink the paddle."""
+        """Trigger the animation to shrink the paddle and exit the state."""
         self._shrink = True
 
 

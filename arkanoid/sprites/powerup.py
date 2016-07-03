@@ -105,8 +105,9 @@ class PowerUp(pygame.sprite.Sprite):
         Returns:
             True if appropriate to activate, false otherwise.
         """
-        # Subclasses can override if they need to do some specific check,
-        # but the default behaviour is to always allow activation.
+        if self.game.paddle.exploding_animation:
+            # Don't activate when the paddle is exploding.
+            return False
         return True
 
     def deactivate(self):
@@ -183,6 +184,9 @@ class ExpandPowerUp(PowerUp):
         self.game.paddle.transition(paddle.NORMAL)
 
     def _can_activate(self):
-        if isinstance(self.game.active_powerup, self.__class__):
-            return False
-        return True
+        can_activate = super()._can_activate()
+        if can_activate:
+            # Don't activate if the active powerup is already expand.
+            can_activate = not isinstance(self.game.active_powerup,
+                                          self.__class__)
+        return can_activate
