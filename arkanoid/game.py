@@ -4,9 +4,7 @@ import pygame
 
 from arkanoid.rounds import Round1
 from arkanoid.sprites.ball import Ball
-from arkanoid.sprites.paddle import (EXPLODE,
-                                     NORMAL,
-                                     Paddle)
+from arkanoid.sprites.paddle import Paddle
 from arkanoid.utils import (font,
                             h_centre_pos,
                             load_png)
@@ -416,8 +414,6 @@ class RoundPlayState(BaseState):
     def update(self):
         if self.game.round.complete:
             self.game.round = self.game.round.next_round()
-            # TODO: do we need a RoundEndState for specific behaviour when a
-            # round is ended (completed)?
             self.game.state = RoundStartState(self.game)
 
 
@@ -429,33 +425,24 @@ class BallOffScreenState(BaseState):
     def __init__(self, game):
         super().__init__(game)
 
-        # Track the number of update cycles.
-        self._start = 0
+        # Deactivate the active powerup if set.
+        if self.game.active_powerup:
+            self.game.active_powerup.deactivate()
 
-        self._deactivated = False
-        self._exploded = False
+        # Tell the paddle to explode.
+        self.game.paddle.explode(on_complete=self._exploded)
+        self._explode_complete = False
 
     def update(self):
-        # Deactivate the active powerup if set.
-        if not self._deactivated and self.game.active_powerup:
-            self.game.active_powerup.deactivate()
-            self._deactivated = True
-
-        # Wait for any deactivation animation to complete.
-        if not self._exploded and self._start > 20:
-            # Tell the paddle to explode.
-            self.game.paddle.transition(EXPLODE)
-            self._exploded = True
-
         # Wait for the explosion animation to complete.
-        if self._start > 100:
+        if self._explode_complete:
             if self.game.lives - 1 > 0:
-                self.game.paddle.transition(NORMAL)
                 self.game.state = RoundRestartState(self.game)
             else:
                 self.game.state = GameEndState(self.game)
 
-        self._start += 1
+    def _exploded(self):
+        self._explode_complete = True
 
 
 class RoundRestartState(RoundStartState):

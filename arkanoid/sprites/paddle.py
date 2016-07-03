@@ -70,15 +70,20 @@ class Paddle(pygame.sprite.Sprite):
         # The next state to transition to.
         self._next_state = None
 
+        # Set up the exploding sequence of images.
+        self._image_explode, _ = load_png('paddle_explode.png')
+        self._image_orig = self.image
+        self._exploding_animation = None
+
+        # Whether we need to explode.
+        self._explode = False
+        self._on_explode_complete = None
+
+        # Keep track of update cycles for animation purposes.
+        self._animation_count = 0
+
     def update(self):
         """Update the state of the paddle."""
-        # Continuously move the paddle when the offset is non-zero.
-        newpos = self.rect.move(self.move, 0)
-
-        if self._area.contains(newpos):
-            # But only update the position of the paddle if it's within
-            # the screen area.
-            self.rect = newpos
 
         if self._state.complete and self._next_state:
             # Transition to the next state when current state complete.
@@ -87,6 +92,31 @@ class Paddle(pygame.sprite.Sprite):
 
         # Delegate to our active state.
         self._state.update()
+
+        if self._exploding_animation:
+            # Do the exploding animation.
+            self._do_explode()
+        else:
+            # We're not exploding, so continuously move the paddle when the
+            # offset is non-zero.
+            newpos = self.rect.move(self.move, 0)
+
+            if self._area.contains(newpos):
+                # But only update the position of the paddle if it's within
+                # the screen area.
+                self.rect = newpos
+
+    def _do_explode(self):
+        if self._animation_count < 90:
+            if self._animation_count % 2 == 0:
+                self.image = next(self._exploding_animation)
+            self._animation_count += 1
+        else:
+            self._on_explode_complete()
+            self.image = self._image_orig
+            self._on_explode_complete = None
+            self._exploding_animation = None
+            self._animation_count = 0
 
     def transition(self, state):
         """Transition to the specified state.
@@ -121,6 +151,18 @@ class Paddle(pygame.sprite.Sprite):
     def reset(self):
         """Reset the position of the paddle to its start position."""
         self.rect.center = self._area.center
+
+    def explode(self, on_complete):
+        """Animate a paddle explosion.
+
+        Args:
+            on_complete:
+                No-args callable that will be called when the explosion
+                animation has finished.
+        """
+        self._exploding_animation = itertools.cycle((self._image_explode,
+                                                     self._image_orig))
+        self._on_explode_complete = on_complete
 
     @staticmethod
     def bounce_strategy(paddle_rect, ball_rect):
@@ -167,6 +209,26 @@ class Paddle(pygame.sprite.Sprite):
 
         # Look up the angle and convert it to radians, before returning.
         return math.radians(angles[index])
+
+
+class ExplodingAnimation:
+
+    # TODO: if exploding animation, then paddle can delegate to it.
+    # paddle.explode() creates new instance of animation passing in
+    # the callback.
+
+    def __init__(self, paddle):
+        # Set up the exploding sequence of images.
+        self._image_explode, _ = load_png('paddle_explode.png')
+        self._image_orig = self.image
+        self._animation = None
+
+        # Whether we need to explode.
+        self._explode = False
+        self._on_explode_complete = None
+
+        # Keep track of update cycles for animation purposes.
+        self._animation_count = 0
 
 
 class PaddleState:
@@ -307,36 +369,7 @@ class LaserState:
     pass
 
 
-class ExplodingState(PaddleState):
-    """This state animates the paddle exploding when it misses the ball."""
-
-    def __init__(self, paddle):
-        super().__init__(paddle)
-
-        image_explode, _ = load_png('paddle_explode.png')
-        self.rect = paddle.rect
-        self._image_orig = paddle.image
-
-        self._animation = itertools.cycle((image_explode, paddle.image))
-        self._explode_start = 0
-
-    def update(self):
-        """Animate the paddle explosion."""
-        if not self.complete and self._explode_start < 90:
-            if self._explode_start % 2 == 0:
-                self.paddle.image = next(self._animation)
-            self._explode_start += 1
-        else:
-            self.paddle.image = self._image_orig
-            self.complete = True
-
-    def exit(self):
-        # No specific exit behaviour.
-        pass
-
-
 # The different paddle states.
 NORMAL = NormalState
 WIDE = WideState
 LASER = LaserState
-EXPLODE = ExplodingState
