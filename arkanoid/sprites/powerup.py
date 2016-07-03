@@ -14,11 +14,9 @@ class PowerUp(pygame.sprite.Sprite):
     the game in some way when it collides with the paddle.
 
     This is an abstract base class that holds functionality common to all
-    concrete powerups. Concrete subclasses must implement _activate() to
-    perform the powerup specific action and also deactivate() to undo the
-    action. It is important that all powerup initialisation takes place in
-    _activate() and not in the __init__() method to ensure that actions
-    happen at the right time.
+    concrete powerups. All important powerup initialisation should
+    take place in _activate() and not in the __init__() method to ensure
+    that actions happen at the right time.
     """
 
     # The speed the powerup falls from a brick.
@@ -70,17 +68,20 @@ class PowerUp(pygame.sprite.Sprite):
 
             # Check whether the powerup has collided with the paddle.
             if self.rect.colliderect(self.game.paddle.rect):
-                # We've collided, so first check whether there is an
-                # existing active powerup in the game, and deactivate if so.
-                if self.game.active_powerup:
-                    self.game.active_powerup.deactivate()
-                # Activate ourselves.
-                self._activate()
-                # Set ourselves as the active powerup in the game.
-                self.game.active_powerup = self
+                # We've collided, so check whether it is appropriate for us
+                # # to activate.
+                if self._can_activate():
+                    # If there is already an active powerup in the game,
+                    # deactivate that first.
+                    if self.game.active_powerup:
+                        self.game.active_powerup.deactivate()
+                    # Carry out the powerup specific activation behaviour.
+                    self._activate()
+                    # Set ourselves as the active powerup in the game.
+                    self.game.active_powerup = self
                 # No need to display ourself anymore.
                 self.game.powerups.remove(self)
-                self.visible = False  # TODO: is this needed (and below)?
+                self.visible = False
             else:
                 # Keep track of the number of update cycles for animation
                 # purposes.
@@ -96,6 +97,17 @@ class PowerUp(pygame.sprite.Sprite):
         powerup subclasses to perform the powerup specific action.
         """
         raise NotImplementedError('Subclasses must implement _activate()')
+
+    def _can_activate(self):
+        """Whether it is appropriate for the powerup to activate given
+        current game state.
+
+        Returns:
+            True if appropriate to activate, false otherwise.
+        """
+        # Subclasses can override if they need to do some specific check,
+        # but the default behaviour is to always allow activation.
+        return True
 
     def deactivate(self):
         """Deactivate the current powerup by returning the game state back
@@ -169,3 +181,8 @@ class ExpandPowerUp(PowerUp):
         """Deactivate the ExpandPowerUp by returning the paddle back to
         its original size."""
         self.game.paddle.transition(paddle.NORMAL)
+
+    def _can_activate(self):
+        if isinstance(self.game.active_powerup, self.__class__):
+            return False
+        return True
