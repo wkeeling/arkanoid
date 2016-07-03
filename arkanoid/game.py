@@ -428,6 +428,7 @@ class BallOffScreenState(BaseState):
         # Deactivate the active powerup if set.
         if self.game.active_powerup:
             self.game.active_powerup.deactivate()
+            self.game.active_powerup = None
 
         # Tell the paddle to explode.
         self.game.paddle.explode(on_complete=self._exploded)
