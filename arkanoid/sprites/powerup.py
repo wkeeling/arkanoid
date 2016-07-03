@@ -175,7 +175,7 @@ class ExpandPowerUp(PowerUp):
         super().__init__(game, brick, self._PNG_FILES)
 
     def _activate(self):
-        # Tell the paddle that we want it to transition to WideState next.
+        # Tell the paddle that we want to transition to WideState next.
         self.game.paddle.transition(paddle.WIDE)
 
     def deactivate(self):

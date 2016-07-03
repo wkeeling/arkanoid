@@ -92,6 +92,21 @@ class Paddle(pygame.sprite.Sprite):
                 # But only update the position of the paddle if it's within
                 # the screen area.
                 self.rect = newpos
+            else:
+                # The new position is not within the screen area based on
+                # current speed, which might leave a small gap. Adjust the
+                # speed until we match the paddle up with the edge of the
+                # game area exactly.
+                while self.move != 0:
+                    if self.move < 0:
+                        self.move += 1
+                    else:
+                        self.move -= 1
+                        
+                    newpos = self.rect.move(self.move, 0)
+                    if self.area.contains(newpos):
+                        self.rect = newpos
+                        break
 
     def transition(self, state):
         """Transition to the specified state.
