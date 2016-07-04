@@ -4,7 +4,7 @@ import logging
 import pygame
 
 from arkanoid.sprites import paddle
-from arkanoid.utils import load_png
+from arkanoid.util import load_png
 
 LOG = logging.getLogger(__name__)
 

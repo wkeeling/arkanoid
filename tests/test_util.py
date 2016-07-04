@@ -2,12 +2,12 @@ from unittest.mock import Mock
 from unittest.mock import patch
 from unittest import TestCase
 
-from arkanoid.utils import h_centre_pos
+from arkanoid.util import h_centre_pos
 
 
 class TestUtils(TestCase):
 
-    @patch('arkanoid.utils.pygame')
+    @patch('arkanoid.util.pygame')
     def test_returns_left_pos_for_horizontal_centre(self, mock_pygame):
         mock_screen = Mock()
         mock_screen.get_width.return_value = 600

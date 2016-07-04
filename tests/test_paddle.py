@@ -5,13 +5,13 @@ from unittest.mock import patch
 
 import pygame
 
-from arkanoid.sprites import Paddle
+from arkanoid.sprites.paddle import Paddle
 
 
 class TestPaddle(TestCase):
 
-    @patch('arkanoid.sprites.load_png')
-    @patch('arkanoid.sprites.pygame')
+    @patch('arkanoid.sprites.paddle.load_png')
+    @patch('arkanoid.sprites.paddle.pygame')
     def test_initialise(self, mock_pygame, mock_load_png):
         mock_screen, mock_area, mock_image, mock_rect = (
             Mock(), Mock(), Mock(), Mock())
@@ -33,8 +33,8 @@ class TestPaddle(TestCase):
         mock_pygame.Rect.assert_called_once_with(10, 630, 580, 10)
         self.assertEqual(paddle.rect.center, 'area center')
 
-    @patch('arkanoid.sprites.load_png')
-    @patch('arkanoid.sprites.pygame')
+    @patch('arkanoid.sprites.paddle.load_png')
+    @patch('arkanoid.sprites.paddle.pygame')
     def test_update_moves_when_in_area(self, mock_pygame, mock_load_png):
         mock_image, mock_rect, mock_area, mock_new_rect = (
             Mock(), Mock(), Mock(), Mock())
@@ -48,8 +48,8 @@ class TestPaddle(TestCase):
 
         self.assertEqual(paddle.rect, mock_new_rect)
 
-    @patch('arkanoid.sprites.load_png')
-    @patch('arkanoid.sprites.pygame')
+    @patch('arkanoid.sprites.paddle.load_png')
+    @patch('arkanoid.sprites.paddle.pygame')
     def test_update_not_move_when_not_in_area(self, mock_pygame, mock_load_png):
         mock_image, mock_rect, mock_area, mock_new_rect = (
             Mock(), Mock(), Mock(), Mock())
@@ -63,8 +63,8 @@ class TestPaddle(TestCase):
 
         self.assertEqual(paddle.rect, mock_rect)
 
-    @patch('arkanoid.sprites.load_png')
-    @patch('arkanoid.sprites.pygame')
+    @patch('arkanoid.sprites.paddle.load_png')
+    @patch('arkanoid.sprites.paddle.pygame')
     def test_move_left(self, mock_pygame, mock_load_png):
         mock_image, mock_rect, mock_area = (Mock(), Mock(), Mock())
         mock_load_png.return_value = mock_image, mock_rect
@@ -77,8 +77,8 @@ class TestPaddle(TestCase):
 
         mock_rect.move.assert_called_once_with(-10, 0)
 
-    @patch('arkanoid.sprites.load_png')
-    @patch('arkanoid.sprites.pygame')
+    @patch('arkanoid.sprites.paddle.load_png')
+    @patch('arkanoid.sprites.paddle.pygame')
     def test_move_right(self, mock_pygame, mock_load_png):
         mock_image, mock_rect, mock_area = (Mock(), Mock(), Mock())
         mock_load_png.return_value = mock_image, mock_rect
@@ -91,8 +91,8 @@ class TestPaddle(TestCase):
 
         mock_rect.move.assert_called_once_with(15, 0)
 
-    @patch('arkanoid.sprites.load_png')
-    @patch('arkanoid.sprites.pygame')
+    @patch('arkanoid.sprites.paddle.load_png')
+    @patch('arkanoid.sprites.paddle.pygame')
     def test_stop(self, mock_pygame, mock_load_png):
         mock_image, mock_rect, mock_area = (Mock(), Mock(), Mock())
         mock_load_png.return_value = mock_image, mock_rect
@@ -105,8 +105,8 @@ class TestPaddle(TestCase):
 
         mock_rect.move.assert_called_once_with(0, 0)
 
-    @patch('arkanoid.sprites.load_png')
-    @patch('arkanoid.sprites.pygame')
+    @patch('arkanoid.sprites.paddle.load_png')
+    @patch('arkanoid.sprites.paddle.pygame')
     def test_reset(self, mock_pygame, mock_load_png):
         mock_image, mock_rect, mock_area = (Mock(), Mock(), Mock())
         mock_load_png.return_value = mock_image, mock_rect

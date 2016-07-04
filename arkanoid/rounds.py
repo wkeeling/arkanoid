@@ -7,7 +7,7 @@ from arkanoid.sprites.brick import Brick
 from arkanoid.sprites.powerup import (ExpandPowerUp,
                                       ExtraLifePowerUp,
                                       SlowBallPowerUp)
-from arkanoid.utils import load_png
+from arkanoid.util import load_png
 
 
 class Round1:
@@ -121,5 +121,3 @@ class Round1:
                 brick.rect = rect
 
             left += rect.width+1
-
-

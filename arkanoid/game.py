@@ -2,12 +2,13 @@ import logging
 
 import pygame
 
+from arkanoid.event import dispatcher
 from arkanoid.rounds import Round1
 from arkanoid.sprites.ball import Ball
 from arkanoid.sprites.paddle import Paddle
-from arkanoid.utils import (font,
-                            h_centre_pos,
-                            load_png)
+from arkanoid.util import (font,
+                           h_centre_pos,
+                           load_png)
 
 LOG = logging.getLogger(__name__)
 
@@ -52,32 +53,35 @@ class Arkanoid:
         # Reference to a running game, when one is in play.
         self._game = None
 
+        # Whether we're running.
+        self._running = True
+
+        # Set up the top level event handlers.
+        def quit_handler(event):
+            self._running = False
+        dispatcher.register_handler(pygame.QUIT, quit_handler)
+
     def main_loop(self):
         """Starts the main loop of the program which manages the screen
         interactions and game play.
 
         Pretty much everything takes place within this loop.
         """
-        running = True
-
-        while running:
+        while self._running:
             # Game runs at 60 fps.
             self._clock.tick(GAME_SPEED)
 
-            # Monitor for key presses.
-            event_list = pygame.event.get()
-            for event in event_list:
-                if event.type == pygame.QUIT:
-                    running = False
+            # Dispatch events.
+            dispatcher.dispatch()
 
             # TODO: add logic to begin game
             if not self._game:
                 self._game = Game()
 
-            self._game.update(event_list)
+            self._game.update()
 
             if self._game.over:
-                running = False
+                self._running = False
 
             # Display all updates.
             pygame.display.flip()
@@ -147,32 +151,14 @@ class Game:
         # The current game state.
         self.state = RoundStartState(self)
 
-    def update(self, events):
-        """Update the state of the running game.
-
-        Args:
-            events:
-                The EventList containing the events captured since the last
-                frame.
-        """
+    def update(self):
+        """Update the state of the running game."""
         # Common updates.
-        self._handle_events(events)
         self._update_sprites()
         self._update_lives()
 
         # Delegate to the active state for specific behaviour.
         self.state.update()
-
-    def _handle_events(self, event_list):
-        for event in event_list:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    self.paddle.move_left()
-                elif event.key == pygame.K_RIGHT:
-                    self.paddle.move_right()
-            elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                    self.paddle.stop()
 
     def _update_sprites(self):
         """Erase the sprites, update their state, and then redraw them
@@ -182,9 +168,11 @@ class Game:
         sprites += self.powerups
         sprites += self.other_sprites
 
+        # Erase.
         for sprite in sprites:
             self._screen.blit(self.round.background, sprite.rect, sprite.rect)
 
+        # Update and redraw, if visible.
         for sprite in sprites:
             sprite.update()
             if sprite.visible:
