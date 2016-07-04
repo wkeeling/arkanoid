@@ -114,7 +114,7 @@ class Round1:
                 if rect:
                     top -= rect.height
 
-            if not brick.is_destroyed():
+            if brick.visible:
                 # Each layer consists of 13 bricks added horizontally.
                 rect = background.blit(brick.image, (left, top))
                 # Update the brick's rect with the new position

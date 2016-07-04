@@ -81,14 +81,15 @@ class Brick(pygame.sprite.Sprite):
                 self.image = self.image_orig
                 self._animate = None
 
-    def is_destroyed(self):
-        """Whether the brick is now destroyed and should be removed from the
-        game.
+    @property
+    def visible(self):
+        """Whether the brick is still visible based on its collision count,
+        or whether it is destroyed and no longer visible.
 
         Returns:
-            True if the brick is destroyed. False otherwise.
+            True if the brick is visible. False otherwise.
         """
-        return self.collision_count >= self._destroy_after
+        return self.collision_count < self._destroy_after
 
     def animate(self):
         """Trigger animation of this brick."""

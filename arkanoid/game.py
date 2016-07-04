@@ -138,6 +138,9 @@ class Game:
         # The currently applied powerup, if any.
         self.active_powerup = None
 
+        # Other sprites which can be brought into the game can be added here.
+        self.other_sprites = []
+
         # Whether the game is finished.
         self.over = False
 
@@ -174,41 +177,18 @@ class Game:
     def _update_sprites(self):
         """Erase the sprites, update their state, and then redraw them
         on the screen."""
-        # Erase the previous location of the sprites.
-        self._screen.blit(self.round.background,
-                          self.paddle.rect,
-                          self.paddle.rect)
-        self._screen.blit(self.round.background,
-                          self.ball.rect,
-                          self.ball.rect)
-        for brick in self.round.bricks:
-            self._screen.blit(self.round.background,
-                              brick.rect,
-                              brick.rect)
-        for powerup in self.powerups:
-            self._screen.blit(self.round.background,
-                              powerup.rect,
-                              powerup.rect)
+        sprites = [self.paddle, self.ball]
+        sprites += self.round.bricks
+        sprites += self.powerups
+        sprites += self.other_sprites
 
-        # Update the state of the sprites and redraw them, assuming
-        # they're visible.
-        self.paddle.update()
-        if self.paddle.visible:
-            self._screen.blit(self.paddle.image, self.paddle.rect)
+        for sprite in sprites:
+            self._screen.blit(self.round.background, sprite.rect, sprite.rect)
 
-        self.ball.update()
-        if self.ball.visible:
-            self._screen.blit(self.ball.image, self.ball.rect)
-
-        for brick in self.round.bricks:
-            brick.update()
-            if not brick.is_destroyed():
-                self._screen.blit(brick.image, brick.rect)
-
-        for powerup in self.powerups:
-            powerup.update()
-            if powerup.visible:
-                self._screen.blit(powerup.image, powerup.rect)
+        for sprite in sprites:
+            sprite.update()
+            if sprite.visible:
+                self._screen.blit(sprite.image, sprite.rect)
 
     def _update_lives(self):
         """Update the number of remaining lives displayed on the screen."""
@@ -344,8 +324,12 @@ class RoundStartState(BaseState):
         # Increment the collision count.
         brick.collision_count += 1
 
-        # Should the brick be destroyed?
-        if brick.is_destroyed():
+        # Has the brick been destroyed, based on the collision count?
+        if brick.visible:
+            # Still visible, so animate it to indicate strike.
+            brick.animate()
+        else:
+            # Brick has been destroyed.
             if brick.powerup_cls:
                 # There is a powerup in the brick.
                 powerup = brick.powerup_cls(self.game, brick)
@@ -363,9 +347,6 @@ class RoundStartState(BaseState):
             # Erase the brick from the screen.
             self._screen.blit(self.game.round.background, brick.rect,
                               brick.rect)
-        else:
-            # Brick not destroyed, so animate it to indicate strike.
-            brick.animate()
 
     def update(self):
         """Handle the sequence of events that happen at the beginning of a
