@@ -42,7 +42,7 @@ class PowerUp(pygame.sprite.Sprite):
         super().__init__()
         self.game = game
         self._speed = speed
-        self._animation = itertools.cycle([load_png(png)[0] for png in pngs])
+        self._animation = itertools.cycle(load_png(png)[0] for png in pngs)
         self._animation_start = 0
 
         self.image = None
