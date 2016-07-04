@@ -102,7 +102,7 @@ class Paddle(pygame.sprite.Sprite):
                         self.move += 1
                     else:
                         self.move -= 1
-                        
+
                     newpos = self.rect.move(self.move, 0)
                     if self.area.contains(newpos):
                         self.rect = newpos

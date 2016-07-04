@@ -284,7 +284,8 @@ class RoundStartState(BaseState):
         # Set the ball up with the round's collidable objects.
         self._configure_ball()
 
-        self._start_time = None
+        # Keep track of the number of update cycles.
+        self._update_count = 0
         self._screen = pygame.display.get_surface()
 
         # Initialise the sprites' start state.
@@ -372,35 +373,30 @@ class RoundStartState(BaseState):
         """
         caption, ready = None, None
 
-        if not self._start_time:
-            self._start_time = pygame.time.get_ticks()
-
-        if self._time_elapsed() > 1000:
-            # Display the caption after a second.
+        if self._update_count > 60:
+            # Display the caption after a short delay.
             caption = self._screen.blit(self._caption, self._caption_pos)
-        if self._time_elapsed() > 2500:
+        if self._update_count > 150:
             # Display the "Ready" message.
             ready = self._screen.blit(self._ready, self._ready_pos)
             # Display the sprites.
             self.game.paddle.visible = True
             self.game.ball.visible = True
-        if self._time_elapsed() > 4500:
+        if self._update_count > 270:
             # Erase the text.
             self._screen.blit(self.game.round.background, caption, caption)
             self._screen.blit(self.game.round.background, ready, ready)
-        if self._time_elapsed() > 5000:
+        if self._update_count > 300:
             # Release the anchor.
             self.game.ball.release(BALL_START_ANGLE_RAD)
             # Normal gameplay begins.
             self.game.state = RoundPlayState(self.game)
 
+        self._update_count += 1
+
         # Don't let the paddle move when it's not displayed.
         if not self.game.paddle.visible:
             self.game.paddle.stop()
-
-    def _time_elapsed(self):
-        now = pygame.time.get_ticks()
-        return now - self._start_time
 
 
 class RoundPlayState(BaseState):
@@ -470,7 +466,7 @@ class RoundRestartState(RoundStartState):
         # Run the logic in the RoundStartState first.
         super().update()
 
-        if self._time_elapsed() > 1000:
+        if self._update_count > 60:
             # Update the number of lives when we display the caption.
             self.game.lives = self._lives
 
