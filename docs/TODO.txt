@@ -56,3 +56,5 @@ Powerups shouldn't activate when a paddle is exploding.
 Refactor exploding logic into ExplodingAnimation.
 
 Use Travis CI
+
+Use "update_count" rather than "get_start_time" in RoundStartState
