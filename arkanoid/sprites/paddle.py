@@ -112,8 +112,7 @@ class Paddle(pygame.sprite.Sprite):
         """Transition to the specified state.
 
         Note that this is a request to transition, notifying an existing state
-        to exit, before applying the new state. If the state being transitioned
-        to is the same as the current state, this method does nothing.
+        to exit, before applying the new state.
 
         Args:
             state:
@@ -219,7 +218,7 @@ class ExplodingAnimation:
         self._image_orig, _ = load_png('paddle.png')
         self._exploding_animation = itertools.cycle((self._image_explode,
                                                      self._image_orig))
-        # Whether we need to explode.
+        # The notification callback.
         self._on_explode_complete = on_complete
 
         # Keep track of update cycles for animation purposes.
@@ -296,7 +295,7 @@ class NormalState(PaddleState):
     def __init__(self, paddle):
         super().__init__(paddle)
 
-        # Put back the standard paddle graphic.
+        # Set the default paddle graphic.
         pos = self.paddle.rect.center
         self.paddle.image, self.paddle.rect = load_png('paddle.png')
         self.paddle.rect.center = pos
