@@ -54,3 +54,5 @@ When paddle expands into wall it won't move
 The powerups should be more intelligent. Don't drop loads of the same when the powerup is already active?
 Powerups shouldn't activate when a paddle is exploding.
 Refactor exploding logic into ExplodingAnimation.
+
+Use Travis CI
