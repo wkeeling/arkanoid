@@ -63,20 +63,11 @@ class Paddle(pygame.sprite.Sprite):
         # The current paddle state.
         self._state = NormalState(self)
 
-        # The next state to transition to.
-        self._next_state = None
-
         # Used when the paddle needs to explode.
         self.exploding_animation = None
 
     def update(self):
         """Update the state of the paddle."""
-
-        if self._state.complete and self._next_state:
-            # Transition to the next state when current state complete.
-            self._state = self._next_state(self)
-            self._next_state = None
-
         # Delegate to our active state.
         self._state.update()
 
@@ -109,17 +100,21 @@ class Paddle(pygame.sprite.Sprite):
                         break
 
     def transition(self, state):
-        """Transition to the specified state.
+        """Transition to the specified state, as represented by the state
+        class.
 
         Note that this is a request to transition, notifying an existing state
-        to exit, before applying the new state.
+        to exit, before initialising and applying the new state.
 
         Args:
             state:
-                The state to transition to.
+                The state class to transition to.
         """
-        self._state.exit()
-        self._next_state = state
+        def on_complete():
+            # Switch the state on state exit.
+            self._state = state(self)
+
+        self._state.exit(on_complete)
 
     def move_left(self):
         """Tell the paddle to move to the left by the speed set when the
@@ -279,12 +274,17 @@ class PaddleState:
         """
         raise NotImplementedError('Subclasses must implement update()')
 
-    def exit(self):
+    def exit(self, on_complete=None):
         """Sub-states must implement this to perform any behaviour that should
         happen just before the state transitions to some other state.
 
-        Sub-states should set the 'complete' instance attribute to True once
-        this behaviour is completed.
+        When the exit behaviour is completed, sub-states must call the no-args
+        on_complete callable if one has been passed.
+
+        Args:
+            on_complete:
+                A no-args callable that will be called when the exit behaviour
+                has completed.
         """
         raise NotImplementedError('Subclasses must implement exit()')
 
@@ -300,17 +300,12 @@ class NormalState(PaddleState):
         self.paddle.image, self.paddle.rect = load_png('paddle.png')
         self.paddle.rect.center = pos
 
-        # We're always in a completed state, ready to transition to
-        # a new state.
-        self.complete = True
-
     def update(self):
         # Nothing specific to do in normal state.
         pass
 
-    def exit(self):
-        # No specific exit behaviour.
-        pass
+    def exit(self, on_complete=None):
+        on_complete()
 
 
 class WideState(PaddleState):
@@ -340,6 +335,9 @@ class WideState(PaddleState):
 
         # Whether we're to expand or to shrink.
         self._expand, self._shrink = True, False
+
+        # Exit callback
+        self._on_complete = None
 
     def update(self):
         """Animate the paddle expanding from normal to wide or shrinking
@@ -379,13 +377,20 @@ class WideState(PaddleState):
         except StopIteration:
             # State ends.
             self._shrink = False
-            self.complete = True
+            self._on_complete()
         else:
             self._update_count += 1
 
-    def exit(self):
-        """Trigger the animation to shrink the paddle and exit the state."""
+    def exit(self, on_complete=None):
+        """Trigger the animation to shrink the paddle and exit the state.
+
+        Args:
+            on_complete:
+                No-args callable invoked when the shrinking paddle animation
+                has completed.
+        """
         self._shrink = True
+        self._on_complete = on_complete
 
 
 class LaserState:
