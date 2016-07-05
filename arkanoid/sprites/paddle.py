@@ -67,9 +67,6 @@ class Paddle(pygame.sprite.Sprite):
         # Used when the paddle needs to explode.
         self.exploding_animation = None
 
-        # Setup the event handlers.
-        self._register_event_handlers()
-
     def update(self):
         """Update the state of the paddle."""
         # Delegate to our active state.
@@ -149,23 +146,6 @@ class Paddle(pygame.sprite.Sprite):
                 animation has finished.
         """
         self.exploding_animation = ExplodingAnimation(self, on_complete)
-
-    def _register_event_handlers(self):
-
-        def move_left(event):
-            if event.key == pygame.K_LEFT:
-                self.move_left()
-        dispatcher.register_handler(pygame.KEYDOWN, move_left)
-
-        def move_right(event):
-            if event.key == pygame.K_RIGHT:
-                self.move_right()
-        dispatcher.register_handler(pygame.KEYDOWN, move_right)
-
-        def stop(event):
-            if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                self.stop()
-        dispatcher.register_handler(pygame.KEYUP, stop)
 
     @staticmethod
     def bounce_strategy(paddle_rect, ball_rect):

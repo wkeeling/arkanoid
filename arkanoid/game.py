@@ -145,11 +145,14 @@ class Game:
         # Other sprites which can be brought into the game can be added here.
         self.other_sprites = []
 
+        # Create event handlers required by the game.
+        self._create_event_handlers()
+
         # Whether the game is finished.
         self.over = False
 
         # The current game state.
-        self.state = RoundStartState(self)
+        self.state = GameStartState(self)
 
     def update(self):
         """Update the state of the running game."""
@@ -199,6 +202,23 @@ class Game:
         if not isinstance(self.state, BallOffScreenState):
             self.state = BallOffScreenState(self)
 
+    def _create_event_handlers(self):
+
+        def move_left(event):
+            if event.key == pygame.K_LEFT:
+                self.paddle.move_left()
+        self.handler_move_left = move_left
+
+        def move_right(event):
+            if event.key == pygame.K_RIGHT:
+                self.paddle.move_right()
+        self.handler_move_right = move_right
+
+        def stop(event):
+            if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                self.paddle.stop()
+        self.handler_stop = stop
+
     def __repr__(self):
         class_name = type(self).__name__
         return '{}(round_class={}, lives={})'.format(
@@ -237,9 +257,15 @@ class GameStartState(BaseState):
     def __init__(self, game):
         super().__init__(game)
 
+        # Register the event handlers for paddle control.
+        dispatcher.register_handler(pygame.KEYDOWN,
+                                    self.game.handler_move_left,
+                                    self.game.handler_move_right)
+        dispatcher.register_handler(pygame.KEYUP, self.game.handler_stop)
+
     def update(self):
         # TODO: implement the game intro sequence (animation).
-        pass
+        self.game.state = RoundStartState(self.game)
 
 
 class RoundStartState(BaseState):
@@ -459,6 +485,11 @@ class GameEndState(BaseState):
 
         # Indicate that the game is over.
         game.over = True
+
+        # Unregister the event handlers.
+        dispatcher.unregister_handler(self.game.handler_move_left,
+                                      self.game.handler_move_right,
+                                      self.game.handler_stop)
 
     def update(self):
         pass
