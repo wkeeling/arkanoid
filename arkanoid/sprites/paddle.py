@@ -320,14 +320,10 @@ class WideState(PaddleState):
         super().__init__(paddle)
 
         # Load the images/rects required for the expanding animation.
-        self._expand_anim = iter(load_png_sequence('paddle_expand'))
+        self._expand_anim = iter(load_png_sequence('paddle_wide'))
 
         # Load the images/rects required for the expanding animation.
-        self._shrink_anim = iter(reversed(load_png_sequence('paddle_expand')))
-
-        # Keep track of the number of times we're updated, in order to
-        # animate.
-        self._update_count = 0
+        self._shrink_anim = iter(reversed(load_png_sequence('paddle_wide')))
 
         # Whether we're to expand or to shrink.
         self._expand, self._shrink = True, False
@@ -345,37 +341,31 @@ class WideState(PaddleState):
 
     def _expand_paddle(self):
         try:
-            if self._update_count % 5 == 0:
-                pos = self.paddle.rect.center
-                self.paddle.image, self.paddle.rect = next(
-                    self._expand_anim)
-                self.paddle.rect.center = pos
-                while (not self.paddle.area.collidepoint(
-                        self.paddle.rect.midleft)):
-                    # Nudge the paddle back inside the game area.
-                    self.paddle.rect = self.paddle.rect.move(1, 0)
-                while (not self.paddle.area.collidepoint(
-                        self.paddle.rect.midright)):
-                    # Nudge the paddle back inside the game area.
-                    self.paddle.rect = self.paddle.rect.move(-1, 0)
+            pos = self.paddle.rect.center
+            self.paddle.image, self.paddle.rect = next(
+                self._expand_anim)
+            self.paddle.rect.center = pos
+            while (not self.paddle.area.collidepoint(
+                    self.paddle.rect.midleft)):
+                # Nudge the paddle back inside the game area.
+                self.paddle.rect = self.paddle.rect.move(1, 0)
+            while (not self.paddle.area.collidepoint(
+                    self.paddle.rect.midright)):
+                # Nudge the paddle back inside the game area.
+                self.paddle.rect = self.paddle.rect.move(-1, 0)
         except StopIteration:
             self._expand = False
-        else:
-            self._update_count += 1
 
     def _shrink_paddle(self):
         try:
-            if self._update_count % 5 == 0:
-                pos = self.paddle.rect.center
-                self.paddle.image, self.paddle.rect = next(
-                    self._shrink_anim)
-                self.paddle.rect.center = pos
+            pos = self.paddle.rect.center
+            self.paddle.image, self.paddle.rect = next(
+                self._shrink_anim)
+            self.paddle.rect.center = pos
         except StopIteration:
             # State ends.
             self._shrink = False
             self._on_complete()
-        else:
-            self._update_count += 1
 
     def exit(self, on_complete=None):
         """Trigger the animation to shrink the paddle and exit the state.
