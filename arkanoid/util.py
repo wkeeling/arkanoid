@@ -17,7 +17,8 @@ def load_png(filename):
     Raises:
         FileNotFoundError if the image filename was not found.
     """
-    q_filename = os.path.join(os.path.dirname(__file__), 'data', 'graphics', filename)
+    q_filename = os.path.join(os.path.dirname(__file__), 'data', 'graphics',
+                              filename)
     if not os.path.exists(q_filename):
         raise FileNotFoundError('File not found: {}'.format(q_filename))
     image = pygame.image.load(q_filename)
@@ -26,6 +27,40 @@ def load_png(filename):
     else:
         image = image.convert_alpha()
     return image, image.get_rect()
+
+
+def load_png_sequence(filename_prefix):
+    """Load a sequence of png images with the specified filename from the
+    data/graphics directory.
+
+    Each png filename in the sequence will be formed by appending an
+    incrementing number, starting at 1, followed by the .png extension. The
+    png files will then be loaded for each sequence number until a file
+    cannot be found, at which point loading will stop and a list of
+    the files will be returned.
+
+    For example, if the filename prefix is 'paddle_wide' then a filename of
+    'paddle_wide_1.png' will attempt to be loaded, followed by
+    'paddle_wide_2.png' etc. until a file cannot be found.
+
+    Args:
+        filename_prefix:
+            The beginning of the png filename of each file in the sequence.
+    Returns:
+        A list of 2-tuples of image/rect.
+    """
+    count = 1
+    sequence = []
+    while True:
+        filename = '%s_%s.png' % (filename_prefix, count)
+        try:
+            sequence.append(load_png(filename))
+        except FileNotFoundError:
+            # End of sequence.
+            break
+        else:
+            count += 1
+    return sequence
 
 
 @functools.lru_cache()

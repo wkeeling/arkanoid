@@ -5,7 +5,7 @@ from unittest import TestCase
 from arkanoid.util import h_centre_pos
 
 
-class TestUtils(TestCase):
+class TestUtil(TestCase):
 
     @patch('arkanoid.util.pygame')
     def test_returns_left_pos_for_horizontal_centre(self, mock_pygame):

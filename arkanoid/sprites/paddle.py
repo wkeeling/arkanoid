@@ -4,8 +4,8 @@ import math
 
 import pygame
 
-from arkanoid.event import dispatcher
-from arkanoid.util import load_png
+from arkanoid.util import (load_png,
+                           load_png_sequence)
 
 
 LOG = logging.getLogger(__name__)
@@ -316,19 +316,14 @@ class WideState(PaddleState):
     also to decrease it when the state exits.
     """
 
-    _PADDLE_IMAGES = ('paddle_expand_1.png',
-                      'paddle_expand_2.png',
-                      'paddle_expand_3.png')
-
     def __init__(self, paddle):
         super().__init__(paddle)
 
         # Load the images/rects required for the expanding animation.
-        self._expand_anim = iter(load_png(img) for img in self._PADDLE_IMAGES)
+        self._expand_anim = iter(load_png_sequence('paddle_expand'))
 
         # Load the images/rects required for the expanding animation.
-        self._shrink_anim = iter(
-            load_png(img) for img in reversed(self._PADDLE_IMAGES))
+        self._shrink_anim = iter(reversed(load_png_sequence('paddle_expand')))
 
         # Keep track of the number of times we're updated, in order to
         # animate.
