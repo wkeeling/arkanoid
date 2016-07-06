@@ -56,3 +56,7 @@ Use Travis CI
 Game events will need to be added to dispatcher when game starts, and removed when game ends.
 Currently these are set up in the Paddle sprite, but this won't work because each time a new game (and Paddle sprite)
 is created, duplicate event handlers will get added to the dispatcher.
+
+The rounds should not hold a reference to the next rounds.
+Round classes should be held in a list (or tuple) at the game level.
+When a game is created, we create an "rounds = iter(ROUNDS)" attribute which we call next(rounds) on for each round.

@@ -6,8 +6,8 @@ import pygame
 LOG = logging.getLogger(__name__)
 
 
-class EventDispatcher:
-    """Dispatch pygame events to registered handlers.
+class EventReceiver:
+    """Receive pygame events and dispatch to registered handlers.
 
     When an event occurs that matches a registered handler then that handler
     is invoked with the event that triggered it. More than one handler can be
@@ -18,8 +18,8 @@ class EventDispatcher:
         # Map of event types to handlers.
         self._handlers = defaultdict(list)
 
-    def dispatch(self):
-        """Get the latest list of pygame events (if any) and dispatch them
+    def receive(self):
+        """Receive the latest list of pygame events (if any) and dispatch them
         to any registered handlers.
         """
         event_list = pygame.event.get()
@@ -67,4 +67,4 @@ class EventDispatcher:
 
 
 # The singleton EventDispatcher instance.
-dispatcher = EventDispatcher()
+receiver = EventReceiver()

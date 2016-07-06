@@ -4,9 +4,12 @@ import math
 
 import pygame
 
+from arkanoid.event import receiver
 from arkanoid.util import (load_png,
                            load_png_sequence)
 
+
+__all__ = 'Paddle', 'NORMAL', 'WIDE', 'LASER'
 
 LOG = logging.getLogger(__name__)
 
@@ -100,7 +103,7 @@ class Paddle(pygame.sprite.Sprite):
                         self.rect = newpos
                         break
 
-    def transition(self, state):
+    def transition(self, state, *args):
         """Transition to the specified state, as represented by the state
         class.
 
@@ -110,10 +113,15 @@ class Paddle(pygame.sprite.Sprite):
         Args:
             state:
                 The state class to transition to.
+            args:
+                Additional arguments that may be passed to the state.
         """
         def on_complete():
             # Switch the state on state exit.
-            self._state = state(self)
+            if args:
+                self._state = state(self, *args)
+            else:
+                self._state = state(self)
 
         self._state.exit(on_complete)
 
@@ -289,6 +297,10 @@ class PaddleState:
         """
         raise NotImplementedError('Subclasses must implement exit()')
 
+    def __repr__(self):
+        class_name = type(self).__name__
+        return '{}({!r})'.format(class_name, self.paddle)
+
 
 class NormalState(PaddleState):
     """This represents the default state of the paddle."""
@@ -310,7 +322,7 @@ class NormalState(PaddleState):
 
 
 class WideState(PaddleState):
-    """This state represents the wider state of the paddle.
+    """This state represents the extended wide state of the paddle.
 
     Animation is used to increase the width when the state is created, and
     also to decrease it when the state exits.
@@ -379,8 +391,121 @@ class WideState(PaddleState):
         self._on_complete = on_complete
 
 
-class LaserState:
-    pass
+class LaserState(PaddleState):
+    """This state represents the laser paddle which is able to fire bullets
+    upwards at the bricks.
+
+    Animation is used to convert from the normal paddle to the laser paddle
+    and vice-versa.
+    """
+
+    def __init__(self, paddle, game):
+        super().__init__(paddle)
+
+        # Create the two bullet sprites.
+        self._bullet1 = LaserBullet(paddle,
+                              offset=5,
+                              bricks=game.round.bricks,
+                              on_collide=game.on_brick_collide)
+        self._bullet2 = LaserBullet(paddle,
+                              offset=5,
+                              bricks=game.round.bricks,
+                              on_collide=game.on_brick_collide)
+
+        # Allow the bullets to be displayed.
+        game.other_sprites.append(self._bullet1)
+        game.other_sprites.append(self._bullet2)
+
+        # Start monitoring for spacebar presses for firing bullets.
+        receiver.register_handler(pygame.KEYUP, self._fire)
+
+    def update(self):
+        pass
+
+    def exit(self, on_complete=None):
+        """Trigger the animation to return to normal state."""
+        # Stop monitoring for spacebar presses now that we're leaving the
+        # state.
+        receiver.unregister_handler(self._fire)
+
+    def _fire(self, event):
+        if event.key == pygame.K_SPACE:
+            # Fire the bullets, but only if they aren't already on the screen.
+            # We only allow one pair of bullets to be fired at once.
+
+
+
+class LaserBullet(pygame.sprite.Sprite):
+    """Represent a bullet fired from the laser paddle."""
+
+    def __init__(self, paddle, offset, bricks, on_collide, speed=15):
+        """Initialise the laser bullets.
+
+        Args:
+            paddle:
+                The paddle from which the bullet is fired.
+            offset:
+                The offset from the left of the paddle from which the bullet
+                starts its upwards trajectory.
+            bricks:
+                The bricks that the bullet might collide with and destroy.
+            on_collide:
+                A callback that will be invoked when the bullet collides
+                with a brick. The callback must accept one argument: the
+                brick instance.
+            speed:
+                The speed at which the bullet travels.
+        """
+        super().__init__()
+        # Load the bullet and its rect.
+        self.image, self.rect = load_png('laser_bullet.png')
+
+        self._paddle = paddle
+        self._offset = offset
+        self._bricks = bricks
+        self._on_collide = on_collide
+        self._speed = speed
+
+        # The area within which the bullet is travelling.
+        screen = pygame.display.get_surface()
+        self._area = screen.get_rect()
+
+        # Whether the bullet is visible.
+        # It may not be visible if it went off screen without hitting a brick,
+        # or if it did hit a brick and was destroyed as a result.
+        self.visible = False
+
+    def release(self):
+        """Set the bullet in motion from its start point."""
+        # Set the start position of the bullet.
+        self.rect.midbottom = self._paddle.rect.left + self._offset
+        self.visible = True
+
+    def update(self):
+        # Only update if we're still visible.
+        if self.visible:
+            # Calculate the new position.
+            self.rect = self.rect.move(0, self._speed)
+
+            # Check we're on the screen.
+            if self._area.contains(self.rect):
+                # Check if we've collided with a brick.
+                index = self.rect.collidelist(
+                    [brick.rect for brick in self._bricks])
+
+                if index > -1:
+                    # We've collided with a brick, find out which.
+                    brick = self._bricks[index]
+                    # Powerups aren't released when laser destroys a brick.
+                    brick.powerup_cls = None
+                    # Invoke the collision callback.
+                    self._on_collide(brick)
+
+                    # Since we've collided, we're now invisible.
+                    self.visible = False
+            else:
+                # No longer on the screen.
+                self.visible = False
 
 
 # The different paddle states.

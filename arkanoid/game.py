@@ -2,7 +2,7 @@ import logging
 
 import pygame
 
-from arkanoid.event import dispatcher
+from arkanoid.event import receiver
 from arkanoid.rounds import Round1
 from arkanoid.sprites.ball import Ball
 from arkanoid.sprites.paddle import Paddle
@@ -59,7 +59,7 @@ class Arkanoid:
         # Set up the top level event handlers.
         def quit_handler(event):
             self._running = False
-        dispatcher.register_handler(pygame.QUIT, quit_handler)
+        receiver.register_handler(pygame.QUIT, quit_handler)
 
     def main_loop(self):
         """Starts the main loop of the program which manages the screen
@@ -71,8 +71,8 @@ class Arkanoid:
             # Game runs at 60 fps.
             self._clock.tick(GAME_SPEED)
 
-            # Dispatch events.
-            dispatcher.dispatch()
+            # Receive and dispatch events.
+            receiver.receive()
 
             # TODO: add logic to begin game
             if not self._game:
@@ -245,7 +245,7 @@ class BaseState:
 
     def __repr__(self):
         class_name = type(self).__name__
-        return '{}({})'.format(class_name, self.game)
+        return '{}({!r})'.format(class_name, self.game)
 
 
 class GameStartState(BaseState):
@@ -258,10 +258,10 @@ class GameStartState(BaseState):
         super().__init__(game)
 
         # Register the event handlers for paddle control.
-        dispatcher.register_handler(pygame.KEYDOWN,
-                                    self.game.handler_move_left,
-                                    self.game.handler_move_right)
-        dispatcher.register_handler(pygame.KEYUP, self.game.handler_stop)
+        receiver.register_handler(pygame.KEYDOWN,
+                                  self.game.handler_move_left,
+                                  self.game.handler_move_right)
+        receiver.register_handler(pygame.KEYUP, self.game.handler_stop)
 
     def update(self):
         # TODO: implement the game intro sequence (animation).
@@ -357,10 +357,6 @@ class RoundStartState(BaseState):
             # Tell the round that a brick has gone, so that it can decide
             # whether the round is completed.
             self.game.round.brick_destroyed()
-
-            # Erase the brick from the screen.
-            self._screen.blit(self.game.round.background, brick.rect,
-                              brick.rect)
 
     def update(self):
         """Handle the sequence of events that happen at the beginning of a
@@ -487,9 +483,9 @@ class GameEndState(BaseState):
         game.over = True
 
         # Unregister the event handlers.
-        dispatcher.unregister_handler(self.game.handler_move_left,
-                                      self.game.handler_move_right,
-                                      self.game.handler_stop)
+        receiver.unregister_handler(self.game.handler_move_left,
+                                    self.game.handler_move_right,
+                                    self.game.handler_stop)
 
     def update(self):
         pass
