@@ -6,6 +6,7 @@ import pygame
 from arkanoid.sprites.brick import Brick
 from arkanoid.sprites.powerup import (ExpandPowerUp,
                                       ExtraLifePowerUp,
+                                      LaserPowerUp,
                                       SlowBallPowerUp)
 from arkanoid.util import load_png
 
@@ -13,8 +14,9 @@ from arkanoid.util import load_png
 class Round1:
     """Initialises the background, brick layout and powerups for round one."""
 
-    # _POWERUP_CLASSES = ExpandPowerUp,
-    _POWERUP_CLASSES = ExtraLifePowerUp, SlowBallPowerUp, ExpandPowerUp
+    _POWERUP_CLASSES = LaserPowerUp,
+    # _POWERUP_CLASSES = (ExpandPowerUp, ExtraLifePowerUp, SlowBallPowerUp,
+    #                     LaserPowerUp)
 
     # How far down the screen the bottom row of bricks starts
     _BOTTOM_ROW_START = 200

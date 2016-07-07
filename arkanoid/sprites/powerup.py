@@ -190,3 +190,31 @@ class ExpandPowerUp(PowerUp):
             can_activate = not isinstance(self.game.active_powerup,
                                           self.__class__)
         return can_activate
+
+
+class LaserPowerUp(PowerUp):
+    """This PowerUp allows the paddle to fire a laser beam."""
+
+    _PNG_FILES = 'powerup_laser.png',
+
+    def __init__(self, game, brick):
+        super().__init__(game, brick, self._PNG_FILES)
+
+    def _activate(self):
+        # Tell the paddle that we want to transition to LaserState next.
+        self.game.paddle.transition(paddle.LASER, self.game)
+        self.game.ball.speed = 0
+        self.game.ball.base_speed = 0
+
+    def deactivate(self):
+        """Deactivate the LaserPowerUp by turning the paddle back to a
+        normal paddle."""
+        self.game.paddle.transition(paddle.NORMAL)
+
+    def _can_activate(self):
+        can_activate = super()._can_activate()
+        if can_activate:
+            # Don't activate if the active powerup is already laser.
+            can_activate = not isinstance(self.game.active_powerup,
+                                          self.__class__)
+        return can_activate

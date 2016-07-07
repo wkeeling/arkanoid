@@ -197,13 +197,46 @@ class Game:
                 self._screen.blit(self._life_img, (left, top)))
             left += self._life_img.get_width() + 10
 
+    def on_brick_collide(self, brick):
+        """Callback called by a sprite when it collides with a brick.
+
+        In this case a sprite might be the ball, or a laser beam from the
+        laser paddle.
+
+        Args:
+            brick:
+                The Brick instance the sprite collided with.
+        """
+        # Increment the collision count.
+        brick.collision_count += 1
+
+        # Has the brick been destroyed, based on the collision count?
+        if brick.visible:
+            # Still visible, so animate it to indicate strike.
+            brick.animate()
+        else:
+            # Brick has been destroyed.
+            if brick.powerup_cls:
+                # There is a powerup in the brick.
+                powerup = brick.powerup_cls(self, brick)
+
+                # Display the powerup.
+                self.powerups.append(powerup)
+
+            # Tell the ball that the brick has gone.
+            self.ball.remove_collidable_object(brick)
+
+            # Tell the round that a brick has gone, so that it can decide
+            # whether the round is completed.
+            self.round.brick_destroyed()
+
     def _off_screen(self):
         """Callback called by the ball when it goes offscreen."""
         if not isinstance(self.state, BallOffScreenState):
             self.state = BallOffScreenState(self)
 
     def _create_event_handlers(self):
-
+        """Create the event handlers for paddle movement."""
         def move_left(event):
             if event.key == pygame.K_LEFT:
                 self.paddle.move_left()
@@ -326,37 +359,7 @@ class RoundStartState(BaseState):
             self.game.ball.add_collidable_object(
                 brick,
                 speed_adjust=BRICK_SPEED_ADJUST,
-                on_collide=self._on_brick_collide)
-
-    def _on_brick_collide(self, brick):
-        """Callback called by the ball when it collides with a brick.
-
-        Args:
-            brick:
-                The Brick instance the ball collided with.
-        """
-        # Increment the collision count.
-        brick.collision_count += 1
-
-        # Has the brick been destroyed, based on the collision count?
-        if brick.visible:
-            # Still visible, so animate it to indicate strike.
-            brick.animate()
-        else:
-            # Brick has been destroyed.
-            if brick.powerup_cls:
-                # There is a powerup in the brick.
-                powerup = brick.powerup_cls(self.game, brick)
-
-                # Display the powerup.
-                self.game.powerups.append(powerup)
-
-            # Tell the ball that the brick has gone.
-            self.game.ball.remove_collidable_object(brick)
-
-            # Tell the round that a brick has gone, so that it can decide
-            # whether the round is completed.
-            self.game.round.brick_destroyed()
+                on_collide=self.game.on_brick_collide)
 
     def update(self):
         """Handle the sequence of events that happen at the beginning of a

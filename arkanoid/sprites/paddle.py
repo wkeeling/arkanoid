@@ -332,10 +332,8 @@ class WideState(PaddleState):
         super().__init__(paddle)
 
         # Load the images/rects required for the expanding animation.
-        self._expand_anim = iter(load_png_sequence('paddle_wide'))
-
-        # Load the images/rects required for the expanding animation.
-        self._shrink_anim = iter(reversed(load_png_sequence('paddle_wide')))
+        self._image_sequence = load_png_sequence('paddle_wide')
+        self._animation = iter(self._image_sequence)
 
         # Whether we're to expand or to shrink.
         self._expand, self._shrink = True, False
@@ -353,10 +351,7 @@ class WideState(PaddleState):
 
     def _expand_paddle(self):
         try:
-            pos = self.paddle.rect.center
-            self.paddle.image, self.paddle.rect = next(
-                self._expand_anim)
-            self.paddle.rect.center = pos
+            self._convert()
             while (not self.paddle.area.collidepoint(
                     self.paddle.rect.midleft)):
                 # Nudge the paddle back inside the game area.
@@ -370,14 +365,17 @@ class WideState(PaddleState):
 
     def _shrink_paddle(self):
         try:
-            pos = self.paddle.rect.center
-            self.paddle.image, self.paddle.rect = next(
-                self._shrink_anim)
-            self.paddle.rect.center = pos
+            self._convert()
         except StopIteration:
             # State ends.
             self._shrink = False
             self._on_complete()
+
+    def _convert(self):
+        pos = self.paddle.rect.center
+        self.paddle.image, self.paddle.rect = next(self._animation)
+        self.paddle.rect.center = pos
+        LOG.debug('converting...')
 
     def exit(self, on_complete=None):
         """Trigger the animation to shrink the paddle and exit the state.
@@ -389,10 +387,11 @@ class WideState(PaddleState):
         """
         self._shrink = True
         self._on_complete = on_complete
+        self._animation = iter(reversed(self._image_sequence))
 
 
 class LaserState(PaddleState):
-    """This state represents the laser paddle which is able to fire bullets
+    """This state represents a laser paddle which is able to fire bullets
     upwards at the bricks.
 
     Animation is used to convert from the normal paddle to the laser paddle
@@ -404,35 +403,82 @@ class LaserState(PaddleState):
 
         # Create the two bullet sprites.
         self._bullet1 = LaserBullet(paddle,
-                              offset=5,
-                              bricks=game.round.bricks,
-                              on_collide=game.on_brick_collide)
+                                    offset=5,
+                                    bricks=game.round.bricks,
+                                    on_collide=game.on_brick_collide)
         self._bullet2 = LaserBullet(paddle,
-                              offset=5,
-                              bricks=game.round.bricks,
-                              on_collide=game.on_brick_collide)
+                                    offset=paddle.rect.width - 5,
+                                    bricks=game.round.bricks,
+                                    on_collide=game.on_brick_collide)
+
+        # Load the images/rects for converting to a laser paddle.
+        self._image_sequence = load_png_sequence('paddle_laser')
+        self._laser_anim = iter(self._image_sequence)
 
         # Allow the bullets to be displayed.
         game.other_sprites.append(self._bullet1)
         game.other_sprites.append(self._bullet2)
 
-        # Start monitoring for spacebar presses for firing bullets.
-        receiver.register_handler(pygame.KEYUP, self._fire)
+        # Whether we're converting to or from a laser paddle.
+        self._to_laser, self._from_laser = True, False
+
+        # Exit callback
+        self._on_complete = None
 
     def update(self):
-        pass
+        """Animate the paddle from normal to laser, or from laser to normal.
+
+        Once converted to laser, start monitoring for spacebar presses.
+        """
+        if self._to_laser:
+            self._convert_to_laser()
+        elif self._from_laser:
+            self._convert_from_laser()
+
+    def _convert_to_laser(self):
+        try:
+            self._convert()
+        except StopIteration:
+            # Conversion finished.
+            self._to_laser = False
+            # Start monitoring for spacebar presses for firing bullets.
+            receiver.register_handler(pygame.KEYUP, self._fire)
+
+    def _convert_from_laser(self):
+        try:
+            self._convert()
+        except StopIteration:
+            # State ends.
+            self._from_laser = False
+            self._on_complete()
+
+    def _convert(self):
+        pos = self.paddle.rect.center
+        self.paddle.image, self.paddle.rect = next(self._laser_anim)
+        self.paddle.rect.center = pos
 
     def exit(self, on_complete=None):
-        """Trigger the animation to return to normal state."""
+        """Trigger the animation to return to normal state.
+
+        Args:
+            on_complete:
+                No-args callable invoked when the laser has converted back
+                to a normal paddle.
+        """
         # Stop monitoring for spacebar presses now that we're leaving the
         # state.
+        self._from_laser = True
+        self._on_complete = on_complete
+        self._laser_anim = iter(reversed(self._image_sequence))
         receiver.unregister_handler(self._fire)
 
     def _fire(self, event):
         if event.key == pygame.K_SPACE:
             # Fire the bullets, but only if they aren't already on the screen.
             # We only allow one pair of bullets to be fired at once.
-
+            if not self._bullet1.visible and not self._bullet2.visible:
+                self._bullet1.release()
+                self._bullet2.release()
 
 
 class LaserBullet(pygame.sprite.Sprite):
@@ -478,20 +524,24 @@ class LaserBullet(pygame.sprite.Sprite):
     def release(self):
         """Set the bullet in motion from its start point."""
         # Set the start position of the bullet.
-        self.rect.midbottom = self._paddle.rect.left + self._offset
+        left, top = self._paddle.rect.bottomleft
+        self.rect.midbottom = left + self._offset, top
         self.visible = True
 
     def update(self):
+        """Animate the laser bullet moving upwards, and handle any collisions
+        with bricks.
+        """
         # Only update if we're still visible.
         if self.visible:
             # Calculate the new position.
-            self.rect = self.rect.move(0, self._speed)
+            self.rect = self.rect.move(0, -self._speed)
 
             # Check we're on the screen.
             if self._area.contains(self.rect):
                 # Check if we've collided with a brick.
                 index = self.rect.collidelist(
-                    [brick.rect for brick in self._bricks])
+                    [brick.rect for brick in self._bricks if brick.visible])
 
                 if index > -1:
                     # We've collided with a brick, find out which.
@@ -501,7 +551,7 @@ class LaserBullet(pygame.sprite.Sprite):
                     # Invoke the collision callback.
                     self._on_collide(brick)
 
-                    # Since we've collided, we're now invisible.
+                    # Since we've collided, we're no longer visible.
                     self.visible = False
             else:
                 # No longer on the screen.
