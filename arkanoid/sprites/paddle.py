@@ -250,10 +250,12 @@ class PaddleState:
 
     This base class is abstract and concrete sub-states should implement
     both the update() and exit() abstract methods. The update() method is
-    called repeatedly and is where much of the state specific logic will
-    reside. With the exit() method, states should perform any exit specific
-    behaviour and then set the 'complete' instance attribute to True, to
-    permit the transition to a new state.
+    called repeatedly by the game and is where much of the state specific 
+    logic should reside. 
+    
+    With the exit() method, states should perform any exit specific
+    behaviour and then call the on_complete no-args callback to indicate
+    that transition to a new state can now occur.
     """
 
     def __init__(self, paddle):
@@ -267,11 +269,6 @@ class PaddleState:
                 The Paddle instance.
         """
         self.paddle = paddle
-
-        # Sub-states must set this to True when they are done (typically
-        # in their exit() implementation) so that a transition to a new state
-        # can occur.
-        self.complete = False
 
         LOG.debug('Entered {}'.format(type(self).__name__))
 
@@ -303,7 +300,7 @@ class PaddleState:
 
 
 class NormalState(PaddleState):
-    """This represents the default state of the paddle."""
+    """This represents the default appearance of the paddle."""
 
     def __init__(self, paddle):
         super().__init__(paddle)
@@ -322,7 +319,7 @@ class NormalState(PaddleState):
 
 
 class WideState(PaddleState):
-    """This state represents the extended wide state of the paddle.
+    """This state represents the wide state of the paddle.
 
     Animation is used to increase the width when the state is created, and
     also to decrease it when the state exits.
@@ -375,7 +372,6 @@ class WideState(PaddleState):
         pos = self.paddle.rect.center
         self.paddle.image, self.paddle.rect = next(self._animation)
         self.paddle.rect.center = pos
-        LOG.debug('converting...')
 
     def exit(self, on_complete=None):
         """Trigger the animation to shrink the paddle and exit the state.
@@ -465,11 +461,11 @@ class LaserState(PaddleState):
                 No-args callable invoked when the laser has converted back
                 to a normal paddle.
         """
-        # Stop monitoring for spacebar presses now that we're leaving the
-        # state.
         self._from_laser = True
         self._on_complete = on_complete
         self._laser_anim = iter(reversed(self._image_sequence))
+        # Stop monitoring for spacebar presses now that we're leaving the
+        # state.        
         receiver.unregister_handler(self._fire)
 
     def _fire(self, event):
@@ -518,7 +514,7 @@ class LaserBullet(pygame.sprite.Sprite):
 
         # Whether the bullet is visible.
         # It may not be visible if it went off screen without hitting a brick,
-        # or if it did hit a brick and was destroyed as a result.
+        # or if it hit a brick and was destroyed as a result.
         self.visible = False
 
     def release(self):
