@@ -51,7 +51,7 @@ class Paddle(pygame.sprite.Sprite):
         # Load the paddle image and its rect.
         self.image, self.rect = load_png('paddle.png')
 
-        # Create the area the paddle can move within.
+        # Create the area the paddle can move laterally in.
         screen = pygame.display.get_surface().get_rect()
         self.area = pygame.Rect(screen.left + left_offset,
                                 screen.height - bottom_offset,
@@ -105,7 +105,7 @@ class Paddle(pygame.sprite.Sprite):
 
     def _area_contains(self, newpos):
         return self.area.collidepoint(newpos.midleft) and \
-                        self.area.collidepoint(newpos.midright)
+               self.area.collidepoint(newpos.midright)
 
     def transition(self, state, *args):
         """Transition to the specified state, as represented by the state

@@ -177,11 +177,13 @@ class ExpandPowerUp(PowerUp):
     def _activate(self):
         # Tell the paddle that we want to transition to WideState next.
         self.game.paddle.transition(paddle.WIDE)
+        self.game.ball.base_speed += 1
 
     def deactivate(self):
         """Deactivate the ExpandPowerUp by returning the paddle back to
         its original size."""
         self.game.paddle.transition(paddle.NORMAL)
+        self.game.ball.base_speed -= 1
 
     def _can_activate(self):
         can_activate = super()._can_activate()
@@ -203,11 +205,13 @@ class LaserPowerUp(PowerUp):
     def _activate(self):
         # Tell the paddle that we want to transition to LaserState next.
         self.game.paddle.transition(paddle.LASER, self.game)
+        self.game.ball.base_speed += 1
 
     def deactivate(self):
         """Deactivate the LaserPowerUp by turning the paddle back to a
         normal paddle."""
         self.game.paddle.transition(paddle.NORMAL)
+        self.game.ball.base_speed -= 1
 
     def _can_activate(self):
         can_activate = super()._can_activate()
