@@ -198,7 +198,7 @@ class Game:
             left += self._life_img.get_width() + 10
 
     def on_brick_collide(self, brick):
-        """Callback called by a sprite when it collides with a brick.
+        """Called by a sprite when it collides with a brick.
 
         In this case a sprite might be the ball, or a laser beam from the
         laser paddle.
