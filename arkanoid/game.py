@@ -480,7 +480,7 @@ class GameEndState(BaseState):
         # Bring the ball back onto the screen, but hide it.
         # This prevents the offscreen callback from being called again.
         game.ball.anchor(game.paddle.rect.top)
-        game.ball.visible = True
+        game.ball.visible = False
 
         # Indicate that the game is over.
         game.over = True
