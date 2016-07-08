@@ -81,27 +81,31 @@ class Paddle(pygame.sprite.Sprite):
         else:
             # We're not exploding, so continuously move the paddle when the
             # offset is non-zero.
-            newpos = self.rect.move(self.move, 0)
+            if self.move:
+                newpos = self.rect.move(self.move, 0)
+                if self._area_contains(newpos):
+                    # But only update the position of the paddle if it's
+                    # within the movable area.
+                    self.rect = newpos
+                else:
+                    # The new position is not within the screen area based on
+                    # current speed, which might leave a small gap. Adjust the
+                    # speed until we match the paddle up with the edge of the
+                    # game area exactly.
+                    while self.move != 0:
+                        if self.move < 0:
+                            self.move += 1
+                        else:
+                            self.move -= 1
 
-            if self.area.contains(newpos):
-                # But only update the position of the paddle if it's within
-                # the screen area.
-                self.rect = newpos
-            else:
-                # The new position is not within the screen area based on
-                # current speed, which might leave a small gap. Adjust the
-                # speed until we match the paddle up with the edge of the
-                # game area exactly.
-                while self.move != 0:
-                    if self.move < 0:
-                        self.move += 1
-                    else:
-                        self.move -= 1
+                        newpos = self.rect.move(self.move, 0)
+                        if self._area_contains(newpos):
+                            self.rect = newpos
+                            break
 
-                    newpos = self.rect.move(self.move, 0)
-                    if self.area.contains(newpos):
-                        self.rect = newpos
-                        break
+    def _area_contains(self, newpos):
+        return self.area.collidepoint(newpos.midleft) and \
+                        self.area.collidepoint(newpos.midright)
 
     def transition(self, state, *args):
         """Transition to the specified state, as represented by the state
@@ -399,11 +403,11 @@ class LaserState(PaddleState):
 
         # Create the two bullet sprites.
         self._bullet1 = LaserBullet(paddle,
-                                    offset=5,
+                                    offset=7,
                                     bricks=game.round.bricks,
                                     on_collide=game.on_brick_collide)
         self._bullet2 = LaserBullet(paddle,
-                                    offset=paddle.rect.width - 5,
+                                    offset=paddle.rect.width - 7,
                                     bricks=game.round.bricks,
                                     on_collide=game.on_brick_collide)
 
@@ -500,7 +504,7 @@ class LaserBullet(pygame.sprite.Sprite):
         """
         super().__init__()
         # Load the bullet and its rect.
-        self.image, self.rect = load_png('laser_bullet.png')
+        self.image, self.rect = load_png.__wrapped__('laser_bullet.png')
 
         self._paddle = paddle
         self._offset = offset
@@ -536,8 +540,10 @@ class LaserBullet(pygame.sprite.Sprite):
             # Check we're on the screen.
             if self._area.contains(self.rect):
                 # Check if we've collided with a brick.
-                visible_bricks = [brick.rect for brick in self._bricks if brick.visible]
-                index = self.rect.collidelist(visible_bricks)
+                visible_bricks = [brick for brick in self._bricks
+                                  if brick.visible]
+                index = self.rect.collidelist(
+                    [brick.rect for brick in visible_bricks])
 
                 if index > -1:
                     # We've collided with a brick, find out which.

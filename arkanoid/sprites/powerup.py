@@ -203,8 +203,6 @@ class LaserPowerUp(PowerUp):
     def _activate(self):
         # Tell the paddle that we want to transition to LaserState next.
         self.game.paddle.transition(paddle.LASER, self.game)
-        self.game.ball.speed = 0
-        self.game.ball.base_speed = 0
 
     def deactivate(self):
         """Deactivate the LaserPowerUp by turning the paddle back to a
