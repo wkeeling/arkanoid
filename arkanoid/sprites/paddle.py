@@ -536,12 +536,12 @@ class LaserBullet(pygame.sprite.Sprite):
             # Check we're on the screen.
             if self._area.contains(self.rect):
                 # Check if we've collided with a brick.
-                index = self.rect.collidelist(
-                    [brick.rect for brick in self._bricks if brick.visible])
+                visible_bricks = [brick.rect for brick in self._bricks if brick.visible]
+                index = self.rect.collidelist(visible_bricks)
 
                 if index > -1:
                     # We've collided with a brick, find out which.
-                    brick = self._bricks[index]
+                    brick = self._bricks[visible_bricks]
                     # Powerups aren't released when laser destroys a brick.
                     brick.powerup_cls = None
                     # Invoke the collision callback.
