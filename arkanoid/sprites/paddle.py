@@ -64,11 +64,14 @@ class Paddle(pygame.sprite.Sprite):
         # paddle to move left, a positive value to move right.
         self.move = 0
 
-        # The current paddle state.
-        self._state = NormalState(self)
-
         # Used when the paddle needs to explode.
         self.exploding_animation = None
+
+        # A list of no-args callables that will be called on ball collision.
+        self.ball_collide_callbacks = []
+
+        # The current paddle state.
+        self._state = NormalState(self)
 
     def update(self):
         """Update the state of the paddle."""
@@ -158,6 +161,20 @@ class Paddle(pygame.sprite.Sprite):
                 animation has finished.
         """
         self.exploding_animation = ExplodingAnimation(self, on_complete)
+
+    def on_ball_collide(self, paddle):
+        """Called when the ball collides with the paddle.
+
+        This implementation delegates to the instance level
+        ball_collide_callbacks list. To monitor for ball collisions, add
+        a callback to that list.
+
+        Args:
+            paddle:
+                The paddle that was struck.
+        """
+        for callback in self.ball_collide_callbacks:
+            callback()
 
     @staticmethod
     def bounce_strategy(paddle_rect, ball_rect):

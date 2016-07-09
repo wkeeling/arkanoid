@@ -212,7 +212,7 @@ class Game:
 
         # Has the brick been destroyed, based on the collision count?
         if brick.visible:
-            # Still visible, so animate it to indicate strike.
+            # Still visible, so animate to indicate strike.
             brick.animate()
         else:
             # Brick has been destroyed.
@@ -350,7 +350,8 @@ class RoundStartState(BaseState):
 
         self.game.ball.add_collidable_object(
             self.game.paddle,
-            bounce_strategy=self.game.paddle.bounce_strategy)
+            bounce_strategy=self.game.paddle.bounce_strategy,
+            on_collide=self.game.paddle.on_ball_collide)
 
         for brick in self.game.round.bricks:
             # Make the ball aware of the bricks it might collide with.

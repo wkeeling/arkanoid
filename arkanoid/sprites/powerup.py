@@ -3,6 +3,7 @@ import logging
 
 import pygame
 
+from arkanoid.event import receiver
 from arkanoid.sprites import paddle
 from arkanoid.util import load_png
 
@@ -128,7 +129,7 @@ class ExtraLifePowerUp(PowerUp):
         super().__init__(game, brick, self._PNG_FILES)
 
     def _activate(self):
-        # Add an extra life to the game.
+        """Add an extra life to the game."""
         self.game.lives += 1
 
     def deactivate(self):
@@ -152,6 +153,7 @@ class SlowBallPowerUp(PowerUp):
         self._orig_speed = None
 
     def _activate(self):
+        """Slow the ball down."""
         # Remember the original speed of the ball.
         self._orig_speed = self.game.ball.base_speed
 
@@ -175,7 +177,9 @@ class ExpandPowerUp(PowerUp):
         super().__init__(game, brick, self._PNG_FILES)
 
     def _activate(self):
-        # Tell the paddle that we want to transition to WideState next.
+        """Tell the paddle that we want to transition to WideState next."""
+        # Increase the speed of the ball slightly now the player has the
+        # advantage of a wider paddle.
         self.game.paddle.transition(paddle.WIDE)
         self.game.ball.base_speed += 1
 
@@ -195,7 +199,10 @@ class ExpandPowerUp(PowerUp):
 
 
 class LaserPowerUp(PowerUp):
-    """This PowerUp allows the paddle to fire a laser beam."""
+    """This PowerUp allows the paddle to fire a laser beam.
+
+    Firing is controlled with the spacebar.
+    """
 
     _PNG_FILES = 'powerup_laser.png',
 
@@ -203,7 +210,9 @@ class LaserPowerUp(PowerUp):
         super().__init__(game, brick, self._PNG_FILES)
 
     def _activate(self):
-        # Tell the paddle that we want to transition to LaserState next.
+        """Tell the paddle that we want to transition to LaserState next."""
+        # Increase the speed of the ball slightly now the player has the
+        # advantage of the laser.
         self.game.paddle.transition(paddle.LASER, self.game)
         self.game.ball.base_speed += 1
 
@@ -220,3 +229,44 @@ class LaserPowerUp(PowerUp):
             can_activate = not isinstance(self.game.active_powerup,
                                           self.__class__)
         return can_activate
+
+
+class CatchPowerUp(PowerUp):
+    """This PowerUp allows the paddle to catch the ball.
+
+    The ball is released by pressing the spacebar.
+    """
+
+    _PNG_FILES = 'powerup_catch.png',
+
+    def __init__(self, game, brick):
+        super().__init__(game, brick, self._PNG_FILES)
+
+    def _activate(self):
+        """Add the ability to catch the ball when it collides with the
+        paddle.
+        """
+        self.game.paddle.ball_collide_callbacks.append(self._catch)
+
+        # Monitor for spacebar presses to release a caught ball.
+        receiver.register_handler(pygame.KEYUP, self._release_ball)
+
+    def deactivate(self):
+        """Deactivate the CatchPowerUp from preventing the paddle from
+        catching the ball.
+        """
+        self.game.paddle.ball_collide_callbacks.remove(self._catch)
+        receiver.unregister_handler(self._release_ball)
+
+    def _release_ball(self, event):
+        """Release a caught ball when the spacebar is pressed."""
+        if event.key == pygame.K_SPACE:
+            self.game.ball.release()
+
+    def _catch(self):
+        """Catch the ball when it collides with the paddle."""
+        # Work out the position of the ball relative to the paddle.
+        pos = self.game.ball.rect.bottomleft[0] - \
+            self.game.paddle.rect.topleft[0], -self.game.paddle.rect.height
+        self.game.ball.anchor(self.game.paddle, pos)
+
