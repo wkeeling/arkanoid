@@ -1,7 +1,6 @@
 
 ball will always gradually slow to base speed at pre-defined rate: x factor per frame (explain in Ball docstring)
 
-_angle and _speed in ball should be public (not internal)
 
 fix issue where ball gets stuck in wall
 
@@ -42,8 +41,6 @@ bounce strategies that handle invalid bouncing and always put the ball back in p
 - or -
 the screen left/right/top needs to know when the ball has gone off and put it back in play
 
-Expanding paddle/laser powerup will increase ball speed.
-
 Need better event mechanism.
 Possibly create decorator for registering event handlers?  @event_handler
 also, @collidable_object(on_collide=arkanoid.game.collision_handler)
@@ -52,10 +49,6 @@ also, @collidable_object(on_collide=arkanoid.game.collision_handler)
 The powerups should be more intelligent. Don't drop loads of the same when the powerup is already active?
 
 Use Travis CI
-
-Game events will need to be added to dispatcher when game starts, and removed when game ends.
-Currently these are set up in the Paddle sprite, but this won't work because each time a new game (and Paddle sprite)
-is created, duplicate event handlers will get added to the dispatcher.
 
 The rounds should not hold a reference to the next rounds.
 Round classes should be held in a list (or tuple) at the game level.

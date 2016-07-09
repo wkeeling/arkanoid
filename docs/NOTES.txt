@@ -69,8 +69,6 @@ Issues
 - Logic for bouncing the ball according to standard trigonometry is buggy. Sometimes ball
 gets stuck in strange pattern (e.g. when strikes top of left or right edge).
 
-- Paddle overlaps side graphics.
-
 - Need to implement some kind of speed factor in the ball bounce strategy
 
 - Handle offscreen respawn.

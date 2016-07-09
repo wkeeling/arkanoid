@@ -257,6 +257,7 @@ class CatchPowerUp(PowerUp):
         """
         self.game.paddle.ball_collide_callbacks.remove(self._catch)
         receiver.unregister_handler(self._release_ball)
+        self.game.ball.release()
 
     def _release_ball(self, event):
         """Release a caught ball when the spacebar is pressed."""
