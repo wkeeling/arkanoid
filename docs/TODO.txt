@@ -2,8 +2,6 @@
 ball will always gradually slow to base speed at pre-defined rate: x factor per frame (explain in Ball docstring)
 
 
-fix issue where ball gets stuck in wall
-
 corner bouncing seems to increase speed on paddle/bricks
 
 classes:
@@ -61,4 +59,4 @@ round.next_powerup(brick, active_powerup).
 The round could keep a history of previous powerups so it knows what has been activated and it can look at the
 brick position and the current active powerup to determine the best powerup.
 
-Reorder the states in game.py so they're in a saner order
+Paddle should allow for more oblique angles on ends.

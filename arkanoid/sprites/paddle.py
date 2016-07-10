@@ -417,27 +417,17 @@ class LaserState(PaddleState):
 
     def __init__(self, paddle, game):
         super().__init__(paddle)
-
-        # Create the two bullet sprites.
-        self._bullet1 = LaserBullet(paddle,
-                                    offset=7,
-                                    bricks=game.round.bricks,
-                                    on_collide=game.on_brick_collide)
-        self._bullet2 = LaserBullet(paddle,
-                                    offset=paddle.rect.width - 7,
-                                    bricks=game.round.bricks,
-                                    on_collide=game.on_brick_collide)
+        self._game = game
 
         # Load the images/rects for converting to a laser paddle.
         self._image_sequence = load_png_sequence('paddle_laser')
         self._laser_anim = iter(self._image_sequence)
 
-        # Allow the bullets to be displayed.
-        game.other_sprites.append(self._bullet1)
-        game.other_sprites.append(self._bullet2)
-
         # Whether we're converting to or from a laser paddle.
         self._to_laser, self._from_laser = True, False
+
+        # Track the number of laser bullets currently in the air.
+        self._bullets = []
 
         # Exit callback
         self._on_complete = None
@@ -491,11 +481,30 @@ class LaserState(PaddleState):
 
     def _fire(self, event):
         if event.key == pygame.K_SPACE:
-            # Fire the bullets, but only if they aren't already on the screen.
-            # We only allow one pair of bullets to be fired at once.
-            if not self._bullet1.visible and not self._bullet2.visible:
-                self._bullet1.release()
-                self._bullet2.release()
+            self._bullets = [bullet for bullet in self._bullets if
+                             bullet.visible]
+            # Fire the bullets, only allowing max 4 in the air at once.
+            if len(self._bullets) < 3:
+                # Create the bullet sprites. We fire two bullets at once.
+                bullet1 = LaserBullet(self.paddle,
+                                      offset=7,
+                                      bricks=self._game.round.bricks,
+                                      on_collide=self._game.on_brick_collide)
+                bullet2 = LaserBullet(self.paddle,
+                                      offset=self.paddle.rect.width - 7,
+                                      bricks=self._game.round.bricks,
+                                      on_collide=self._game.on_brick_collide)
+
+                self._bullets.append(bullet1)
+                self._bullets.append(bullet2)
+
+                # Allow the bullets to be displayed.
+                self._game.other_sprites.append(bullet1)
+                self._game.other_sprites.append(bullet2)
+
+                # Release them.
+                bullet1.release()
+                bullet2.release()
 
 
 class LaserBullet(pygame.sprite.Sprite):
@@ -568,6 +577,10 @@ class LaserBullet(pygame.sprite.Sprite):
                     # Powerups aren't released when laser destroys a brick.
                     brick.powerup_cls = None
                     # Invoke the collision callback.
+                    # TODO: the on_collide callback should probably accept a
+                    # sprite rather than a brick specifically. The callback
+                    # can then decide whether this sprite should be destroyed
+                    # and return boolean to indicate that here.
                     self._on_collide(brick)
 
                     # Since we've collided, we're no longer visible.
