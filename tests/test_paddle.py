@@ -44,21 +44,24 @@ class TestPaddle(TestCase):
         mock_area.contains.return_value = True
 
         paddle = Paddle()
+        paddle.move_left()
         paddle.update()
 
         self.assertEqual(paddle.rect, mock_new_rect)
 
     @patch('arkanoid.sprites.paddle.load_png')
     @patch('arkanoid.sprites.paddle.pygame')
-    def test_update_not_move_when_not_in_area(self, mock_pygame, mock_load_png):
-        mock_image, mock_rect, mock_area, mock_new_rect = (
+    def test_update_not_move_when_not_in_area(self, mock_pygame,
+                                              mock_load_png):
+        mock_image, mock_rect, mock_new_rect, mock_area_contains = (
             Mock(), Mock(), Mock(), Mock())
         mock_load_png.return_value = mock_image, mock_rect
-        mock_pygame.Rect.return_value = mock_area
         mock_rect.move.return_value = mock_new_rect
-        mock_area.contains.return_value = False
+        mock_area_contains.return_value = False
 
         paddle = Paddle()
+        paddle._area_contains = mock_area_contains
+        paddle.move_left()
         paddle.update()
 
         self.assertEqual(paddle.rect, mock_rect)
@@ -101,9 +104,10 @@ class TestPaddle(TestCase):
 
         paddle = Paddle()
         paddle.stop()
+        # Should not attempt to move the paddle now it is stopped.
         paddle.update()
 
-        mock_rect.move.assert_called_once_with(0, 0)
+        self.assertEqual(mock_rect.move.call_count, 0)
 
     @patch('arkanoid.sprites.paddle.load_png')
     @patch('arkanoid.sprites.paddle.pygame')
@@ -129,10 +133,10 @@ class TestPaddle(TestCase):
             angle = Paddle.bounce_strategy(paddle, ball)
             angles.append(int(math.degrees(angle)))
 
-        self.assertTrue(angles[0], -130)
-        self.assertTrue(angles[1], -115)
-        self.assertTrue(angles[2], -100)
-        self.assertTrue(angles[3], -80)
-        self.assertTrue(angles[4], -65)
-        self.assertTrue(angles[5], -50)
+        self.assertEqual(angles[0], -140)
+        self.assertEqual(angles[1], -115)
+        self.assertEqual(angles[2], -100)
+        self.assertEqual(angles[3], -80)
+        self.assertEqual(angles[4], -65)
+        self.assertEqual(angles[5], -40)
 

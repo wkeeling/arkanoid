@@ -214,7 +214,7 @@ class Paddle(pygame.sprite.Sprite):
             segments.append(segment)
 
         # The bounce angles corresponding to each of the 8 segments.
-        angles = -130, -115, -100, -80, -65, -50
+        angles = -140, -115, -100, -80, -65, -40
 
         # Discover which segment the ball collided with. Just use the first.
         index = ball_rect.collidelist(segments)
