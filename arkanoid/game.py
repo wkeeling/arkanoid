@@ -290,6 +290,10 @@ class GameStartState(BaseState):
     def __init__(self, game):
         super().__init__(game)
 
+        # The ball and paddle are kept invisible at the very start.
+        self.game.paddle.visible = False
+        self.game.ball.visible = False
+
         # Register the event handlers for paddle control.
         receiver.register_handler(pygame.KEYDOWN,
                                   self.game.handler_move_left,
@@ -316,13 +320,13 @@ class RoundStartState(BaseState):
         self._screen = pygame.display.get_surface()
 
         # Initialise the sprites' start state.
+        self.game.ball.reset()
         self.game.paddle.visible = False
         self.game.ball.visible = False
-        paddle_width = self.game.paddle.rect.width
-        paddle_height = self.game.paddle.rect.height
         # Anchor the ball to the paddle.
         self.game.ball.anchor(self.game.paddle,
-                              (paddle_width // 2, -paddle_height))
+                              (self.game.paddle.rect.width // 2,
+                               -self.game.paddle.rect.height))
 
         # Initialise the text.
         self._caption = font(MAIN_FONT, 18).render(self.game.round.caption,
@@ -383,7 +387,7 @@ class RoundStartState(BaseState):
             self._screen.blit(self.game.round.background, ready, ready)
         if self._update_count > 300:
             # Release the anchor.
-            self.game.ball.release(BALL_START_ANGLE_RAD)
+            self.game.ball.release()
             # Normal gameplay begins.
             self.game.state = RoundPlayState(self.game)
 

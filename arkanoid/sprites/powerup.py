@@ -270,4 +270,3 @@ class CatchPowerUp(PowerUp):
         pos = self.game.ball.rect.bottomleft[0] - \
             self.game.paddle.rect.topleft[0], -self.game.paddle.rect.height
         self.game.ball.anchor(self.game.paddle, pos)
-

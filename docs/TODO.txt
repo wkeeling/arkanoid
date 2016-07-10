@@ -61,4 +61,4 @@ round.next_powerup(brick, active_powerup).
 The round could keep a history of previous powerups so it knows what has been activated and it can look at the
 brick position and the current active powerup to determine the best powerup.
 
-In handle_collision, if still in contact with same object as previous, then *don't* change the angle
+Reorder the states in game.py so they're in a saner order

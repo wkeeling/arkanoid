@@ -72,6 +72,7 @@ class Ball(pygame.sprite.Sprite):
         # The ball's current speed, initialised at the base speed.
         self.speed = self.base_speed
 
+        self._start_pos = start_pos
         self._start_angle = start_angle
         self._top_speed = top_speed
         self._normalisation_rate = normalisation_rate
@@ -86,6 +87,7 @@ class Ball(pygame.sprite.Sprite):
 
         # The objects the ball can collide with.
         self._collidable_objects = []
+        self._last_collidable_object = None
 
         # The position or sprite the ball may be anchored to.
         self._anchor = None
@@ -219,17 +221,26 @@ class Ball(pygame.sprite.Sprite):
 
         if len(rects) == 1:
             # Collision with a single object.
-            bounce_strategy = self._collidable_objects[indexes[0]][1]
-            if bounce_strategy:
-                # We have a bounce strategy, so use that.
-                self._angle = bounce_strategy(rects[0], self.rect)
-            else:
-                # Use the default calculation for the angle.
-                self._angle = self._calc_new_angle(rects)
+            recalculate_angle = (not self._last_collidable_object or
+                                 self._last_collidable_object != objs[0])
+            if recalculate_angle:
+                # Only calculate a new angle if the last collidable object
+                # is not the same as this one. This allows the ball continue
+                # on the same trajectory and prevents it from getting 'stuck'
+                # inside objects.
+                bounce_strategy = self._collidable_objects[indexes[0]][1]
+                if bounce_strategy:
+                    # We have a bounce strategy, so use that.
+                    self._angle = bounce_strategy(rects[0], self.rect)
+                else:
+                    # Use the default calculation for the angle.
+                    self._angle = self._calc_new_angle(rects)
+                self._last_collidable_object = objs[0]
         else:
             # Collision with more than one object.
             # Use the default calculation for the angle.
             self._angle = self._calc_new_angle(rects)
+            self._last_collidable_object = None
 
         for i in range(len(actions)):
             # Invoke the collision callbacks
@@ -322,3 +333,12 @@ class Ball(pygame.sprite.Sprite):
             self._angle = angle
         self.speed = self.base_speed
         self._anchor = None
+
+    def reset(self):
+        """Reset the state of the ball back to its starting state."""
+        self.rect.midbottom = self._start_pos
+        self.speed = self.base_speed
+        self.visible = True
+        self._angle = self._start_angle
+        self._anchor = None
+        self._last_collidable_object = None

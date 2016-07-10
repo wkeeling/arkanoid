@@ -43,7 +43,11 @@ class Paddle(pygame.sprite.Sprite):
         super().__init__()
 
         # The speed of the paddle movement in pixels per frame.
-        self.speed = speed
+        self._speed = speed
+
+        # The current movement in pixels. A negative value will trigger the
+        # paddle to move left, a positive value to move right.
+        self._move = 0
 
         # This toggles visibility of the paddle.
         self.visible = True
@@ -59,10 +63,6 @@ class Paddle(pygame.sprite.Sprite):
                                 self.rect.height)
         # Position the paddle.
         self.rect.center = self.area.center
-
-        # The current movement in pixels. A negative value will trigger the
-        # paddle to move left, a positive value to move right.
-        self.move = 0
 
         # Used when the paddle needs to explode.
         self.exploding_animation = None
@@ -84,8 +84,8 @@ class Paddle(pygame.sprite.Sprite):
         else:
             # We're not exploding, so continuously move the paddle when the
             # offset is non-zero.
-            if self.move:
-                newpos = self.rect.move(self.move, 0)
+            if self._move:
+                newpos = self.rect.move(self._move, 0)
                 if self._area_contains(newpos):
                     # But only update the position of the paddle if it's
                     # within the movable area.
@@ -95,13 +95,13 @@ class Paddle(pygame.sprite.Sprite):
                     # current speed, which might leave a small gap. Adjust the
                     # speed until we match the paddle up with the edge of the
                     # game area exactly.
-                    while self.move != 0:
-                        if self.move < 0:
-                            self.move += 1
+                    while self._move != 0:
+                        if self._move < 0:
+                            self._move += 1
                         else:
-                            self.move -= 1
+                            self._move -= 1
 
-                        newpos = self.rect.move(self.move, 0)
+                        newpos = self.rect.move(self._move, 0)
                         if self._area_contains(newpos):
                             self.rect = newpos
                             break
@@ -136,17 +136,17 @@ class Paddle(pygame.sprite.Sprite):
         """Tell the paddle to move to the left by the speed set when the
         paddle was initialised."""
         # Set the offset to negative to move left.
-        self.move = -self.speed
+        self._move = -self._speed
 
     def move_right(self):
         """Tell the paddle to move to the right by the speed set when the
         paddle was initialised."""
         # A positive offset to move right.
-        self.move = self.speed
+        self._move = self._speed
 
     def stop(self):
         """Tell the paddle to stop moving."""
-        self.move = 0
+        self._move = 0
 
     def reset(self):
         """Reset the position of the paddle to its start position."""
