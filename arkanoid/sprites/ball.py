@@ -26,7 +26,7 @@ class Ball(pygame.sprite.Sprite):
     add_collidable_object() for further details.
     """
 
-    def __init__(self, start_pos, start_angle, base_speed, max_speed=15,
+    def __init__(self, start_pos, start_angle, base_speed, top_speed=15,
                  normalisation_rate=0.02,
                  off_screen_callback=None):
         """
@@ -44,10 +44,10 @@ class Ball(pygame.sprite.Sprite):
                 The baseline speed of the ball. Collisions with objects may
                 increase/decrease the speed of the ball, but the speed will
                 never fall below the base speed.
-            max_speed
+            top_speed
                 The maximum permitted speed of the ball. Collisions with
                 objects may increase the speed of the ball, but the speed
-                will never go above the max_speed.
+                will never go above the top_speed.
             normalisation_rate:
                 The per-frame rate at which the ball is brought back to base
                 speed, should the speed have changed due to collision with
@@ -73,7 +73,7 @@ class Ball(pygame.sprite.Sprite):
         self.speed = self.base_speed
 
         self._start_angle = start_angle
-        self._max_speed = max_speed
+        self._top_speed = top_speed
         self._normalisation_rate = normalisation_rate
         self._off_screen_callback = off_screen_callback
 
@@ -238,7 +238,7 @@ class Ball(pygame.sprite.Sprite):
                 on_collide(objs[i])
 
         # Adjust the speed based on what we collided with.
-        if self.speed < self._max_speed:
+        if self.speed < self._top_speed:
             self.speed += speed_adjust
         LOG.debug('Ball speed: %s', self.speed)
 

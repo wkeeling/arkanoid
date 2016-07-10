@@ -24,7 +24,7 @@ BALL_START_ANGLE_RAD = 5.0
 BALL_BASE_SPEED = 8  # pixels per frame
 # The max speed of the ball, prevents a runaway speed when lots of rapid
 # collisions.
-BALL_MAX_SPEED = 15  # pixels per frame
+BALL_TOP_SPEED = 15  # pixels per frame
 # Per-frame rate at which ball is brought back to base speed.
 BALL_SPEED_NORMALISATION_RATE = 0.02
 # Increase in speed caused by colliding with a brick.
@@ -132,7 +132,7 @@ class Game:
         self.ball = Ball(start_pos=self.paddle.rect.midtop,
                          start_angle=BALL_START_ANGLE_RAD,
                          base_speed=BALL_BASE_SPEED,
-                         max_speed=BALL_MAX_SPEED,
+                         top_speed=BALL_TOP_SPEED,
                          normalisation_rate=BALL_SPEED_NORMALISATION_RATE,
                          off_screen_callback=self._off_screen)
 
