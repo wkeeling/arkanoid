@@ -4,7 +4,9 @@ import logging
 import pygame
 
 from arkanoid.event import receiver
-from arkanoid.sprites import paddle
+from arkanoid.sprites.paddle import (LaserState,
+                                     NormalState,
+                                     WideState)
 from arkanoid.util import load_png
 
 LOG = logging.getLogger(__name__)
@@ -180,13 +182,13 @@ class ExpandPowerUp(PowerUp):
         """Tell the paddle that we want to transition to WideState next."""
         # Increase the speed of the ball slightly now the player has the
         # advantage of a wider paddle.
-        self.game.paddle.transition(paddle.WIDE)
+        self.game.paddle.transition(WideState(self.game.paddle))
         self.game.ball.base_speed += 1
 
     def deactivate(self):
         """Deactivate the ExpandPowerUp by returning the paddle back to
         its original size."""
-        self.game.paddle.transition(paddle.NORMAL)
+        self.game.paddle.transition(NormalState(self.game.paddle))
         self.game.ball.base_speed -= 1
 
     def _can_activate(self):
@@ -213,13 +215,13 @@ class LaserPowerUp(PowerUp):
         """Tell the paddle that we want to transition to LaserState next."""
         # Increase the speed of the ball slightly now the player has the
         # advantage of the laser.
-        self.game.paddle.transition(paddle.LASER, self.game)
+        self.game.paddle.transition(LaserState(self.game.paddle, self.game))
         self.game.ball.base_speed += 1
 
     def deactivate(self):
         """Deactivate the LaserPowerUp by turning the paddle back to a
         normal paddle."""
-        self.game.paddle.transition(paddle.NORMAL)
+        self.game.paddle.transition(NormalState(self.game.paddle))
         self.game.ball.base_speed -= 1
 
     def _can_activate(self):

@@ -8,9 +8,6 @@ from arkanoid.event import receiver
 from arkanoid.util import (load_png,
                            load_png_sequence)
 
-
-__all__ = 'Paddle', 'NORMAL', 'WIDE', 'LASER'
-
 LOG = logging.getLogger(__name__)
 
 
@@ -110,25 +107,19 @@ class Paddle(pygame.sprite.Sprite):
         return self.area.collidepoint(newpos.midleft) and \
                self.area.collidepoint(newpos.midright)
 
-    def transition(self, state, *args):
-        """Transition to the specified state, as represented by the state
-        class.
+    def transition(self, state):
+        """Transition to the specified state.
 
         Note that this is a request to transition, notifying an existing state
-        to exit, before initialising and applying the new state.
+        to exit, before switching to the new state.
 
         Args:
             state:
-                The state class to transition to.
-            args:
-                Additional arguments that may be passed to the state.
+                The state to transition to.
         """
         def on_complete():
             # Switch the state on state exit.
-            if args:
-                self._state = state(self, *args)
-            else:
-                self._state = state(self)
+            self._state = state
 
         self._state.exit(on_complete)
 
@@ -271,12 +262,12 @@ class PaddleState:
 
     This base class is abstract and concrete sub-states should implement
     both the update() and exit() abstract methods. The update() method is
-    called repeatedly by the game and is where much of the state specific 
-    logic should reside. 
-    
-    With the exit() method, states should perform any exit specific
-    behaviour and then call the on_complete no-args callback to indicate
-    that transition to a new state can now occur.
+    called repeatedly by the game and is where much of the state specific
+    logic should reside.
+
+    The exit() method is called before a transition to a new state. States
+    should perform any exit up behaviour here, such as animating back to
+    normal, before calling the no-args on_complete() callback.
     """
 
     def __init__(self, paddle):
@@ -476,7 +467,7 @@ class LaserState(PaddleState):
         self._on_complete = on_complete
         self._laser_anim = iter(reversed(self._image_sequence))
         # Stop monitoring for spacebar presses now that we're leaving the
-        # state.        
+        # state.
         receiver.unregister_handler(self._fire)
 
     def _fire(self, event):
@@ -588,9 +579,3 @@ class LaserBullet(pygame.sprite.Sprite):
             else:
                 # No longer on the screen.
                 self.visible = False
-
-
-# The different paddle states.
-NORMAL = NormalState
-WIDE = WideState
-LASER = LaserState
