@@ -1,0 +1,12 @@
+version: '2'
+services:
+  pygame:
+    container_name: pygame
+    privileged: true
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python3 main.py
+    volumes:
+      - .:/home/platform
+
