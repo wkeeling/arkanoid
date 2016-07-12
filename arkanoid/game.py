@@ -237,19 +237,28 @@ class Game:
 
     def _create_event_handlers(self):
         """Create the event handlers for paddle movement."""
+        keys_down = 0
+
         def move_left(event):
+            nonlocal keys_down
             if event.key == pygame.K_LEFT:
                 self.paddle.move_left()
+                keys_down += 1
         self.handler_move_left = move_left
 
         def move_right(event):
+            nonlocal keys_down
             if event.key == pygame.K_RIGHT:
                 self.paddle.move_right()
+                keys_down += 1
         self.handler_move_right = move_right
 
         def stop(event):
+            nonlocal keys_down
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                self.paddle.stop()
+                keys_down -= 1
+                if keys_down == 0:
+                    self.paddle.stop()
         self.handler_stop = stop
 
     def __repr__(self):
