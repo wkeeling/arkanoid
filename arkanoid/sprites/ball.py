@@ -283,16 +283,18 @@ class Ball(pygame.sprite.Sprite):
             # or bottom of the ball has collided with the top of an object.
             LOG.debug('Top/bottom collision')
             angle = -self._angle
+            # Add small amount of randomness +/-3 degrees (+/- 0.05 rad)
+            angle += random.uniform(-0.05, 0.05)
         else:
             # Ball has hit the side of an object.
             LOG.debug('Side collision')
             angle = math.pi - self._angle
+            # Add small amount of randomness +/-3 degrees (+/- 0.05 rad)
+            angle += random.uniform(-0.05, 0.05)
 
         if angle > 6.28:
             angle = angle - 6.28
 
-        # Add small amount of randomness +/-3 degrees (+/- 0.05 rad)
-        angle += random.uniform(-0.05, 0.05)
         LOG.debug('Angle: %s', angle)
 
         return angle
