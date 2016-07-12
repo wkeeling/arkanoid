@@ -276,19 +276,13 @@ class Ball(pygame.sprite.Sprite):
             bl = bl or rect.collidepoint(self.rect.bottomleft)
             br = br or rect.collidepoint(self.rect.bottomright)
 
-        if sum((tl, tr, bl, br)) == 3 or sum((tl, tr, bl, br)) == 4: 
-            LOG.debug('3 point collision') 
+        if [tl, tr, bl, br].count(True) in (1, 3, 4):
             angle = self._angle + math.pi
         elif (tl and tr) or (bl and br):
             # Top of the ball has collided with the bottom of an object,
             # or bottom of the ball has collided with the top of an object.
             LOG.debug('Top/bottom collision')
             angle = -self._angle
-        elif sum((tl, tr, bl, br)) == 1:
-            # Ball has hit the corner of an object - bounce it back in
-            # the direction from which it originated.
-            LOG.debug('Corner collision')
-            angle = self._angle + math.pi
         else:
             # Ball has hit the side of an object.
             LOG.debug('Side collision')
