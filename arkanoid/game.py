@@ -21,7 +21,7 @@ DISPLAY_CAPTION = 'Arkanoid'
 # The angle the ball initially moves off the paddle, in radians.
 BALL_START_ANGLE_RAD = 5.0
 # The speed that the ball will always try to arrive at.
-BALL_BASE_SPEED = 8  # pixels per frame
+BALL_BASE_SPEED = 15  # pixels per frame
 # The max speed of the ball, prevents a runaway speed when lots of rapid
 # collisions.
 BALL_TOP_SPEED = 15  # pixels per frame

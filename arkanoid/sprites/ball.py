@@ -276,26 +276,37 @@ class Ball(pygame.sprite.Sprite):
             bl = bl or rect.collidepoint(self.rect.bottomleft)
             br = br or rect.collidepoint(self.rect.bottomright)
 
+        angle = self._angle
+        LOG.debug('%s, %s, %s, %s', tl, tr, bl, br)
+        LOG.debug('Angle before: %s', self._angle)
+
         if [tl, tr, bl, br].count(True) in (1, 3, 4):
-            angle = self._angle + math.pi
-        elif (tl and tr) or (bl and br):
-            # Top of the ball has collided with the bottom of an object,
-            # or bottom of the ball has collided with the top of an object.
-            LOG.debug('Top/bottom collision')
+            LOG.debug('Multi-point collision')
+            if self._angle < 0:
+                angle = self._angle + math.pi
+            else:
+                angle = self._angle - math.pi
+        elif (tl and tr) and self._angle < 0:
+            LOG.debug('Top collision')
             angle = -self._angle
             # Add small amount of randomness +/-3 degrees (+/- 0.05 rad)
             angle += random.uniform(-0.05, 0.05)
-        else:
+        elif (bl and br) and self._angle > 0:
+            LOG.debug('Bottom collision')
+            angle = -self._angle
+            # Add small amount of randomness +/-3 degrees (+/- 0.05 rad)
+            angle += random.uniform(-0.05, 0.05)
+        elif (tl and bl) or (tr and br):
             # Ball has hit the side of an object.
             LOG.debug('Side collision')
-            angle = math.pi - self._angle
+            if self._angle < 0:
+                angle = -math.pi - self._angle
+            else:
+                angle = math.pi - self._angle
             # Add small amount of randomness +/-3 degrees (+/- 0.05 rad)
             angle += random.uniform(-0.05, 0.05)
 
-        if angle > 6.28:
-            angle = angle - 6.28
-
-        LOG.debug('Angle: %s', angle)
+        LOG.debug('Angle after: %s', angle)
 
         return angle
 
