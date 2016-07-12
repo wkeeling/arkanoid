@@ -73,10 +73,10 @@ class Round1:
         edges = collections.namedtuple('edge', 'left right top')
         side_edge, _ = load_png('edge.png')
         top_edge, _ = load_png('top.png')
-        left_rect = self.background.blit(side_edge, (0, 0))
+        left_rect = self.background.blit(side_edge, (-30, 0))
         right_rect = self.background.blit(side_edge, (
-            self.background.get_rect().width - side_edge.get_width(), 0))
-        top_rect = self.background.blit(top_edge, (side_edge.get_width(), 0))
+            self.background.get_rect().width - 20, 0))
+        top_rect = self.background.blit(top_edge, (20, -30))
         return edges(left_rect, right_rect, top_rect)
 
     def _create_bricks(self):
@@ -89,7 +89,7 @@ class Round1:
             # a powerup.
             powerup_indexes = random.sample(range(13), 3)
             # Grey bricks take 2 hits to destroy.
-            destroy_after = 2 if colour == 'grey' else 1
+            destroy_after = 2000 if colour == 'grey' else 1
 
             for i in range(13):
                 powerup = None

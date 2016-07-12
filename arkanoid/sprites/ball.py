@@ -236,7 +236,10 @@ class Ball(pygame.sprite.Sprite):
                     # Use the default calculation for the angle.
                     self._angle = self._calc_new_angle(rects)
                 self._last_collidable_object = objs[0]
+            else:
+                LOG.debug('Not recalculating angle')
         else:
+            LOG.debug('Collided with more than one object!')
             # Collision with more than one object.
             # Use the default calculation for the angle.
             self._angle = self._calc_new_angle(rects)
@@ -296,7 +299,7 @@ class Ball(pygame.sprite.Sprite):
                 angle = math.pi - self._angle
 
         # Add small amount of randomness +/-3 degrees (+/- 0.05 rad)
-        angle += random.uniform(-0.05, 0.05)
+        angle += random.uniform(-0.10, 0.10)
         LOG.debug('Angle: %s', angle)
 
         return angle

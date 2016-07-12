@@ -60,3 +60,5 @@ The round could keep a history of previous powerups so it knows what has been ac
 brick position and the current active powerup to determine the best powerup.
 
 Paddle should allow for more oblique angles on ends.
+
+Angle is going crazy high in radians. Need to prevent this.
