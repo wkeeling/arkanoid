@@ -178,7 +178,7 @@ class Ball(pygame.sprite.Sprite):
                 rect = pos.rect
             except AttributeError:
                 # A fixed position.
-                return pygame.Rect(pos)
+                return pygame.Rect(pos, (self.rect.width, self.rect.height))
             # We're anchored to another sprite.
             if rel_pos:
                 # Use the relative position from the sprite's left/top.
