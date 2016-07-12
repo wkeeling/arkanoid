@@ -223,6 +223,7 @@ class Ball(pygame.sprite.Sprite):
             # Collision with a single object.
             recalculate_angle = (not self._last_collidable_object or
                                  self._last_collidable_object != objs[0])
+            recalculate_angle = True
             if recalculate_angle:
                 # Only calculate a new angle if the last collidable object
                 # is not the same as this one. This allows the ball continue
@@ -267,36 +268,31 @@ class Ball(pygame.sprite.Sprite):
         """Calculate the default angle of bounce of the ball, given a
         sequence of rectangles that the ball collided with.
         """
-        if len(rects) == 3:
-            # Collision where 3 bricks join causes the ball to bounce back
-            # in the direction it originated.
-            LOG.debug('3 brick collision')
+        tl, tr, bl, br = False, False, False, False
+
+        for rect in rects:
+            tl = tl or rect.collidepoint(self.rect.topleft)
+            tr = tr or rect.collidepoint(self.rect.topright)
+            bl = bl or rect.collidepoint(self.rect.bottomleft)
+            br = br or rect.collidepoint(self.rect.bottomright)
+
+        if sum((tl, tr, bl, br)) == 3 or sum((tl, tr, bl, br)) == 4: 
+            LOG.debug('3 point collision') 
+            angle = self._angle + math.pi
+        elif (tl and tr) or (bl and br):
+            # Top of the ball has collided with the bottom of an object,
+            # or bottom of the ball has collided with the top of an object.
+            LOG.debug('Top/bottom collision')
+            angle = -self._angle
+        elif sum((tl, tr, bl, br)) == 1:
+            # Ball has hit the corner of an object - bounce it back in
+            # the direction from which it originated.
+            LOG.debug('Corner collision')
             angle = self._angle + math.pi
         else:
-            # Has to have collided with max 2 objects. Find out how
-            # many points of the ball's rect are in contact.
-            tl, tr, bl, br = False, False, False, False
-
-            for rect in rects:
-                tl = tl or rect.collidepoint(self.rect.topleft)
-                tr = tr or rect.collidepoint(self.rect.topright)
-                bl = bl or rect.collidepoint(self.rect.bottomleft)
-                br = br or rect.collidepoint(self.rect.bottomright)
-
-            if (tl and tr) or (bl and br):
-                # Top of the ball has collided with the bottom of an object,
-                # or bottom of the ball has collided with the top of an object.
-                LOG.debug('Top/bottom collision')
-                angle = -self._angle
-            elif sum((tl, tr, bl, br)) == 1:
-                # Ball has hit the corner of an object - bounce it back in
-                # the direction from which it originated.
-                LOG.debug('Corner collision')
-                angle = self._angle + math.pi
-            else:
-                # Ball has hit the side of an object.
-                LOG.debug('Side collision')
-                angle = math.pi - self._angle
+            # Ball has hit the side of an object.
+            LOG.debug('Side collision')
+            angle = math.pi - self._angle
 
         # Add small amount of randomness +/-3 degrees (+/- 0.05 rad)
         angle += random.uniform(-0.10, 0.10)
