@@ -87,7 +87,6 @@ class Ball(pygame.sprite.Sprite):
 
         # The objects the ball can collide with.
         self._collidable_objects = []
-        self._last_collidable_object = None
 
         # The position or sprite the ball may be anchored to.
         self._anchor = None
@@ -221,26 +220,17 @@ class Ball(pygame.sprite.Sprite):
 
         if len(rects) == 1:
             # Collision with a single object.
-            recalculate_angle = (not self._last_collidable_object or
-                                 self._last_collidable_object != objs[0])
-            if recalculate_angle:
-                # Only calculate a new angle if the last collidable object
-                # is not the same as this one. This allows the ball continue
-                # on the same trajectory and prevents it from getting 'stuck'
-                # inside objects.
-                bounce_strategy = self._collidable_objects[indexes[0]][1]
-                if bounce_strategy:
-                    # We have a bounce strategy, so use that.
-                    self._angle = bounce_strategy(rects[0], self.rect)
-                else:
-                    # Use the default calculation for the angle.
-                    self._angle = self._calc_new_angle(rects)
-                self._last_collidable_object = objs[0]
+            bounce_strategy = self._collidable_objects[indexes[0]][1]
+            if bounce_strategy:
+                # We have a bounce strategy, so use that.
+                self._angle = bounce_strategy(rects[0], self.rect)
+            else:
+                # Use the default calculation for the angle.
+                self._angle = self._calc_new_angle(rects)
         else:
             # Collision with more than one object.
             # Use the default calculation for the angle.
             self._angle = self._calc_new_angle(rects)
-            self._last_collidable_object = None
 
         for i in range(len(actions)):
             # Invoke the collision callbacks
@@ -264,40 +254,47 @@ class Ball(pygame.sprite.Sprite):
         """Calculate the default angle of bounce of the ball, given a
         sequence of rectangles that the ball collided with.
         """
-        if len(rects) == 3:
-            # Collision where 3 bricks join causes the ball to bounce back
-            # in the direction it originated.
-            LOG.debug('3 brick collision')
-            angle = self._angle + math.pi
-        else:
-            # Has to have collided with max 2 objects. Find out how
-            # many points of the ball's rect are in contact.
-            tl, tr, bl, br = False, False, False, False
+        tl, tr, bl, br = False, False, False, False
 
-            for rect in rects:
-                tl = tl or rect.collidepoint(self.rect.topleft)
-                tr = tr or rect.collidepoint(self.rect.topright)
-                bl = bl or rect.collidepoint(self.rect.bottomleft)
-                br = br or rect.collidepoint(self.rect.bottomright)
+        for rect in rects:
+            # Work out which corners of the ball rect are in contact.
+            tl = tl or rect.collidepoint(self.rect.topleft)
+            tr = tr or rect.collidepoint(self.rect.topright)
+            bl = bl or rect.collidepoint(self.rect.bottomleft)
+            br = br or rect.collidepoint(self.rect.bottomright)
 
-            if (tl and tr) or (bl and br):
-                # Top of the ball has collided with the bottom of an object,
-                # or bottom of the ball has collided with the top of an object.
-                LOG.debug('Top/bottom collision')
-                angle = -self._angle
-            elif sum((tl, tr, bl, br)) == 1:
-                # Ball has hit the corner of an object - bounce it back in
-                # the direction from which it originated.
-                LOG.debug('Corner collision')
+        angle = self._angle
+
+        if [tl, tr, bl, br].count(True) in (1, 3, 4):
+            # Ball has collided with a corner, or is fully inside another
+            # object. Bounce it back in the direction it came from. Note we
+            # don't apply any randomness here, as we need the ball to go back
+            # in exactly the opposite direction to prevent it from getting
+            # stuck inside an object.
+            LOG.debug('Corner or multipoint collision')
+            if self._angle < 0:
                 angle = self._angle + math.pi
             else:
-                # Ball has hit the side of an object.
+                angle = self._angle - math.pi
+        else:
+            if (tl and tr) and self._angle < 0:
+                # Top of the ball has collided with an object.
+                LOG.debug('Top collision')
+                angle = -self._angle
+            elif (bl and br) and self._angle > 0:
+                # Bottom of the ball has collided with an object.
+                LOG.debug('Bottom collision')
+                angle = -self._angle
+            elif (tl and bl) or (tr and br):
+                # Side of the ball has collided with an object.
                 LOG.debug('Side collision')
-                angle = math.pi - self._angle
+                if self._angle < 0:
+                    angle = -math.pi - self._angle
+                else:
+                    angle = math.pi - self._angle
+            angle += random.uniform(-0.05, 0.05)
 
-        # Add small amount of randomness +/-3 degrees (+/- 0.05 rad)
-        angle += random.uniform(-0.05, 0.05)
-        LOG.debug('Angle: %s', angle)
+        LOG.debug('New angle: %s', angle)
 
         return angle
 
@@ -341,4 +338,3 @@ class Ball(pygame.sprite.Sprite):
         self.visible = True
         self._angle = self._start_angle
         self._anchor = None
-        self._last_collidable_object = None
