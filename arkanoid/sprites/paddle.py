@@ -393,9 +393,10 @@ class WideState(PaddleState):
                 No-args callable invoked when the shrinking paddle animation
                 has completed.
         """
-        self._shrink = True
-        self._on_complete = on_complete
-        self._animation = iter(reversed(self._image_sequence))
+        if not self._shrink:
+            self._shrink = True
+            self._on_complete = on_complete
+            self._animation = iter(reversed(self._image_sequence))
 
 
 class LaserState(PaddleState):
@@ -463,12 +464,13 @@ class LaserState(PaddleState):
                 No-args callable invoked when the laser has converted back
                 to a normal paddle.
         """
-        self._from_laser = True
-        self._on_complete = on_complete
-        self._laser_anim = iter(reversed(self._image_sequence))
-        # Stop monitoring for spacebar presses now that we're leaving the
-        # state.
-        receiver.unregister_handler(self._fire)
+        if not self._from_laser:
+            self._from_laser = True
+            self._on_complete = on_complete
+            self._laser_anim = iter(reversed(self._image_sequence))
+            # Stop monitoring for spacebar presses now that we're leaving the
+            # state.
+            receiver.unregister_handler(self._fire)
 
     def _fire(self, event):
         if event.key == pygame.K_SPACE:

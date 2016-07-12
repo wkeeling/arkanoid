@@ -292,6 +292,9 @@ class Ball(pygame.sprite.Sprite):
                     angle = -math.pi - self._angle
                 else:
                     angle = math.pi - self._angle
+            # Add a small amount of randomness to the bounce to make it a
+            # little more unpredictable, and to prevent the ball from getting
+            # stuck in a repeating bounce loop.
             angle += random.uniform(-0.05, 0.05)
 
         LOG.debug('New angle: %s', angle)
