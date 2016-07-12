@@ -294,8 +294,11 @@ class Ball(pygame.sprite.Sprite):
             LOG.debug('Side collision')
             angle = math.pi - self._angle
 
+        if angle > 6.28:
+            angle = angle - 6.28
+
         # Add small amount of randomness +/-3 degrees (+/- 0.05 rad)
-        angle += random.uniform(-0.10, 0.10)
+        angle += random.uniform(-0.05, 0.05)
         LOG.debug('Angle: %s', angle)
 
         return angle
