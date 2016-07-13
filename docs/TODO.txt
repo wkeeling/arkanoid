@@ -6,42 +6,8 @@ corner bouncing seems to increase speed on paddle/bricks
 
 classes:
 
-Arkanoid
-    main class with main_loop
-
-Game
-    created when a game is started
-    interacts and keeps track of current level, keeps track of number of lives, score
-    has update() method called repeatedly by Arkanoid.main_loop()
-    has attribute "over" which is checked by main_loop to determine whether to update or throw away
-    if not game.over:
-        game.update()
-
-Round
-    RoundOne
-    RoundTwo
-    etc.
-    creates sprites, background, layout (may need base Round for common logic such as creating sprites - TemplatePattern here perhaps?)
-    determines layout, keeps track of active power up
-    brought into play when a person starts to play the game. ends when complete, or when lives fall below zero
-    the Game keeps track of the Round
-    has attribute "complete" which is checked by Game.update() to determine whether to move to next round
-    if not round.complete:
-        round.update()
-    Game keeps track of lives. If lives < 0, then calls round.end() to notify Round to clean up.
-
 
 Multiple balls could be MultiBall() object switched out with game.ball.
-
-The edges should not be collidable objects, because sometimes the ball when at speed, bounces straight
-over them and outside the screen. May not be a problem when they're wider. They could have custom
-bounce strategies that handle invalid bouncing and always put the ball back in play.
-- or -
-the screen left/right/top needs to know when the ball has gone off and put it back in play
-
-Need better event mechanism.
-Possibly create decorator for registering event handlers?  @event_handler
-also, @collidable_object(on_collide=arkanoid.game.collision_handler)
 
 
 The powerups should be more intelligent. Don't drop loads of the same when the powerup is already active?
@@ -52,11 +18,8 @@ The rounds should not hold a reference to the next rounds.
 Round classes should be held in a list (or tuple) at the game level.
 When a game is created, we create an "rounds = iter(ROUNDS)" attribute which we call next(rounds) on for each round.
 
-PowerUp selection could be dynamic and done by the round:
 
-round.next_powerup(brick, active_powerup).
-
-The round could keep a history of previous powerups so it knows what has been activated and it can look at the
-brick position and the current active powerup to determine the best powerup.
-
-Paddle should allow for more oblique angles on ends.
+2 regressions:
+    - Ball getting stuck in side wall (side bounce bouncing the ball *back in*)
+    - Can't switch between Laser -> Wide and vice versa
+    - Left and right keys getting stuck down (if held down when game ends?)

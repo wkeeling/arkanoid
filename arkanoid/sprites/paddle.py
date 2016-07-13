@@ -292,12 +292,12 @@ class PaddleState:
         """
         raise NotImplementedError('Subclasses must implement update()')
 
-    def exit(self, on_complete=None):
+    def exit(self, on_complete):
         """Sub-states must implement this to perform any behaviour that should
         happen just before the state transitions to some other state.
 
         When the exit behaviour is completed, sub-states must call the no-args
-        on_complete callable if one has been passed.
+        on_complete callable.
 
         Args:
             on_complete:
@@ -386,7 +386,7 @@ class WideState(PaddleState):
         self.paddle.image, self.paddle.rect = next(self._animation)
         self.paddle.rect.center = pos
 
-    def exit(self, on_complete=None):
+    def exit(self, on_complete):
         """Trigger the animation to shrink the paddle and exit the state.
 
         Args:
@@ -394,10 +394,9 @@ class WideState(PaddleState):
                 No-args callable invoked when the shrinking paddle animation
                 has completed.
         """
-        if not self._shrink:
-            self._shrink = True
-            self._on_complete = on_complete
-            self._animation = iter(reversed(self._image_sequence))
+        self._shrink = True
+        self._on_complete = on_complete
+        self._animation = iter(reversed(self._image_sequence))
 
 
 class LaserState(PaddleState):
@@ -457,7 +456,7 @@ class LaserState(PaddleState):
         self.paddle.image, self.paddle.rect = next(self._laser_anim)
         self.paddle.rect.center = pos
 
-    def exit(self, on_complete=None):
+    def exit(self, on_complete):
         """Trigger the animation to return to normal state.
 
         Args:
@@ -465,13 +464,12 @@ class LaserState(PaddleState):
                 No-args callable invoked when the laser has converted back
                 to a normal paddle.
         """
-        if not self._from_laser:
-            self._from_laser = True
-            self._on_complete = on_complete
-            self._laser_anim = iter(reversed(self._image_sequence))
-            # Stop monitoring for spacebar presses now that we're leaving the
-            # state.
-            receiver.unregister_handler(self._fire)
+        self._from_laser = True
+        self._on_complete = on_complete
+        self._laser_anim = iter(reversed(self._image_sequence))
+        # Stop monitoring for spacebar presses now that we're leaving the
+        # state.
+        receiver.unregister_handler(self._fire)
 
     def _fire(self, event):
         if event.key == pygame.K_SPACE:

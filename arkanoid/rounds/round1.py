@@ -24,7 +24,7 @@ class Round1:
     def __init__(self):
         self._screen = pygame.display.get_surface()
 
-        # The background for the round.
+        # The background for this round.
         self.background = self._create_background()
 
         # These edges have been blitted to the background and are used
@@ -42,9 +42,6 @@ class Round1:
 
         # The caption of the round, displayed on screen.
         self.caption = 'Round 1'
-
-        # The class of the next round after this.
-        self.next_round = None
 
         # Keep track of the number of destroyed bricks.
         self._bricks_destroyed = 0
@@ -83,25 +80,38 @@ class Round1:
         bricks = []
         colours = 'green', 'blue', 'yellow', 'red', 'grey'
 
+        # Create the distribution of powerup classes.
+        powerup_classes = []
+        # powerup_classes.extend([CatchPowerUp] * 2)
+        powerup_classes.extend([ExpandPowerUp] * 10)
+        # powerup_classes.extend([ExtraLifePowerUp] * 2)
+        # powerup_classes.extend([SlowBallPowerUp] * 2)
+        powerup_classes.extend([LaserPowerUp] * 10)
+        random.shuffle(powerup_classes)
+
+        # Randomly select the indexes for the bricks that will contain
+        # powerups.
+        powerup_indexes = random.sample(range(65), len(powerup_classes))
+
+        # Count the bricks created.
+        count = 0
+
         # Each coloured brick forms a new layer.
         for colour in colours:
-            # Randomly select 3 indexes in this row that will contain
-            # a powerup.
-            powerup_indexes = random.sample(range(13), 3)
             # Grey bricks take 2 hits to destroy.
             destroy_after = 2 if colour == 'grey' else 1
 
             for i in range(13):
-                powerup = None
+                powerup_class = None
 
-                if i in powerup_indexes:
-                    powerup_indexes.remove(i)
-                    powerup = random.choice(self._POWERUP_CLASSES)
+                if count in powerup_indexes:
+                    powerup_class = powerup_classes.pop(0)
 
                 brick = Brick(colour, destroy_after=destroy_after,
-                              powerup_cls=powerup)
+                              powerup_cls=powerup_class)
 
                 bricks.append(brick)
+                count += 1
 
         return bricks
 

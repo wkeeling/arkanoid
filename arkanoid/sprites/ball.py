@@ -103,11 +103,13 @@ class Ball(pygame.sprite.Sprite):
         behaviour of the ball whenever it strikes the object being added.
         The strategy should be a callable that will receive two arguments:
         the Rect of the object being struck, and the Rect of the ball. It
-        should return the angle of bounce in radians. If not supplied, the
-        ball will conform to normal physics when bouncing off the object.
+        should return the angle of bounce in radians. The angle is measured
+        clockwise from the righthand x-axis. Angles should be positive.
+        If not supplied, the ball will conform to normal trignometric rules
+        when bouncing off the object.
 
         In addition, an optional collision callable can be supplied together
-        with the object being added. This will  be invoked to perform an
+        with the object being added. This will be invoked to perform an
         action whenever the ball strikes the object. The callable takes one
         argument: the object that the ball struck.
 

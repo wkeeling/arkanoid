@@ -3,7 +3,7 @@ import logging
 import pygame
 
 from arkanoid.event import receiver
-from arkanoid.rounds import Round1
+from arkanoid.rounds.round1 import Round1
 from arkanoid.sprites.ball import Ball
 from arkanoid.sprites.paddle import Paddle
 from arkanoid.util import (font,
