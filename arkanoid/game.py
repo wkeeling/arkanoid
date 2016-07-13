@@ -19,7 +19,7 @@ DISPLAY_SIZE = 600, 650
 # The title of the main window.
 DISPLAY_CAPTION = 'Arkanoid'
 # The angle the ball initially moves off the paddle, in radians.
-BALL_START_ANGLE_RAD = -1.3  # Value must be no smaller than -3.14
+BALL_START_ANGLE_RAD = 5.0  # Value must be no smaller than -3.14
 # The speed that the ball will always try to arrive at.
 BALL_BASE_SPEED = 8  # pixels per frame
 # The max speed of the ball, prevents a runaway speed when lots of rapid

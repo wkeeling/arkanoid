@@ -272,26 +272,22 @@ class Ball(pygame.sprite.Sprite):
             # in exactly the opposite direction to prevent it from getting
             # stuck inside an object.
             LOG.debug('Corner or multipoint collision')
-            if self._angle < 0:
-                angle = self._angle + math.pi
-            else:
+            if self._angle > math.pi:
                 angle = self._angle - math.pi
+            else:
+                angle = self._angle + math.pi
         else:
-            if (tl and tr) and self._angle < 0:
+            if (tl and tr) or (bl and br):
                 # Top of the ball has collided with an object.
-                LOG.debug('Top collision')
-                angle = -self._angle
-            elif (bl and br) and self._angle > 0:
-                # Bottom of the ball has collided with an object.
-                LOG.debug('Bottom collision')
-                angle = -self._angle
+                LOG.debug('Top/bottom collision')
+                angle = (2*math.pi) - self._angle
             elif (tl and bl) or (tr and br):
                 # Side of the ball has collided with an object.
                 LOG.debug('Side collision')
-                if self._angle < 0:
-                    angle = -math.pi - self._angle
-                else:
+                if self._angle < math.pi:
                     angle = math.pi - self._angle
+                else:
+                    angle = ((2*math.pi) - self._angle) + math.pi
             # Add a small amount of randomness to the bounce to make it a
             # little more unpredictable, and to prevent the ball from getting
             # stuck in a repeating bounce loop.
