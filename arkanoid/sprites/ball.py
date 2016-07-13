@@ -280,9 +280,13 @@ class Ball(pygame.sprite.Sprite):
             else:
                 angle = self._angle + math.pi
         else:
-            if (tl and tr) or (bl and br):
+            if tl and tr and self._angle > math.pi:
                 # Top of the ball has collided with an object.
-                LOG.debug('Top/bottom collision')
+                LOG.debug('Top collision')
+                angle = TWO_PI - self._angle
+            elif bl and br and self._angle < math.pi:
+                # Bottom of the ball has collided with an object.
+                LOG.debug('Bottom collision')
                 angle = TWO_PI - self._angle
             elif (tl and bl) or (tr and br):
                 # Side of the ball has collided with an object.
