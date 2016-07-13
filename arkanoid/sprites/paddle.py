@@ -317,14 +317,15 @@ class NormalState(PaddleState):
     def __init__(self, paddle):
         super().__init__(paddle)
 
-        # Set the default paddle graphic.
-        pos = self.paddle.rect.center
-        self.paddle.image, self.paddle.rect = load_png('paddle.png')
-        self.paddle.rect.center = pos
+        self._image_set = False
 
     def update(self):
-        # Nothing specific to do in normal state.
-        pass
+        if not self._image_set:
+            # Set the default paddle graphic.
+            pos = self.paddle.rect.center
+            self.paddle.image, self.paddle.rect = load_png('paddle.png')
+            self.paddle.rect.center = pos
+            self._image_set = True
 
     def exit(self, on_complete=None):
         on_complete()

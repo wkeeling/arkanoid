@@ -7,6 +7,7 @@ import pygame
 from arkanoid.util import load_png
 
 LOG = logging.getLogger(__name__)
+TWO_PI = math.pi * 2
 
 
 class Ball(pygame.sprite.Sprite):
@@ -280,14 +281,14 @@ class Ball(pygame.sprite.Sprite):
             if (tl and tr) or (bl and br):
                 # Top of the ball has collided with an object.
                 LOG.debug('Top/bottom collision')
-                angle = (2*math.pi) - self._angle
+                angle = TWO_PI - self._angle
             elif (tl and bl) or (tr and br):
                 # Side of the ball has collided with an object.
                 LOG.debug('Side collision')
                 if self._angle < math.pi:
                     angle = math.pi - self._angle
                 else:
-                    angle = ((2*math.pi) - self._angle) + math.pi
+                    angle = (TWO_PI - self._angle) + math.pi
             # Add a small amount of randomness to the bounce to make it a
             # little more unpredictable, and to prevent the ball from getting
             # stuck in a repeating bounce loop.
