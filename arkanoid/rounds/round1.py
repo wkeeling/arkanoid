@@ -12,6 +12,7 @@ from arkanoid.sprites.powerup import (CatchPowerUp,
                                       LaserPowerUp,
                                       SlowBallPowerUp)
 
+
 class Round1:
     """Initialises the background, brick layout and powerups for round one."""
 
