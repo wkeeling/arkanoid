@@ -4,7 +4,6 @@ import os
 import pygame
 
 
-@functools.lru_cache()
 def load_png(filename):
     """Load a png image with the specified filename from the
     data/graphics directory and return it and its Rect.

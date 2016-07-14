@@ -525,7 +525,7 @@ class LaserBullet(pygame.sprite.Sprite):
         """
         super().__init__()
         # Load the bullet and its rect.
-        self.image, self.rect = load_png.__wrapped__('laser_bullet.png')
+        self.image, self.rect = load_png('laser_bullet.png')
 
         self._paddle = paddle
         self._offset = offset

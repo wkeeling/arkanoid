@@ -89,10 +89,9 @@ class Arkanoid:
         LOG.debug('Exiting')
 
     def _create_screen(self):
-        screen = pygame.display.set_mode(DISPLAY_SIZE)
+        pygame.display.set_mode(DISPLAY_SIZE)
         pygame.display.set_caption(DISPLAY_CAPTION)
         pygame.mouse.set_visible(False)
-        return screen
 
 
 class Game:
@@ -124,8 +123,8 @@ class Game:
         self.round = round_class()
 
         # The paddle and ball sprites.
-        self.paddle = Paddle(left_offset=self.round.edges.left.width,
-                             right_offset=self.round.edges.right.width,
+        self.paddle = Paddle(left_offset=self.round.edges.left.rect.width,
+                             right_offset=self.round.edges.right.rect.width,
                              bottom_offset=60,
                              speed=PADDLE_SPEED)
 
@@ -156,17 +155,19 @@ class Game:
 
     def update(self):
         """Update the state of the running game."""
-        # Common updates.
+        # Delegate to the active state. This determines the behaviour
+        # for the current stage of the game.
+        self.state.update()
+
+        # Re-render the sprites.
         self._update_sprites()
         self._update_lives()
-
-        # Delegate to the active state for specific behaviour.
-        self.state.update()
 
     def _update_sprites(self):
         """Erase the sprites, update their state, and then redraw them
         on the screen."""
         sprites = [self.paddle, self.ball]
+        sprites += self.round.edges
         sprites += self.round.bricks
         sprites += self.powerups
         sprites += self.other_sprites
@@ -189,7 +190,7 @@ class Game:
         self._life_rects.clear()
 
         # Display the remaining lives.
-        left = self.round.edges.left.width
+        left = self.round.edges.left.rect.width
         top = self._screen.get_height() - self._life_img.get_height() - 10
 
         for life in range(self.lives - 1):

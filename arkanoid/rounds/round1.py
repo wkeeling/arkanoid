@@ -4,6 +4,8 @@ import random
 import pygame
 
 from arkanoid.sprites.brick import Brick
+from arkanoid.sprites.edge import (TopEdge,
+                                   SideEdge)
 from arkanoid.sprites.powerup import (CatchPowerUp,
                                       ExpandPowerUp,
                                       ExtraLifePowerUp,
@@ -27,9 +29,8 @@ class Round1:
         # The background for this round.
         self.background = self._create_background()
 
-        # These edges have been blitted to the background and are used
-        # as the sides of the game area.
-        self.edges = self._initialise_edges()
+        # The edges used as the sides of the game area.
+        self.edges = self._create_edges()
 
         # Background (plus edges) are blitted to the screen.
         self._screen.blit(self.background, (0, 0))
@@ -65,16 +66,15 @@ class Round1:
         background.fill((0, 0, 0))
         return background
 
-    def _initialise_edges(self):
-        # The edges are blitted to the background.
+    def _create_edges(self):
         edges = collections.namedtuple('edge', 'left right top')
-        side_edge, _ = load_png('edge.png')
-        top_edge, _ = load_png('top.png')
-        left_rect = self.background.blit(side_edge, (0, 0))
-        right_rect = self.background.blit(side_edge, (
-            self.background.get_rect().width - side_edge.get_width(), 0))
-        top_rect = self.background.blit(top_edge, (side_edge.get_width(), 0))
-        return edges(left_rect, right_rect, top_rect)
+        left_edge = SideEdge()
+        right_edge = SideEdge()
+        top_edge = TopEdge()
+        left_edge.rect.topleft = 0, 0
+        right_edge.rect.topright = self._screen.get_width(), 0
+        top_edge.rect.topleft = left_edge.rect.width, 0
+        return edges(left_edge, right_edge, top_edge)
 
     def _create_bricks(self):
         bricks = []
@@ -83,10 +83,10 @@ class Round1:
         # Create the distribution of powerup classes.
         powerup_classes = []
         powerup_classes.extend([CatchPowerUp] * 2)
-        powerup_classes.extend([ExpandPowerUp] * 10)
+        powerup_classes.extend([ExpandPowerUp] * 3)
         powerup_classes.extend([ExtraLifePowerUp] * 2)
         powerup_classes.extend([SlowBallPowerUp] * 2)
-        powerup_classes.extend([LaserPowerUp] * 10)
+        powerup_classes.extend([LaserPowerUp] * 3)
         random.shuffle(powerup_classes)
 
         # Randomly select the indexes for the bricks that will contain
@@ -122,7 +122,7 @@ class Round1:
         for brick in self.bricks:
             if colour != brick.colour:
                 colour = brick.colour
-                left = self.edges[0].width
+                left = self.edges.left.rect.width
                 if rect:
                     top -= rect.height
 
