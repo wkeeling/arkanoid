@@ -11,8 +11,6 @@ from arkanoid.sprites.powerup import (CatchPowerUp,
                                       ExtraLifePowerUp,
                                       LaserPowerUp,
                                       SlowBallPowerUp)
-from arkanoid.util import load_png
-
 
 class Round1:
     """Initialises the background, brick layout and powerups for round one."""
@@ -35,11 +33,9 @@ class Round1:
         # Background (plus edges) are blitted to the screen.
         self._screen.blit(self.background, (0, 0))
 
-        # Create the Bricks that the ball can collide with.
+        # Create the bricks that the ball can collide with, positioning
+        # them on the screen.
         self.bricks = self._create_bricks()
-
-        # Position the bricks on the screen.
-        self._position_bricks(self._screen)
 
         # The caption of the round, displayed on screen.
         self.caption = 'Round 1'
@@ -77,6 +73,11 @@ class Round1:
         return edges(left_edge, right_edge, top_edge)
 
     def _create_bricks(self):
+        """Create the bricks and position them on the screen.
+
+        Returns:
+            A pygame.sprite.Group of bricks.
+        """
         bricks = []
         colours = 'green', 'blue', 'yellow', 'red', 'grey'
 
@@ -113,13 +114,15 @@ class Round1:
                 bricks.append(brick)
                 count += 1
 
-        return bricks
+        self._position_bricks(bricks)
 
-    def _position_bricks(self, background):
+        return pygame.sprite.Group(*bricks)
+
+    def _position_bricks(self, bricks):
         top = self._BOTTOM_ROW_START
         colour, rect = None, None
 
-        for brick in self.bricks:
+        for brick in bricks:
             if colour != brick.colour:
                 colour = brick.colour
                 left = self.edges.left.rect.width
@@ -128,7 +131,7 @@ class Round1:
 
             if brick.visible:
                 # Each layer consists of 13 bricks added horizontally.
-                rect = background.blit(brick.image, (left, top))
+                rect = self._screen.blit(brick.image, (left, top))
                 # Update the brick's rect with the new position
                 brick.rect = rect
 
