@@ -291,7 +291,7 @@ class Ball(pygame.sprite.Sprite):
                 angle = TWO_PI - self._angle
             else:
                 left_collision = tl and bl and self._angle > HALF_PI and self._angle < TWO_PI - HALF_PI
-                right_collision = tr and br and self._angle > TWO_PI - HALF_PI and self._angle < HALF_PI
+                right_collision = tr and br and (self._angle > TWO_PI - HALF_PI or self._angle < HALF_PI)
 
                 if left_collision or right_collision:
                     # Side of the ball has collided with an object.
