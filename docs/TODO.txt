@@ -23,3 +23,5 @@ When a game is created, we create an "rounds = iter(ROUNDS)" attribute which we 
     - Ball getting stuck in side wall (side bounce bouncing the ball *back in*)
     - Can't switch between Laser -> Wide and vice versa
     - Left and right keys getting stuck down (if held down when game ends?)
+
+Use DirtySprte and LayeredDirty and possibly sprite.collidesprite()
