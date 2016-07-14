@@ -263,11 +263,11 @@ class PaddleState:
     This base class is abstract and concrete sub-states should implement
     both the update() and exit() abstract methods. The update() method is
     called repeatedly by the game and is where much of the state specific
-    logic should reside.
+    logic should reside, such as animation behaviour.
 
     The exit() method is called before a transition to a new state. States
-    should perform any exit up behaviour here, such as animating back to
-    normal, before calling the no-args on_complete() callback.
+    should perform any exit behaviour here, such as triggering an animation 
+    to return to normal, before calling the no-args on_complete callback.
     """
 
     def __init__(self, paddle):
