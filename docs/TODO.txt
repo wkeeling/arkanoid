@@ -27,3 +27,8 @@ When a game is created, we create an "rounds = iter(ROUNDS)" attribute which we 
 Use DirtySprte and LayeredDirty and possibly sprite.collidesprite()
 
 Make round edges sprites. Keep them on round. Don't blit them to background. Add them to LayeredDirty
+
+Adding a collidable object to the ball can place the object into a sprite.Group and also into it's own dict, with action, speed, bounce strat in tuple value. Then can lose the get_collidable_rects() and rect.collidelistall as can just use sprite.spritecollide(). Refactor accordingly. Modify the bounce_strategy to take two sprites, rather than two rects.
+
+
+
