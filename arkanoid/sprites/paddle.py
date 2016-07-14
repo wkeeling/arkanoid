@@ -472,6 +472,9 @@ class LaserState(PaddleState):
         receiver.unregister_handler(self._fire)
 
     def _fire(self, event):
+      """Event handler that fires bullets from the paddle when the 
+      spacebar is pressed.
+      """
         if event.key == pygame.K_SPACE:
             self._bullets = [bullet for bullet in self._bullets if
                              bullet.visible]
@@ -500,7 +503,7 @@ class LaserState(PaddleState):
 
 
 class LaserBullet(pygame.sprite.Sprite):
-    """Represent a bullet fired from the laser paddle."""
+    """A bullet fired from the laser paddle."""
 
     def __init__(self, paddle, offset, bricks, on_collide, speed=15):
         """Initialise the laser bullets.
