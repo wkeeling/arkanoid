@@ -25,3 +25,5 @@ When a game is created, we create an "rounds = iter(ROUNDS)" attribute which we 
     - Left and right keys getting stuck down (if held down when game ends?)
 
 Use DirtySprte and LayeredDirty and possibly sprite.collidesprite()
+
+Make round edges sprites. Keep them on round. Don't blit them to background. Add them to LayeredDirty
