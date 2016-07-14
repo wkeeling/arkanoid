@@ -82,10 +82,10 @@ class Round1:
 
         # Create the distribution of powerup classes.
         powerup_classes = []
-        # powerup_classes.extend([CatchPowerUp] * 2)
+        powerup_classes.extend([CatchPowerUp] * 2)
         powerup_classes.extend([ExpandPowerUp] * 10)
-        # powerup_classes.extend([ExtraLifePowerUp] * 2)
-        # powerup_classes.extend([SlowBallPowerUp] * 2)
+        powerup_classes.extend([ExtraLifePowerUp] * 2)
+        powerup_classes.extend([SlowBallPowerUp] * 2)
         powerup_classes.extend([LaserPowerUp] * 10)
         random.shuffle(powerup_classes)
 
