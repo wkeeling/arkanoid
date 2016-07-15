@@ -225,7 +225,7 @@ class Game:
                 self.powerups.append(powerup)
 
             # Tell the ball that the brick has gone.
-            self.ball.remove_collidable_object(brick)
+            self.ball.remove_collidable_sprite(brick)
 
             # Tell the round that a brick has gone, so that it can decide
             # whether the round is completed.
@@ -353,16 +353,16 @@ class RoundStartState(BaseState):
         """Configure the ball with all the objects from the current round
         that it could potentially collide with.
         """
-        self.game.ball.remove_all_collidable_objects()
+        self.game.ball.remove_all_collidable_sprites()
 
         for edge in self.game.round.edges:
             # Every collision with a wall momentarily increases the speed
             # of the ball.
-            self.game.ball.add_collidable_object(
+            self.game.ball.add_collidable_sprite(
                 edge,
                 speed_adjust=WALL_SPEED_ADJUST)
 
-        self.game.ball.add_collidable_object(
+        self.game.ball.add_collidable_sprite(
             self.game.paddle,
             bounce_strategy=self.game.paddle.bounce_strategy,
             on_collide=self.game.paddle.on_ball_collide)
@@ -371,7 +371,7 @@ class RoundStartState(BaseState):
             # Make the ball aware of the bricks it might collide with.
             # Every brick collision momentarily increases the speed of
             # the ball.
-            self.game.ball.add_collidable_object(
+            self.game.ball.add_collidable_sprite(
                 brick,
                 speed_adjust=BRICK_SPEED_ADJUST,
                 on_collide=self.game.on_brick_collide)

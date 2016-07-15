@@ -64,6 +64,13 @@ class Round1:
         return background
 
     def _create_edges(self):
+        """Create the edge sprites and position them at the edges of the
+        screen.
+
+        Returns:
+            A named tuple with attributes 'left', 'right', and 'top' that
+            reference the corresponding edge sprites.
+        """
         edges = collections.namedtuple('edge', 'left right top')
         left_edge = SideEdge()
         right_edge = SideEdge()
