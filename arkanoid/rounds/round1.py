@@ -29,6 +29,8 @@ class Round1:
         self.background = self._create_background()
 
         # The edges used as the sides of the game area.
+        # A named tuple referencing the 3 game edge sprites with the
+        # attributes: 'left', 'right', 'top'.
         self.edges = self._create_edges()
 
         # Background (plus edges) are blitted to the screen.
