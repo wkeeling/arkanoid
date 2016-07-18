@@ -61,16 +61,3 @@ the start sequence of the game, or when the game restarts after losing a life. H
 of steps happen - which are still technically inside the game - but are outside of normal
 gameplay.
 
-
-
-Issues
-------
-
-- Logic for bouncing the ball according to standard trigonometry is buggy. Sometimes ball
-gets stuck in strange pattern (e.g. when strikes top of left or right edge).
-
-- Need to implement some kind of speed factor in the ball bounce strategy
-
-- Handle offscreen respawn.
-
-- Fix key up issue stopping paddle movement.
