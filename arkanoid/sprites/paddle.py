@@ -569,6 +569,9 @@ class LaserBullet(pygame.sprite.Sprite):
                 if collided:
                     # We've collided with a brick.
                     brick = collided[0]
+                    # The game's score is not increased when a laser destroys
+                    # a brick.
+                    brick.value = 0
                     # Powerups aren't released when laser destroys a brick.
                     brick.powerup_cls = None
                     # Invoke the collision callback.

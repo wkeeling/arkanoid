@@ -11,7 +11,7 @@ LOG = logging.getLogger(__name__)
 class Brick(pygame.sprite.Sprite):
     """A Brick is hit and destroyed by the ball."""
 
-    def __init__(self, colour, destroy_after=1, powerup_cls=None):
+    def __init__(self, colour, value, destroy_after=1, powerup_cls=None):
         """Initialise a new Brick in the specified colour.
 
         When a Brick is initialised with the specified colour, a file named
@@ -32,6 +32,8 @@ class Brick(pygame.sprite.Sprite):
             colour:
                 The colour of the brick. Note that a png file named
                 'brick_<colour>.png' must exist in the graphics folder.
+            value:
+                The amount to add to the score when this brick is destroyed.
             destroy_after:
                 The number of strikes by the ball necessary to destroy the
                 brick (default 1).
@@ -41,6 +43,7 @@ class Brick(pygame.sprite.Sprite):
         """
         super().__init__()
         self.colour = colour
+        self.value = value
         # Load the brick graphic.
         self.image, self.rect = load_png('brick_{}.png'.format(colour))
 

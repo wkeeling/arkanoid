@@ -15,7 +15,9 @@ LOG = logging.getLogger(__name__)
 # The speed the game runs at in FPS.
 GAME_SPEED = 60
 # The dimensions of the main game window in pixels.
-DISPLAY_SIZE = 600, 650
+DISPLAY_SIZE = 600, 800
+# The number of pixels from the top of the screen before the top edge starts.
+TOP_OFFSET = 75
 # The title of the main window.
 DISPLAY_CAPTION = 'Arkanoid'
 # The angle the ball initially moves off the paddle, in radians.
@@ -120,7 +122,7 @@ class Game:
         self._life_rects = []
 
         # The current round.
-        self.round = round_class()
+        self.round = round_class(TOP_OFFSET)
 
         # The sprites in the game.
         self.paddle = Paddle(left_offset=self.round.edges.left.rect.width,
@@ -210,6 +212,9 @@ class Game:
         else:
             # Brick has been destroyed.
             if brick.powerup_cls:
+                # Add this brick's value to the score.
+                self.score += brick.value
+
                 # There is a powerup in the brick.
                 powerup = brick.powerup_cls(self, brick)
 
@@ -334,7 +339,7 @@ class RoundStartState(BaseState):
                                -self.game.paddle.rect.height))
 
         # Initialise the text.
-        self._caption = font(MAIN_FONT, 18).render(self.game.round.caption,
+        self._caption = font(MAIN_FONT, 18).render(self.game.round.name,
                                                    False, (255, 255, 255))
         screen_height = self._screen.get_height()
         self._caption_pos = (h_centre_pos(self._caption),
@@ -421,7 +426,7 @@ class RoundPlayState(BaseState):
 
     def update(self):
         if self.game.round.complete:
-            self.game.round = self.game.round.next_round()
+            self.game.round = self.game.round.next_round(TOP_OFFSET)
             self.game.state = RoundStartState(self.game)
 
 

@@ -20,9 +20,17 @@ class Round1:
                         SlowBallPowerUp, LaserPowerUp)
 
     # How far down the screen the bottom row of bricks starts
-    _BOTTOM_ROW_START = 200
+    _BOTTOM_ROW_START = 250
 
-    def __init__(self):
+    def __init__(self, top_offset):
+        """Initialise round 1.
+
+        Args:
+            top_offset:
+                The number of pixels from the top of the screen before the
+                top edge can be displayed.
+        """
+        self._top_offset = top_offset
         self._screen = pygame.display.get_surface()
 
         # The background for this round.
@@ -40,8 +48,8 @@ class Round1:
         # them on the screen.
         self.bricks = self._create_bricks()
 
-        # The caption of the round, displayed on screen.
-        self.caption = 'Round 1'
+        # Displayed on the screen when a round starts/restarts.
+        self.name = 'Round 1'
 
         # Keep track of the number of destroyed bricks.
         self._bricks_destroyed = 0
@@ -77,9 +85,9 @@ class Round1:
         left_edge = SideEdge()
         right_edge = SideEdge()
         top_edge = TopEdge()
-        left_edge.rect.topleft = 0, 0
-        right_edge.rect.topright = self._screen.get_width(), 0
-        top_edge.rect.topleft = left_edge.rect.width, 0
+        left_edge.rect.topleft = 0, self._top_offset
+        right_edge.rect.topright = self._screen.get_width(), self._top_offset
+        top_edge.rect.topleft = left_edge.rect.width, self._top_offset
         return edges(left_edge, right_edge, top_edge)
 
     def _create_bricks(self):
@@ -89,7 +97,8 @@ class Round1:
             A pygame.sprite.Group of bricks.
         """
         bricks = []
-        colours = 'green', 'blue', 'yellow', 'red', 'grey'
+        brick_types = zip(('green', 'blue', 'yellow', 'red', 'grey'),
+                          (80, 100, 120, 160, 180))
 
         # Create the distribution of powerup classes.
         powerup_classes = []
@@ -108,7 +117,7 @@ class Round1:
         count = 0
 
         # Each coloured brick forms a new layer.
-        for colour in colours:
+        for colour, value in brick_types:
             # Grey bricks take 2 hits to destroy.
             destroy_after = 2 if colour == 'grey' else 1
 
@@ -118,7 +127,7 @@ class Round1:
                 if count in powerup_indexes:
                     powerup_class = powerup_classes.pop(0)
 
-                brick = Brick(colour, destroy_after=destroy_after,
+                brick = Brick(colour, value, destroy_after=destroy_after,
                               powerup_cls=powerup_class)
 
                 bricks.append(brick)
