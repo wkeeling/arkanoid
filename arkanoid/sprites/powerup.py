@@ -83,7 +83,7 @@ class PowerUp(pygame.sprite.Sprite):
                     # Set ourselves as the active powerup in the game.
                     self.game.active_powerup = self
                 # No need to display ourself anymore.
-                self.game.powerups.remove(self)
+                self.game.sprites.remove(self)
                 self.visible = False
             else:
                 # Keep track of the number of update cycles for animation
@@ -92,7 +92,7 @@ class PowerUp(pygame.sprite.Sprite):
 
         else:
             # We're no longer on the screen.
-            self.game.powerups.remove(self)
+            self.game.sprites.remove(self)
             self.visible = False
 
     def _activate(self):

@@ -421,8 +421,8 @@ class LaserState(PaddleState):
         # Track the number of laser bullets currently in the air.
         self._bullets = []
 
-        # Exit callback
-        self._on_complete = None
+        # Exit callback.
+        self._on_complete = lambda: None
 
     def update(self):
         """Animate the paddle from normal to laser, or from laser to normal.
@@ -494,8 +494,8 @@ class LaserState(PaddleState):
                 self._bullets.append(bullet2)
 
                 # Allow the bullets to be displayed.
-                self._game.other_sprites.append(bullet1)
-                self._game.other_sprites.append(bullet2)
+                self._game.sprites.append(bullet1)
+                self._game.sprites.append(bullet2)
 
                 # Release them.
                 bullet1.release()

@@ -122,7 +122,7 @@ class Game:
         # The current round.
         self.round = round_class()
 
-        # The paddle and ball sprites.
+        # The sprites in the game.
         self.paddle = Paddle(left_offset=self.round.edges.left.rect.width,
                              right_offset=self.round.edges.right.rect.width,
                              bottom_offset=60,
@@ -135,14 +135,11 @@ class Game:
                          normalisation_rate=BALL_SPEED_NORMALISATION_RATE,
                          off_screen_callback=self._off_screen)
 
-        # The powerup sprites that drop from the bricks.
-        self.powerups = []
-
         # The currently applied powerup, if any.
         self.active_powerup = None
 
-        # Other sprites which can be brought into the game can be added here.
-        self.other_sprites = []
+        # Hold a reference to all the sprites for redrawing purposes.
+        self.sprites = []
 
         # Create event handlers required by the game.
         self._create_event_handlers()
@@ -150,7 +147,8 @@ class Game:
         # Whether the game is finished.
         self.over = False
 
-        # The current game state.
+        # The current game state which handles the behaviour for the
+        # current stage of the game.
         self.state = GameStartState(self)
 
     def update(self):
@@ -166,18 +164,12 @@ class Game:
     def _update_sprites(self):
         """Erase the sprites, update their state, and then redraw them
         on the screen."""
-        sprites = [self.paddle, self.ball]
-        sprites += self.round.edges
-        sprites += self.round.bricks
-        sprites += self.powerups
-        sprites += self.other_sprites
-
         # Erase.
-        for sprite in sprites:
+        for sprite in self.sprites:
             self._screen.blit(self.round.background, sprite.rect, sprite.rect)
 
         # Update and redraw, if visible.
-        for sprite in sprites:
+        for sprite in self.sprites:
             sprite.update()
             if sprite.visible:
                 self._screen.blit(sprite.image, sprite.rect)
@@ -222,7 +214,7 @@ class Game:
                 powerup = brick.powerup_cls(self, brick)
 
                 # Display the powerup.
-                self.powerups.append(powerup)
+                self.sprites.append(powerup)
 
             # Tell the ball that the brick has gone.
             self.ball.remove_collidable_sprite(brick)
@@ -322,6 +314,9 @@ class RoundStartState(BaseState):
     def __init__(self, game):
         super().__init__(game)
 
+        # Set up the sprites for the round.
+        self._setup_sprites()
+
         # Set the ball up with the round's collidable objects.
         self._configure_ball()
 
@@ -348,6 +343,14 @@ class RoundStartState(BaseState):
                                                  (255, 255, 255))
         self._ready_pos = (h_centre_pos(self._ready),
                            self._caption_pos[1] + 50)
+
+    def _setup_sprites(self):
+        """Make all the sprites available for rendering."""
+        self.game.sprites.clear()
+        self.game.sprites.append(self.game.paddle)
+        self.game.sprites.append(self.game.ball)
+        self.game.sprites += self.game.round.edges
+        self.game.sprites += self.game.round.bricks
 
     def _configure_ball(self):
         """Configure the ball with all the objects from the current round
@@ -465,10 +468,12 @@ class RoundRestartState(RoundStartState):
         # Whether we've reset the paddle.
         self._paddle_reset = False
 
+    def _setup_sprites(self):
+        """No need to setup the sprites again on round restart."""
+        pass
+
     def _configure_ball(self):
-        """When restarting a round, we override _configure_ball to do nothing,
-        as the ball is not reconfigured on restarts.
-        """
+        """No need to configure the ball again on round restart."""
         pass
 
     def update(self):
