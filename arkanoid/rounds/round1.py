@@ -42,7 +42,7 @@ class Round1:
         self.edges = self._create_edges()
 
         # Background (plus edges) are blitted to the screen.
-        self._screen.blit(self.background, (0, 0))
+        self._screen.blit(self.background, (0, top_offset))
 
         # Create the bricks that the ball can collide with, positioning
         # them on the screen.
@@ -70,7 +70,7 @@ class Round1:
         background = pygame.Surface(self._screen.get_size())
         background = background.convert()
         # TODO: background image should be loaded from a file.
-        background.fill((0, 0, 0))
+        background.fill((0, 0, 255))
         return background
 
     def _create_edges(self):
