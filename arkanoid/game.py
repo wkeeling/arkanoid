@@ -192,6 +192,15 @@ class Game:
                 self._screen.blit(self._life_img, (left, top)))
             left += self._life_img.get_width() + 10
 
+    def _update_score(self):
+        score = font(MAIN_FONT, 18).render(str(self.score), False,
+                                           (255, 255, 255))
+        background = pygame.Surface(score.get_size())
+        background = background.convert()
+        background.fill((0, 0, 0))
+        self._screen.blit(background, (20, 20), score.get_rect())
+        self._screen.blit(score, (20, 20))
+
     def on_brick_collide(self, brick):
         """Called by a sprite when it collides with a brick.
 
@@ -212,14 +221,15 @@ class Game:
         else:
             # Brick has been destroyed.
             if brick.powerup_cls:
-                # Add this brick's value to the score.
-                self.score += brick.value
-
                 # There is a powerup in the brick.
                 powerup = brick.powerup_cls(self, brick)
 
                 # Display the powerup.
                 self.sprites.append(powerup)
+            if brick.value:
+                # Add this brick's value to the score.
+                self.score += brick.value
+                self._update_score()
 
             # Tell the ball that the brick has gone.
             self.ball.remove_collidable_sprite(brick)

@@ -68,11 +68,11 @@ class Round1(BaseRound):
 
         # Create the distribution of powerup classes.
         powerup_classes = []
-        powerup_classes.extend([CatchPowerUp] * 2)
-        powerup_classes.extend([ExpandPowerUp] * 3)
+        powerup_classes.extend([CatchPowerUp] * 3)
+        powerup_classes.extend([ExpandPowerUp] * 4)
         powerup_classes.extend([ExtraLifePowerUp] * 2)
         powerup_classes.extend([SlowBallPowerUp] * 2)
-        powerup_classes.extend([LaserPowerUp] * 3)
+        powerup_classes.extend([LaserPowerUp] * 4)
         random.shuffle(powerup_classes)
 
         # Randomly select the indexes for the bricks that will contain
