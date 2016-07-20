@@ -482,13 +482,9 @@ class LaserState(PaddleState):
             if len(self._bullets) < 3:
                 # Create the bullet sprites. We fire two bullets at once.
                 left, top = self.paddle.rect.bottomleft
-                bullet1 = LaserBullet(position=(left + 7, top),
-                                      bricks=self._game.round.bricks,
-                                      on_collide=self._game.on_brick_collide)
-                bullet2 = LaserBullet(
-                        position=(left + self.paddle.rect.width - 7, top),
-                        bricks=self._game.round.bricks,
-                        on_collide=self._game.on_brick_collide)
+                bullet1 = LaserBullet(self._game, position=(left + 7, top))
+                bullet2 = LaserBullet(self._game, position=(
+                    left + self.paddle.rect.width - 7, top))
 
                 self._bullets.append(bullet1)
                 self._bullets.append(bullet2)
@@ -505,18 +501,14 @@ class LaserState(PaddleState):
 class LaserBullet(pygame.sprite.Sprite):
     """A bullet fired from the laser paddle."""
 
-    def __init__(self, position, bricks, on_collide, speed=15):
+    def __init__(self, game, position, speed=15):
         """Initialise the laser bullets.
 
         Args:
+            game:
+                The running Game instance.
             position:
                 The position the bullet starts from.
-            bricks:
-                The bricks that the bullet might collide with and destroy.
-            on_collide:
-                A callback that will be invoked when the bullet collides
-                with a brick. The callback must accept one argument: the
-                brick instance.
             speed:
                 The speed at which the bullet travels.
         """
@@ -524,9 +516,8 @@ class LaserBullet(pygame.sprite.Sprite):
         # Load the bullet and its rect.
         self.image, self.rect = load_png('laser_bullet.png')
 
+        self._game = game
         self._position = position
-        self._bricks = bricks
-        self._on_collide = on_collide
         self._speed = speed
 
         # The area within which the bullet is travelling.
@@ -552,11 +543,11 @@ class LaserBullet(pygame.sprite.Sprite):
             # Calculate the new position.
             self.rect = self.rect.move(0, -self._speed)
 
-            # Check we're on the screen.
-            if self._area.contains(self.rect):
-                visible_bricks = [brick for brick in self._bricks
+            if not self._game.round.edges.top.rect.colliderect(self.rect):
+                # We haven't collided with the top of the game area, so
+                # check whether we've collided with a brick.
+                visible_bricks = [brick for brick in self._game.round.bricks
                                   if brick.visible]
-                # Check if we've collided with a brick.
                 collided = pygame.sprite.spritecollide(self, visible_bricks,
                                                        False)
 
@@ -573,10 +564,10 @@ class LaserBullet(pygame.sprite.Sprite):
                     # sprite rather than a brick specifically. The callback
                     # can then decide whether this sprite should be destroyed
                     # and return boolean to indicate that here.
-                    self._on_collide(brick)
+                    self._game.on_brick_collide(brick)
 
                     # Since we've collided, we're no longer visible.
                     self.visible = False
             else:
-                # No longer on the screen.
+                # We've collided with the top edge of the game area.
                 self.visible = False

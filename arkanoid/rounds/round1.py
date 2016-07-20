@@ -19,8 +19,8 @@ class Round1:
     _POWERUP_CLASSES = (CatchPowerUp, ExpandPowerUp, ExtraLifePowerUp,
                         SlowBallPowerUp, LaserPowerUp)
 
-    # How far down the screen the bottom row of bricks starts
-    _BOTTOM_ROW_START = 250
+    # The offset from the top edge to where the bottom row of bricks starts.
+    _BOTTOM_ROW_VERTICAL_OFFSET = 250
 
     def __init__(self, top_offset):
         """Initialise round 1.
@@ -70,7 +70,7 @@ class Round1:
         background = pygame.Surface(self._screen.get_size())
         background = background.convert()
         # TODO: background image should be loaded from a file.
-        background.fill((0, 0, 255))
+        background.fill((0, 0, 100))
         return background
 
     def _create_edges(self):
@@ -137,7 +137,7 @@ class Round1:
         return pygame.sprite.Group(*bricks)
 
     def _position_bricks(self, bricks):
-        top = self._BOTTOM_ROW_START
+        top = self.edges.top.rect.top + self._BOTTOM_ROW_VERTICAL_OFFSET
         colour, rect = None, None
 
         for brick in bricks:
