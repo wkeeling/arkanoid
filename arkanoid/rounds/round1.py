@@ -96,9 +96,9 @@ class Round1:
         Returns:
             A pygame.sprite.Group of bricks.
         """
-        bricks = []
-        brick_types = zip(('green', 'blue', 'yellow', 'red', 'grey'),
-                          (80, 100, 120, 160, 180))
+        colours = 'green', 'blue', 'yellow', 'red', 'grey'
+        values = 80, 100, 120, 160, 180
+        brick_types = zip(colours, values)
 
         # Create the distribution of powerup classes.
         powerup_classes = []
@@ -110,11 +110,10 @@ class Round1:
         random.shuffle(powerup_classes)
 
         # Randomly select the indexes for the bricks that will contain
-        # powerups.
-        powerup_indexes = random.sample(range(65), len(powerup_classes))
+        # powerups, for the bottom 4 rows.
+        powerup_indexes = random.sample(range(52), len(powerup_classes))
 
-        # Count the bricks created.
-        count = 0
+        bricks, count = [], 0
 
         # Each coloured brick forms a new layer.
         for colour, value in brick_types:

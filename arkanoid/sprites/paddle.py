@@ -481,14 +481,14 @@ class LaserState(PaddleState):
             # Fire the bullets, only allowing max 4 in the air at once.
             if len(self._bullets) < 3:
                 # Create the bullet sprites. We fire two bullets at once.
-                bullet1 = LaserBullet(self.paddle,
-                                      offset=7,
+                left, top = self.paddle.rect.bottomleft
+                bullet1 = LaserBullet(position=(left + 7, top),
                                       bricks=self._game.round.bricks,
                                       on_collide=self._game.on_brick_collide)
-                bullet2 = LaserBullet(self.paddle,
-                                      offset=self.paddle.rect.width - 7,
-                                      bricks=self._game.round.bricks,
-                                      on_collide=self._game.on_brick_collide)
+                bullet2 = LaserBullet(
+                        position=(left + self.paddle.rect.width - 7, top),
+                        bricks=self._game.round.bricks,
+                        on_collide=self._game.on_brick_collide)
 
                 self._bullets.append(bullet1)
                 self._bullets.append(bullet2)
@@ -505,15 +505,12 @@ class LaserState(PaddleState):
 class LaserBullet(pygame.sprite.Sprite):
     """A bullet fired from the laser paddle."""
 
-    def __init__(self, paddle, offset, bricks, on_collide, speed=15):
+    def __init__(self, position, bricks, on_collide, speed=15):
         """Initialise the laser bullets.
 
         Args:
-            paddle:
-                The paddle from which the bullet is fired.
-            offset:
-                The offset from the left of the paddle from which the bullet
-                starts its upwards trajectory.
+            position:
+                The position the bullet starts from.
             bricks:
                 The bricks that the bullet might collide with and destroy.
             on_collide:
@@ -527,8 +524,7 @@ class LaserBullet(pygame.sprite.Sprite):
         # Load the bullet and its rect.
         self.image, self.rect = load_png('laser_bullet.png')
 
-        self._paddle = paddle
-        self._offset = offset
+        self._position = position
         self._bricks = bricks
         self._on_collide = on_collide
         self._speed = speed
@@ -544,9 +540,7 @@ class LaserBullet(pygame.sprite.Sprite):
 
     def release(self):
         """Set the bullet in motion from its start point."""
-        # Set the start position of the bullet.
-        left, top = self._paddle.rect.bottomleft
-        self.rect.midbottom = left + self._offset, top
+        self.rect.midbottom = self._position
         self.visible = True
 
     def update(self):
