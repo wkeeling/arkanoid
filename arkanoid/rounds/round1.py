@@ -3,6 +3,7 @@ import random
 
 import pygame
 
+from arkanoid.rounds.base import BaseRound
 from arkanoid.sprites.brick import Brick
 from arkanoid.sprites.edge import (TopEdge,
                                    SideEdge)
@@ -13,11 +14,8 @@ from arkanoid.sprites.powerup import (CatchPowerUp,
                                       SlowBallPowerUp)
 
 
-class Round1:
+class Round1(BaseRound):
     """Initialises the background, brick layout and powerups for round one."""
-
-    _POWERUP_CLASSES = (CatchPowerUp, ExpandPowerUp, ExtraLifePowerUp,
-                        SlowBallPowerUp, LaserPowerUp)
 
     # The offset from the top edge to where the bottom row of bricks starts.
     _BOTTOM_ROW_VERTICAL_OFFSET = 250
@@ -30,44 +28,12 @@ class Round1:
                 The number of pixels from the top of the screen before the
                 top edge can be displayed.
         """
-        self._top_offset = top_offset
-        self._screen = pygame.display.get_surface()
+        super().__init__(top_offset)
 
-        # The background for this round.
-        self.background = self._create_background()
-
-        # The edges used as the sides of the game area.
-        # A named tuple referencing the 3 game edge sprites with the
-        # attributes: 'left', 'right', 'top'.
-        self.edges = self._create_edges()
-
-        # Background (plus edges) are blitted to the screen.
-        self._screen.blit(self.background, (0, top_offset))
-
-        # Create the bricks that the ball can collide with, positioning
-        # them on the screen.
-        self.bricks = self._create_bricks()
-
-        # Displayed on the screen when a round starts/restarts.
         self.name = 'Round 1'
 
-        # Keep track of the number of destroyed bricks.
-        self._bricks_destroyed = 0
-
-    @property
-    def complete(self):
-        """Whether the rounds has been completed (all bricks destroyed).
-        Returns:
-            True if the round has been completed. False otherwise.
-        """
-        return self._bricks_destroyed == len(self.bricks)
-
-    def brick_destroyed(self):
-        """Conveys to the Round that a brick has been destroyed in the game."""
-        self._bricks_destroyed += 1
-
     def _create_background(self):
-        background = pygame.Surface(self._screen.get_size())
+        background = pygame.Surface(self.screen.get_size())
         background = background.convert()
         # TODO: background image should be loaded from a file.
         background.fill((0, 0, 100))
@@ -85,9 +51,9 @@ class Round1:
         left_edge = SideEdge()
         right_edge = SideEdge()
         top_edge = TopEdge()
-        left_edge.rect.topleft = 0, self._top_offset
-        right_edge.rect.topright = self._screen.get_width(), self._top_offset
-        top_edge.rect.topleft = left_edge.rect.width, self._top_offset
+        left_edge.rect.topleft = 0, self.top_offset
+        right_edge.rect.topright = self.screen.get_width(), self.top_offset
+        top_edge.rect.topleft = left_edge.rect.width, self.top_offset
         return edges(left_edge, right_edge, top_edge)
 
     def _create_bricks(self):
@@ -149,7 +115,7 @@ class Round1:
 
             if brick.visible:
                 # Each layer consists of 13 bricks added horizontally.
-                rect = self._screen.blit(brick.image, (left, top))
+                rect = self.screen.blit(brick.image, (left, top))
                 # Update the brick's rect with the new position
                 brick.rect = rect
 
