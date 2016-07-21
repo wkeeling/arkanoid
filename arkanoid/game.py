@@ -23,7 +23,7 @@ DISPLAY_CAPTION = 'Arkanoid'
 # The angle the ball initially moves off the paddle, in radians.
 BALL_START_ANGLE_RAD = 5.0  # Value must be no smaller than -3.14
 # The speed that the ball will always try to arrive at.
-BALL_BASE_SPEED = 8  # pixels per frame
+BALL_BASE_SPEED = 9  # pixels per frame
 # The max speed of the ball, prevents a runaway speed when lots of rapid
 # collisions.
 BALL_TOP_SPEED = 15  # pixels per frame
@@ -49,8 +49,12 @@ class Arkanoid:
         # Initialise the clock.
         self._clock = pygame.time.Clock()
 
-        # Create the main screen (the window).
-        self._create_screen()
+        # Create the main screen (the window) and default background.
+        self._screen = self._create_screen()
+        self._background = self._create_background()
+        self._display_score_titles()
+        self._display_score(0)
+        self._display_highscore(0)
 
         # Reference to a running game, when one is in play.
         self._game = None
@@ -81,6 +85,7 @@ class Arkanoid:
                 self._game = Game()
 
             self._game.update()
+            self._display_score(self._game.score)
 
             if self._game.over:
                 self._running = False
@@ -94,6 +99,33 @@ class Arkanoid:
         pygame.display.set_mode(DISPLAY_SIZE)
         pygame.display.set_caption(DISPLAY_CAPTION)
         pygame.mouse.set_visible(False)
+        return pygame.display.get_surface()
+
+    def _create_background(self):
+        background = pygame.Surface(self._screen.get_size())
+        background = background.convert()
+        background.fill((0, 0, 0))
+        return background
+
+    def _display_score_titles(self):
+        player = font(MAIN_FONT, 18).render('1UP', False, (230, 0, 0))
+        self._screen.blit(player, (60, 0))
+        high_score = font(MAIN_FONT, 18).render('HIGH SCORE', False,
+                                                (230, 0, 0))
+        self._screen.blit(high_score, (h_centre_pos(high_score), 0))
+
+    def _display_score(self, value):
+        score = font(MAIN_FONT, 18).render(str(value), False, (255, 255, 255))
+        width = score.get_rect().width
+        self._screen.blit(self._background, (130 - width, 20), score.get_rect())
+        self._screen.blit(score, (130 - width, 20))
+
+    def _display_highscore(self, value):
+        high_score = font(MAIN_FONT, 18).render(str(value), False,
+                                                (255, 255, 255))
+        self._screen.blit(self._background, (h_centre_pos(high_score), 20),
+                          high_score.get_rect())
+        self._screen.blit(high_score, (h_centre_pos(high_score), 20))
 
 
 class Game:
@@ -102,16 +134,17 @@ class Game:
     """
 
     def __init__(self, round_class=Round1, lives=3):
-        """Initialise a new Game with an optional level (aka 'round'), and
-        optional number of lives.
+        """Initialise a new Game.
 
         Args:
-            round_class: The class of the round to start, default Round1.
-            lives: Optional number of lives for the player, default 3.
+            round_class:
+                The class of the round to start, default Round1.
+            lives:
+                Optional number of lives for the player, default 3.
         """
         # Keep track of the score and lives throughout the game.
-        self.score = 0
         self.lives = lives
+        self.score = 0
 
         # Reference to the main screen.
         self._screen = pygame.display.get_surface()
@@ -192,15 +225,6 @@ class Game:
                 self._screen.blit(self._life_img, (left, top)))
             left += self._life_img.get_width() + 10
 
-    def _update_score(self):
-        score = font(MAIN_FONT, 18).render(str(self.score), False,
-                                           (255, 255, 255))
-        background = pygame.Surface(score.get_size())
-        background = background.convert()
-        background.fill((0, 0, 0))
-        self._screen.blit(background, (20, 20), score.get_rect())
-        self._screen.blit(score, (20, 20))
-
     def on_brick_collide(self, brick):
         """Called by a sprite when it collides with a brick.
 
@@ -229,7 +253,6 @@ class Game:
             if brick.value:
                 # Add this brick's value to the score.
                 self.score += brick.value
-                self._update_score()
 
             # Tell the ball that the brick has gone.
             self.ball.remove_collidable_sprite(brick)
