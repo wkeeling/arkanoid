@@ -289,7 +289,8 @@ class Game:
         def stop(event):
             nonlocal keys_down
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                keys_down -= 1
+                if keys_down > 0:
+                    keys_down -= 1
                 if keys_down == 0:
                     self.paddle.stop()
         self.handler_stop = stop
