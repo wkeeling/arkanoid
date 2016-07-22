@@ -244,12 +244,6 @@ class Game:
             brick.animate()
         else:
             # Brick has been destroyed.
-            if brick.powerup_cls:
-                # There is a powerup in the brick.
-                powerup = brick.powerup_cls(self, brick)
-
-                # Display the powerup.
-                self.sprites.append(powerup)
             if brick.value:
                 # Add this brick's value to the score.
                 self.score += brick.value
@@ -260,6 +254,14 @@ class Game:
             # Tell the round that a brick has gone, so that it can decide
             # whether the round is completed.
             self.round.brick_destroyed()
+
+        if brick.powerup_cls:
+            # There is a powerup in the brick.
+            powerup = brick.powerup_cls(self, brick)
+            brick.powerup_cls = None
+
+            # Display the powerup.
+            self.sprites.append(powerup)
 
     def _off_screen(self):
         """Callback called by the ball when it goes offscreen."""
