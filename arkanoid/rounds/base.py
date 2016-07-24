@@ -1,4 +1,9 @@
+import collections
+
 import pygame
+
+from arkanoid.sprites.edge import (TopEdge,
+                                   SideEdge)
 
 
 class BaseRound:
@@ -67,14 +72,21 @@ class BaseRound:
         """Create the edge sprites and position them at the edges of the
         screen.
 
-        Subclasses must override this abstract method to create and position
-        the edge sprites.
+        This implementation creates static edges. Subclasses may override
+        if they wish to provide some special animation within an edge.
 
         Returns:
             A named tuple with attributes 'left', 'right', and 'top' that
             reference the corresponding edge sprites.
         """
-        raise NotImplementedError('Subclasses must implement _create_edges()')
+        edges = collections.namedtuple('edge', 'left right top')
+        left_edge = SideEdge()
+        right_edge = SideEdge()
+        top_edge = TopEdge()
+        left_edge.rect.topleft = 0, self.top_offset
+        right_edge.rect.topright = self.screen.get_width(), self.top_offset
+        top_edge.rect.topleft = left_edge.rect.width, self.top_offset
+        return edges(left_edge, right_edge, top_edge)
 
     def _create_bricks(self):
         """Create the bricks and position them on the screen.

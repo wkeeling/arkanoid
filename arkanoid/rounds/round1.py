@@ -5,8 +5,6 @@ import pygame
 
 from arkanoid.rounds.base import BaseRound
 from arkanoid.sprites.brick import Brick
-from arkanoid.sprites.edge import (TopEdge,
-                                   SideEdge)
 from arkanoid.sprites.powerup import (CatchPowerUp,
                                       ExpandPowerUp,
                                       ExtraLifePowerUp,
@@ -17,8 +15,8 @@ from arkanoid.sprites.powerup import (CatchPowerUp,
 class Round1(BaseRound):
     """Initialises the background, brick layout and powerups for round one."""
 
-    # The offset from the top edge to where the bottom row of bricks starts.
-    _BOTTOM_ROW_VERTICAL_OFFSET = 250
+    # The top value where the bottom row of bricks starts.
+    _BOTTOM_ROW_START_TOP = 350
 
     def __init__(self, top_offset):
         """Initialise round 1.
@@ -38,23 +36,6 @@ class Round1(BaseRound):
         # TODO: background image should be loaded from a file.
         background.fill((0, 0, 100))
         return background
-
-    def _create_edges(self):
-        """Create the edge sprites and position them at the edges of the
-        screen.
-
-        Returns:
-            A named tuple with attributes 'left', 'right', and 'top' that
-            reference the corresponding edge sprites.
-        """
-        edges = collections.namedtuple('edge', 'left right top')
-        left_edge = SideEdge()
-        right_edge = SideEdge()
-        top_edge = TopEdge()
-        left_edge.rect.topleft = 0, self.top_offset
-        right_edge.rect.topright = self.screen.get_width(), self.top_offset
-        top_edge.rect.topleft = left_edge.rect.width, self.top_offset
-        return edges(left_edge, right_edge, top_edge)
 
     def _create_bricks(self):
         """Create the bricks and position them on the screen.
@@ -103,7 +84,7 @@ class Round1(BaseRound):
         return pygame.sprite.Group(*bricks)
 
     def _position_bricks(self, bricks):
-        top = self.edges.top.rect.top + self._BOTTOM_ROW_VERTICAL_OFFSET
+        top = self._BOTTOM_ROW_START_TOP
         colour, rect = None, None
 
         for brick in bricks:

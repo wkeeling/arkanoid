@@ -17,7 +17,7 @@ GAME_SPEED = 60
 # The dimensions of the main game window in pixels.
 DISPLAY_SIZE = 600, 800
 # The number of pixels from the top of the screen before the top edge starts.
-TOP_OFFSET = 75
+TOP_OFFSET = 150
 # The title of the main window.
 DISPLAY_CAPTION = 'Arkanoid'
 # The angle the ball initially moves off the paddle, in radians.
@@ -99,7 +99,10 @@ class Arkanoid:
         pygame.display.set_mode(DISPLAY_SIZE)
         pygame.display.set_caption(DISPLAY_CAPTION)
         pygame.mouse.set_visible(False)
-        return pygame.display.get_surface()
+        screen = pygame.display.get_surface()
+        image, _ = load_png('logo.png')
+        screen.blit(image, (5, 0))
+        return screen
 
     def _create_background(self):
         background = pygame.Surface(self._screen.get_size())
@@ -108,24 +111,26 @@ class Arkanoid:
         return background
 
     def _display_score_titles(self):
-        player = font(MAIN_FONT, 18).render('1UP', False, (230, 0, 0))
-        self._screen.blit(player, (60, 0))
         high_score = font(MAIN_FONT, 18).render('HIGH SCORE', False,
                                                 (230, 0, 0))
-        self._screen.blit(high_score, (h_centre_pos(high_score), 0))
+        self._screen.blit(high_score, (self._screen.get_width() -
+                                       high_score.get_width() - 10, 10))
+        player = font(MAIN_FONT, 18).render('1UP', False, (230, 0, 0))
+        self._screen.blit(player, (self._screen.get_width() -
+                                   player.get_width() - 10, 75))
 
     def _display_score(self, value):
         score = font(MAIN_FONT, 18).render(str(value), False, (255, 255, 255))
-        width = score.get_rect().width
-        self._screen.blit(self._background, (130 - width, 20), score.get_rect())
-        self._screen.blit(score, (130 - width, 20))
+        position = self._screen.get_width() - score.get_width() - 10, 100
+        self._screen.blit(self._background, position, score.get_rect())
+        self._screen.blit(score, position)
 
     def _display_highscore(self, value):
         high_score = font(MAIN_FONT, 18).render(str(value), False,
                                                 (255, 255, 255))
-        self._screen.blit(self._background, (h_centre_pos(high_score), 20),
-                          high_score.get_rect())
-        self._screen.blit(high_score, (h_centre_pos(high_score), 20))
+        position = self._screen.get_width() - high_score.get_width() - 10, 35
+        self._screen.blit(self._background, position, high_score.get_rect())
+        self._screen.blit(high_score, position)
 
 
 class Game:
@@ -377,9 +382,8 @@ class RoundStartState(BaseState):
         # Initialise the text.
         self._caption = font(MAIN_FONT, 18).render(self.game.round.name,
                                                    False, (255, 255, 255))
-        screen_height = self._screen.get_height()
         self._caption_pos = (h_centre_pos(self._caption),
-                             screen_height - (screen_height * 0.4))
+                             self.game.paddle.rect.top - 200)
         self._ready = font(MAIN_FONT, 18).render('Ready', False,
                                                  (255, 255, 255))
         self._ready_pos = (h_centre_pos(self._ready),
