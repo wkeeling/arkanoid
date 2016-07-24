@@ -1,4 +1,5 @@
 import logging
+import random
 
 import pygame
 
@@ -262,11 +263,20 @@ class Game:
 
         if brick.powerup_cls:
             # There is a powerup in the brick.
-            powerup = brick.powerup_cls(self, brick)
-            brick.powerup_cls = None
+            # Figure out whether we shouls release it.
+            release = not brick.visible  # Always release on brick destruction
 
-            # Display the powerup.
-            self.sprites.append(powerup)
+            if not release:
+                # Brick hasn't been destroyed, so randomly decide whether
+                # to release or not.
+                release = random.choice((True, False))
+
+            if release:
+                powerup = brick.powerup_cls(self, brick)
+                brick.powerup_cls = None
+
+                # Display the powerup.
+                self.sprites.append(powerup)
 
     def _off_screen(self):
         """Callback called by the ball when it goes offscreen."""
