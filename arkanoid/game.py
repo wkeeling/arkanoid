@@ -383,7 +383,7 @@ class RoundStartState(BaseState):
         self._caption = font(MAIN_FONT, 18).render(self.game.round.name,
                                                    False, (255, 255, 255))
         self._caption_pos = (h_centre_pos(self._caption),
-                             self.game.paddle.rect.top - 200)
+                             self.game.paddle.rect.top - 150)
         self._ready = font(MAIN_FONT, 18).render('Ready', False,
                                                  (255, 255, 255))
         self._ready_pos = (h_centre_pos(self._ready),
