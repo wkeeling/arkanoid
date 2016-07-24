@@ -3,13 +3,14 @@ import itertools
 import pygame
 
 from arkanoid.rounds.base import BaseRound
+from arkanoid.sprites.brick import Brick
 
 
-class Round1(BaseRound):
+class Round2(BaseRound):
     """Initialises the background, brick layout and powerups for round two."""
 
     # The offset from the top edge to where the bottom row of bricks starts.
-    _BOTTOM_ROW_VERTICAL_OFFSET = 500
+    _BOTTOM_ROW_VERTICAL_OFFSET = 475
 
     def __init__(self, top_offset):
         """Initialise round 2.
@@ -38,8 +39,30 @@ class Round1(BaseRound):
         """
         colours = itertools.cycle(('white', 'amber', 'cyan', 'green', 'red',
                                   'blue', 'magenta', 'yellow'))
-
+        left = self.edges.left.rect.width
+        bricks = []
 
         for i in reversed(range(13)):
-            pass
+            top = self._BOTTOM_ROW_VERTICAL_OFFSET
+            if i > 0:
+                brick = Brick('grey', 80, destroy_after=2, powerup_cls=None)
+            else:
+                brick = Brick('red', 80, destroy_after=1, powerup_cls=None)
 
+            bricks.append(self._blit_brick(brick, left, top))
+
+            colour = next(colours)
+            for _ in range(i):
+                top = top - brick.rect.height
+                brick = Brick(colour, 80 + ((i + 1) * 10),
+                              destroy_after=1, powerup_cls=None)
+                bricks.append(self._blit_brick(brick, left, top))
+
+            left += brick.rect.width+1
+
+        return bricks
+
+    def _blit_brick(self, brick, left, top):
+        rect = self.screen.blit(brick.image, (left, top))
+        brick.rect = rect
+        return brick

@@ -4,7 +4,7 @@ import random
 import pygame
 
 from arkanoid.event import receiver
-from arkanoid.rounds.round1 import Round1
+from arkanoid.rounds.round2 import Round2
 from arkanoid.sprites.ball import Ball
 from arkanoid.sprites.paddle import Paddle
 from arkanoid.util import (font,
@@ -139,7 +139,7 @@ class Game:
     being when a player starts a new game.
     """
 
-    def __init__(self, round_class=Round1, lives=3):
+    def __init__(self, round_class=Round2, lives=3):
         """Initialise a new Game.
 
         Args:

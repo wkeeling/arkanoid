@@ -1,9 +1,9 @@
-import collections
 import random
 
 import pygame
 
 from arkanoid.rounds.base import BaseRound
+from arkanoid.rounds.round2 import Round2
 from arkanoid.sprites.brick import Brick
 from arkanoid.sprites.powerup import (CatchPowerUp,
                                       ExpandPowerUp,
@@ -29,6 +29,7 @@ class Round1(BaseRound):
         super().__init__(top_offset)
 
         self.name = 'Round 1'
+        self.next_round = Round2
 
     def _create_background(self):
         background = pygame.Surface(self.screen.get_size())
