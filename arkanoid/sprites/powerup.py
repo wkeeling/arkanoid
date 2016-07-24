@@ -147,7 +147,7 @@ class SlowBallPowerUp(PowerUp):
 
     _PNG_FILES = 'powerup_slow_ball.png',
     # The ball will assume this base speed when the powerup is activated.
-    _SLOW_BALL_SPEED = 5  # Pixels per frame.
+    _SLOW_BALL_SPEED = 6  # Pixels per frame.
 
     def __init__(self, game, brick):
         super().__init__(game, brick, self._PNG_FILES)
