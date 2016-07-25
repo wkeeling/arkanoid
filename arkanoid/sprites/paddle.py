@@ -49,7 +49,7 @@ class Paddle(pygame.sprite.Sprite):
         # This toggles visibility of the paddle.
         self.visible = True
 
-        # Load the paddle image and its rect.
+        # Load the default paddle image.
         self.image, self.rect = load_png('paddle.png')
 
         # Create the area the paddle can move laterally in.
@@ -317,15 +317,23 @@ class NormalState(PaddleState):
     def __init__(self, paddle):
         super().__init__(paddle)
 
-        self._image_set = False
+        self._image_sequence = load_png_sequence('paddle')
+        self._animation = None
+        self._update_count = 0
 
     def update(self):
-        if not self._image_set:
-            # Set the default paddle graphic.
-            pos = self.paddle.rect.center
-            self.paddle.image, self.paddle.rect = load_png('paddle.png')
-            self.paddle.rect.center = pos
-            self._image_set = True
+        # Animate the flashing paddle lights.
+        if self._update_count % 100 == 0:
+            self._animation = itertools.chain(self._image_sequence,
+                                              reversed(self._image_sequence))
+        elif self._animation:
+            try:
+                if self._update_count % 8 == 0:
+                    self.paddle.image, _ = next(self._animation)
+            except StopIteration:
+                self._animation = None
+
+        self._update_count += 1
 
     def exit(self, on_complete=None):
         on_complete()
