@@ -317,15 +317,23 @@ class NormalState(PaddleState):
     def __init__(self, paddle):
         super().__init__(paddle)
 
+        self._image_loaded = False
         self._image_sequence = load_png_sequence('paddle')
         self._animation = None
         self._update_count = 0
 
     def update(self):
-        # Animate the flashing paddle lights.
+        if not self._image_loaded:
+            pos = self.paddle.rect.center
+            self.paddle.image, self.paddle.rect = load_png('paddle.png')
+            self.paddle.rect.center = pos
+            self._image_loaded = True
+
+        # Pulsate the paddle lights.
         if self._update_count % 100 == 0:
             self._animation = itertools.chain(self._image_sequence,
                                               reversed(self._image_sequence))
+            self._update_count = 0
         elif self._animation:
             try:
                 if self._update_count % 8 == 0:
