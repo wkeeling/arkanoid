@@ -6,7 +6,10 @@ import pygame
 from arkanoid.event import receiver
 from arkanoid.rounds.round1 import Round1
 from arkanoid.sprites.ball import Ball
-from arkanoid.sprites.paddle import Paddle
+from arkanoid.sprites.paddle import (ExplodingState,
+                                     Paddle,
+                                     NormalState
+                                     )
 from arkanoid.util import (font,
                            h_centre_pos,
                            load_png)
@@ -376,6 +379,9 @@ class RoundStartState(BaseState):
         # Set the ball up with the round's collidable objects.
         self._configure_ball()
 
+        # Make sure we start with the paddle in its normal state.
+        self.game.paddle.transition(NormalState(self.game.paddle))
+
         # Keep track of the number of update cycles.
         self._update_count = 0
         self._screen = pygame.display.get_surface()
@@ -494,7 +500,8 @@ class BallOffScreenState(BaseState):
             self.game.active_powerup = None
 
         # Tell the paddle to explode.
-        self.game.paddle.explode(on_complete=self._exploded)
+        self.game.paddle.transition(
+            ExplodingState(self.game.paddle, self._exploded))
         self._explode_complete = False
 
     def update(self):
