@@ -368,7 +368,11 @@ class GameStartState(BaseState):
 
 class RoundStartState(BaseState):
     """This state handles the behaviour that happens at the very beginning of
-    a round and just before the real gameplay begins."""
+    a round and just before the real gameplay begins.
+
+    This state initialises the sprites so they are set up ready for a new
+    round to begin.
+    """
 
     def __init__(self, game):
         super().__init__(game)
@@ -382,11 +386,7 @@ class RoundStartState(BaseState):
         # Make sure we start with the paddle in its normal state.
         self.game.paddle.transition(NormalState(self.game.paddle))
 
-        # Keep track of the number of update cycles.
-        self._update_count = 0
-        self._screen = pygame.display.get_surface()
-
-        # Initialise the sprites' start state.
+        # Initialise the sprites' display state.
         self.game.ball.reset()
         self.game.paddle.visible = False
         self.game.ball.visible = False
@@ -404,6 +404,10 @@ class RoundStartState(BaseState):
                                                  (255, 255, 255))
         self._ready_pos = (h_centre_pos(self._ready),
                            self._caption_pos[1] + 50)
+
+        # Keep track of the number of update cycles.
+        self._update_count = 0
+        self._screen = pygame.display.get_surface()
 
     def _setup_sprites(self):
         """Make all the sprites available for rendering."""

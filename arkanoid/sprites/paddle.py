@@ -108,17 +108,21 @@ class Paddle(pygame.sprite.Sprite):
         """Transition to the specified state.
 
         Note that this is a request to transition, notifying an existing state
-        to exit, before switching to the new state.
+        to exit, before switching to the new state. There therefore may be a
+        delay before the supplied state becomes active.
+
+        Callers can supply an optional on_complete no-args callback to be
+        notified when the transition to the requested state is complete.
 
         Args:
             state:
                 The state to transition to.
         """
-        def on_complete():
+        def on_exit():
             # Switch the state on state exit.
             self._state = state
 
-        self._state.exit(on_complete)
+        self._state.exit(on_exit)
 
     def move_left(self):
         """Tell the paddle to move to the left by the speed set when the
@@ -212,7 +216,7 @@ class PaddleState:
 
     The exit() method is called before a transition to a new state. States
     should perform any exit behaviour here, such as triggering an animation 
-    to return to normal, before calling the no-args on_complete callback.
+    to return to normal, before calling the no-args on_exit callback.
     """
 
     def __init__(self, paddle):
@@ -237,15 +241,15 @@ class PaddleState:
         """
         raise NotImplementedError('Subclasses must implement update()')
 
-    def exit(self, on_complete):
-        """Sub-states must implement this to perform any behaviour that should
+    def exit(self, on_exit):
+        """Trigger any state specific exit behaviour before calling the no-args
+        on_exit callable.
+
+        Sub-states must implement this to perform any behaviour that should
         happen just before the state transitions to some other state.
 
-        When the exit behaviour is completed, sub-states must call the no-args
-        on_complete callable.
-
         Args:
-            on_complete:
+            on_exit:
                 A no-args callable that will be called when the exit behaviour
                 has completed.
         """
@@ -288,8 +292,8 @@ class NormalState(PaddleState):
 
         self._update_count += 1
 
-    def exit(self, on_complete):
-        on_complete()
+    def exit(self, on_exit):
+        on_exit()
 
 
 class WideState(PaddleState):
@@ -310,7 +314,7 @@ class WideState(PaddleState):
         self._expand, self._shrink = True, False
 
         # Exit callback
-        self._on_complete = None
+        self._on_exit = None
 
     def update(self):
         """Animate the paddle expanding from normal to wide or shrinking
@@ -340,23 +344,23 @@ class WideState(PaddleState):
         except StopIteration:
             # State ends.
             self._shrink = False
-            self._on_complete()
+            self._on_exit()
 
     def _convert(self):
         pos = self.paddle.rect.center
         self.paddle.image, self.paddle.rect = next(self._animation)
         self.paddle.rect.center = pos
 
-    def exit(self, on_complete):
+    def exit(self, on_exit):
         """Trigger the animation to shrink the paddle and exit the state.
 
         Args:
-            on_complete:
+            on_exit:
                 No-args callable invoked when the shrinking paddle animation
                 has completed.
         """
         self._shrink = True
-        self._on_complete = on_complete
+        self._on_exit = on_exit
         self._animation = iter(reversed(self._image_sequence))
 
 
@@ -383,7 +387,7 @@ class LaserState(PaddleState):
         self._bullets = []
 
         # Exit callback.
-        self._on_complete = lambda: None
+        self._on_exit = lambda: None
 
     def update(self):
         """Animate the paddle from normal to laser, or from laser to normal.
@@ -410,23 +414,23 @@ class LaserState(PaddleState):
         except StopIteration:
             # State ends.
             self._from_laser = False
-            self._on_complete()
+            self._on_exit()
 
     def _convert(self):
         pos = self.paddle.rect.center
         self.paddle.image, self.paddle.rect = next(self._laser_anim)
         self.paddle.rect.center = pos
 
-    def exit(self, on_complete):
+    def exit(self, on_exit):
         """Trigger the animation to return to normal state.
 
         Args:
-            on_complete:
+            on_exit:
                 No-args callable invoked when the laser has converted back
                 to a normal paddle.
         """
         self._from_laser = True
-        self._on_complete = on_complete
+        self._on_exit = on_exit
         self._laser_anim = iter(reversed(self._image_sequence))
         # Stop monitoring for spacebar presses now that we're leaving the
         # state.
@@ -542,24 +546,24 @@ class ExplodingState(PaddleState):
     allowing the caller to transition the paddle to a new state.
     """
 
-    def __init__(self, paddle, on_complete):
+    def __init__(self, paddle, on_exploded):
         """Initialise a new ExplodingState with the paddle and a no-args
         callback which gets called once the exploding animation is complete.
 
         Args:
             paddle:
                 The paddle instance.
-            on_complete:
+            on_exploded:
                 The no-args callback used to notify the caller when the
                 animation is complete.
         """
         super().__init__(paddle)
         # Set up the exploding images.
         self._image_orig = self.paddle.image
-        self._exploding_animation = iter(
-            [image for image, _ in load_png_sequence('paddle_explode')])
+        self._rect_orig = self.paddle.rect
+        self._exploding_animation = iter(load_png_sequence('paddle_explode'))
         # The notification callback.
-        self._on_explode_complete = on_complete
+        self._on_explode_complete = on_exploded
 
         # Keep track of update cycles for animation purposes.
         self._update_count = 0
@@ -570,17 +574,17 @@ class ExplodingState(PaddleState):
         if 10 < self._update_count < 110:
             if self._update_count % 5 == 0:
                 try:
-                    LOG.debug('animating')
-                    self.paddle.image = next(self._exploding_animation)
+                    self.paddle.image, self.paddle.rect = next(
+                        self._exploding_animation)
+                    self.paddle.rect.center = self._rect_orig.center
                 except StopIteration:
-                    # Animation finished.
-                    self.paddle.image = self._image_orig
-                    # Unset ourselves.
-                    self.paddle.exploding_animation = None
-                    # Notify the client that we're done.
+                    # Animation finished, notify the client that we're done.
                     self._on_explode_complete()
 
+        self.paddle.stop()  # Prevent the paddle from moving when exploding.
         self._update_count += 1
 
-    def exit(self, on_complete):
-        on_complete()
+    def exit(self, on_exit):
+        # No specific exit logic for this state, so notify the caller
+        # immediately.
+        on_exit()
