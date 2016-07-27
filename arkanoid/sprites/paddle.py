@@ -61,9 +61,6 @@ class Paddle(pygame.sprite.Sprite):
         # Position the paddle.
         self.rect.center = self.area.center
 
-        # Used when the paddle needs to explode.
-        self.exploding_animation = None
-
         # A list of no-args callables that will be called on ball collision.
         self.ball_collide_callbacks = []
 
@@ -159,6 +156,10 @@ class Paddle(pygame.sprite.Sprite):
         """
         for callback in self.ball_collide_callbacks:
             callback()
+
+    @property
+    def exploding(self):
+        return isinstance(self._state, ExplodingState)
 
     @staticmethod
     def bounce_strategy(paddle_rect, ball_rect):
