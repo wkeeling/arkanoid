@@ -121,6 +121,8 @@ class Paddle(pygame.sprite.Sprite):
         def on_exit():
             # Switch the state on state exit.
             self._state = state
+            state.enter()
+            LOG.debug('Entered {}'.format(type(state).__name__))
 
         self._state.exit(on_exit)
 
@@ -210,13 +212,23 @@ class PaddleState:
     of its graphics and behaviour.
 
     This base class is abstract and concrete sub-states should implement
-    both the update() and exit() abstract methods. The update() method is
-    called repeatedly by the game and is where much of the state specific
-    logic should reside, such as animation behaviour.
+    the update() abstract method. The update() method is called repeatedly
+    by the game and is where much of the state specific logic should reside,
+    such as animation.
+
+    The enter() and exit() methods are called when the state is entered and
+    exited respectively.
+
+    When the enter() method is called, any previous paddle state is
+    guaranteed to have exited. The enter() method can therefore be used to
+    access any paddle attributes required for sub-state initialisation. Do
+    not use __init__() for this, because a previous paddle state may still
+    be in play and you may end up with attribute values you weren't expecting.
 
     The exit() method is called before a transition to a new state. States
     should perform any exit behaviour here, such as triggering an animation 
-    to return to normal, before calling the no-args on_exit callback.
+    to return to normal, before calling the no-args on_exit callback passed
+    to the exit() method.
     """
 
     def __init__(self, paddle):
@@ -231,7 +243,9 @@ class PaddleState:
         """
         self.paddle = paddle
 
-        LOG.debug('Entered {}'.format(type(self).__name__))
+    def enter(self):
+        """Perform any initialisation when the state is first entered."""
+        pass
 
     def update(self):
         """Update the state of the paddle.
@@ -245,15 +259,12 @@ class PaddleState:
         """Trigger any state specific exit behaviour before calling the no-args
         on_exit callable.
 
-        Sub-states must implement this to perform any behaviour that should
-        happen just before the state transitions to some other state.
-
         Args:
             on_exit:
                 A no-args callable that will be called when the exit behaviour
                 has completed.
         """
-        raise NotImplementedError('Subclasses must implement exit()')
+        on_exit()
 
     def __repr__(self):
         class_name = type(self).__name__
@@ -266,19 +277,18 @@ class NormalState(PaddleState):
     def __init__(self, paddle):
         super().__init__(paddle)
 
-        self._image_loaded = False
         self._image_sequence = load_png_sequence('paddle')
         self._animation = None
         self._update_count = 0
 
-    def update(self):
-        if not self._image_loaded:
-            pos = self.paddle.rect.center
-            self.paddle.image, self.paddle.rect = load_png('paddle.png')
-            self.paddle.rect.center = pos
-            self._image_loaded = True
+    def enter(self):
+        """Set the default paddle graphic."""
+        pos = self.paddle.rect.center
+        self.paddle.image, self.paddle.rect = load_png('paddle.png')
+        self.paddle.rect.center = pos
 
-        # Pulsate the paddle lights.
+    def update(self):
+        """Pulsate the paddle lights."""
         if self._update_count % 100 == 0:
             self._animation = itertools.chain(self._image_sequence,
                                               reversed(self._image_sequence))
@@ -291,9 +301,6 @@ class NormalState(PaddleState):
                 self._animation = None
 
         self._update_count += 1
-
-    def exit(self, on_exit):
-        on_exit()
 
 
 class WideState(PaddleState):
@@ -387,7 +394,7 @@ class LaserState(PaddleState):
         self._bullets = []
 
         # Exit callback.
-        self._on_exit = lambda: None
+        self._on_exit = None
 
     def update(self):
         """Animate the paddle from normal to laser, or from laser to normal.
@@ -451,6 +458,7 @@ class LaserState(PaddleState):
                 bullet2 = LaserBullet(self._game, position=(
                     left + self.paddle.rect.width - 7, top))
 
+                # Keep track of the bullets we're fired.
                 self._bullets.append(bullet1)
                 self._bullets.append(bullet2)
 
@@ -543,7 +551,9 @@ class ExplodingState(PaddleState):
     goes offscreen.
 
     This state notifies the caller when the explosion animation has completed
-    allowing the caller to transition the paddle to a new state.
+    via the on_exploded no-args callback passed to the initialiser.
+
+    Note that this state leaves the paddle invisible when it has completed.
     """
 
     def __init__(self, paddle, on_exploded):
@@ -558,15 +568,19 @@ class ExplodingState(PaddleState):
                 animation is complete.
         """
         super().__init__(paddle)
+
         # Set up the exploding images.
-        self._image_orig = self.paddle.image
-        self._rect_orig = self.paddle.rect
         self._exploding_animation = iter(load_png_sequence('paddle_explode'))
         # The notification callback.
         self._on_explode_complete = on_exploded
+        self._rect_orig = None
 
         # Keep track of update cycles for animation purposes.
         self._update_count = 0
+
+    def enter(self):
+        """Record the original position of the paddle."""
+        self._rect_orig = self.paddle.rect
 
     def update(self):
         """Run the exploding animation."""
@@ -580,11 +594,8 @@ class ExplodingState(PaddleState):
                 except StopIteration:
                     # Animation finished, notify the client that we're done.
                     self._on_explode_complete()
+                    # We leave the paddle invisible, since it's exploded.
+                    self.paddle.visible = False
 
         self.paddle.stop()  # Prevent the paddle from moving when exploding.
         self._update_count += 1
-
-    def exit(self, on_exit):
-        # No specific exit logic for this state, so notify the caller
-        # immediately.
-        on_exit()
