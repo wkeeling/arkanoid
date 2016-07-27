@@ -387,19 +387,19 @@ class RoundStartState(BaseState):
         self.game.paddle.transition(NormalState(self.game.paddle))
 
         # Initialise the sprites' display state.
+        self._screen = pygame.display.get_surface()
         self.game.ball.reset()
         self.game.paddle.visible = False
         self.game.ball.visible = False
-        # Anchor the ball to the paddle.
-        self.game.ball.anchor(self.game.paddle,
-                              (self.game.paddle.rect.width // 2,
-                               -self.game.paddle.rect.height))
+        # Anchor the ball whilst it's invisible.
+        self.game.ball.anchor((self._screen.get_width() / 2,
+                               self._screen.get_height() - 100))
 
         # Initialise the text.
         self._caption = font(MAIN_FONT, 18).render(self.game.round.name,
                                                    False, (255, 255, 255))
         self._caption_pos = (h_centre_pos(self._caption),
-                             self.game.paddle.rect.top - 150)
+                             self.game.paddle.rect.center[1] - 150)
         self._ready = font(MAIN_FONT, 18).render('Ready', False,
                                                  (255, 255, 255))
         self._ready_pos = (h_centre_pos(self._ready),
@@ -407,7 +407,6 @@ class RoundStartState(BaseState):
 
         # Keep track of the number of update cycles.
         self._update_count = 0
-        self._screen = pygame.display.get_surface()
 
     def _setup_sprites(self):
         """Make all the sprites available for rendering."""
@@ -456,6 +455,10 @@ class RoundStartState(BaseState):
         if self._update_count > 150:
             # Display the "Ready" message.
             ready = self._screen.blit(self._ready, self._ready_pos)
+            # Anchor the ball to the paddle.
+            self.game.ball.anchor(self.game.paddle,
+                                  (self.game.paddle.rect.width // 2,
+                                   -self.game.paddle.rect.height))
             # Display the sprites.
             self.game.paddle.visible = True
             self.game.ball.visible = True
