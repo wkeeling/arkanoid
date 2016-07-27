@@ -47,6 +47,7 @@ class BaseRound:
     @property
     def complete(self):
         """Whether the rounds has been completed (all bricks destroyed).
+        
         Returns:
             True if the round has been completed. False otherwise.
         """
