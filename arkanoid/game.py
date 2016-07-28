@@ -56,6 +56,7 @@ class Arkanoid:
         # Create the main screen (the window) and default background.
         self._screen = self._create_screen()
         self._background = self._create_background()
+        self._display_logo()
         self._display_score_titles()
         self._display_score(0)
         self._display_highscore(0)
@@ -104,8 +105,6 @@ class Arkanoid:
         pygame.display.set_caption(DISPLAY_CAPTION)
         pygame.mouse.set_visible(False)
         screen = pygame.display.get_surface()
-        image, _ = load_png('logo.png')
-        screen.blit(image, (5, 0))
         return screen
 
     def _create_background(self):
@@ -113,6 +112,10 @@ class Arkanoid:
         background = background.convert()
         background.fill((0, 0, 0))
         return background
+
+    def _display_logo(self):
+        image, _ = load_png('logo.png')
+        self._screen.blit(image, (5, 0))
 
     def _display_score_titles(self):
         high_score = font(MAIN_FONT, 18).render('HIGH SCORE', False,

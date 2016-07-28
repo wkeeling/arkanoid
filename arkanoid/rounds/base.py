@@ -23,13 +23,13 @@ class BaseRound:
         self.top_offset = top_offset
         self.screen = pygame.display.get_surface()
 
-        # The background for this round.
-        self.background = self._create_background()
-
         # The edges used as the sides of the game area.
         # A named tuple referencing the 3 game edge sprites with the
         # attributes: 'left', 'right', 'top'.
         self.edges = self._create_edges()
+
+        # The background for this round.
+        self.background = self._create_background()
 
         # Background (plus edges) are blitted to the screen.
         self.screen.blit(self.background, (0, top_offset))
@@ -81,8 +81,8 @@ class BaseRound:
             reference the corresponding edge sprites.
         """
         edges = collections.namedtuple('edge', 'left right top')
-        left_edge = SideEdge()
-        right_edge = SideEdge()
+        left_edge = SideEdge('left')
+        right_edge = SideEdge('right')
         top_edge = TopEdge()
         left_edge.rect.topleft = 0, self.top_offset
         right_edge.rect.topright = self.screen.get_width(), self.top_offset

@@ -4,6 +4,7 @@ import logging
 import pygame
 
 from arkanoid.util import load_png
+from arkanoid.util import load_png_sequence
 
 LOG = logging.getLogger(__name__)
 
@@ -47,17 +48,11 @@ class Brick(pygame.sprite.Sprite):
         # Load the brick graphic.
         self.image, self.rect = load_png('brick_{}.png'.format(colour))
 
-        # Remember the original brick graphic.
-        self.image_orig = self.image
-
-        try:
-            # Attempt to load the animation graphic.
-            image_anim, _ = load_png('brick_{}_anim.png'.format(colour))
-        except FileNotFoundError:
-            self._animation = None
-        else:
-            # Set up the animation which cycles between the two images.
-            self._animation = itertools.cycle((self.image, image_anim))
+        # Load the images/rects required for the shimmering animation.
+        self._image_sequence = [image for image, _ in
+                                load_png_sequence('brick_grey')]
+        self._image_sequence.append(self.image)
+        self._animation = None
 
         # The number of ball collisions after which the brick is destroyed.
         self._destroy_after = destroy_after
@@ -69,19 +64,15 @@ class Brick(pygame.sprite.Sprite):
         self.powerup_cls = powerup_cls
 
         # Whether to animate the brick.
-        self._animate = None
+        self._animate = False
 
     def update(self):
-        if self._animation and self._animate is not None:
-            if self._animate < 30:
-                # Animate for 30 cycles.
-                if self._animate % 2 == 0:
-                    # Swap the images every 2 cycles to animate.
-                    self.image = next(self._animation)
-                self._animate += 1
-            else:
-                # Put back the original brick image.
-                self.image = self.image_orig
+        if self._animate:
+            if not self._animation:
+                self._animation = iter(self._image_sequence)
+            try:
+                self.image = next(self._animation)
+            except StopIteration:
                 self._animate = None
 
     @property
@@ -96,4 +87,4 @@ class Brick(pygame.sprite.Sprite):
 
     def animate(self):
         """Trigger animation of this brick."""
-        self._animate = 0
+        self._animate = True
