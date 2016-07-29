@@ -68,7 +68,7 @@ class Round1(BaseRound):
             # Grey bricks take 2 hits to destroy.
             destroy_after = 2 if colour == 'grey' else 1
 
-            for i in range(13):
+            for _ in range(13):
                 powerup_class = None
 
                 if count in powerup_indexes:
