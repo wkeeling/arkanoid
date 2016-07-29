@@ -296,7 +296,7 @@ class NormalState(PaddleState):
             self._update_count = 0
         elif self._animation:
             try:
-                if self._update_count % 8 == 0:
+                if self._update_count % 4 == 0:
                     self.paddle.image, _ = next(self._animation)
             except StopIteration:
                 self._animation = None
