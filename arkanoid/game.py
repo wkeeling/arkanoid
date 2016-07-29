@@ -230,7 +230,7 @@ class Game:
 
         # Display the remaining lives.
         left = self.round.edges.left.rect.width
-        top = self._screen.get_height() - self._life_img.get_height() - 10
+        top = self._screen.get_height() - self._life_img.get_height() - 5
 
         for life in range(self.lives - 1):
             self._life_rects.append(
