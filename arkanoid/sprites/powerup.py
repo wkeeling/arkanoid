@@ -65,7 +65,7 @@ class PowerUp(pygame.sprite.Sprite):
         self.rect = self.rect.move(0, self._speed)
 
         if self._area.contains(self.rect):
-            if self._animation_start % 2 == 0:
+            if self._animation_start % 4 == 0:
                 # Animate the powerup.
                 self.image = next(self._animation)
 
