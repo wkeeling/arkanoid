@@ -126,7 +126,7 @@ class ExtraLifePowerUp(PowerUp):
     """
 
     def __init__(self, game, brick):
-        super().__init__(game, brick, 'powerup_extra_life')
+        super().__init__(game, brick, 'powerup_life')
 
     def _activate(self):
         """Add an extra life to the game."""
@@ -147,7 +147,7 @@ class SlowBallPowerUp(PowerUp):
     _SLOW_BALL_SPEED = 6  # Pixels per frame.
 
     def __init__(self, game, brick):
-        super().__init__(game, brick, 'powerup_slow_ball')
+        super().__init__(game, brick, 'powerup_slow')
 
         self._orig_speed = None
 
