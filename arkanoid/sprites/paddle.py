@@ -290,7 +290,7 @@ class NormalState(PaddleState):
 
     def update(self):
         """Pulsate the paddle lights."""
-        if self._update_count % 100 == 0:
+        if self._update_count % 80 == 0:
             self._animation = itertools.chain(self._image_sequence,
                                               reversed(self._image_sequence))
             self._update_count = 0
