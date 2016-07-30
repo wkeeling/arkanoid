@@ -9,7 +9,7 @@ class TopEdge(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
 
-        self.image, self.rect = load_png('top_edge.png')
+        self.image, self.rect = load_png('top_edge')
         self.visible = True
 
     def update(self):
@@ -32,7 +32,7 @@ class SideEdge(pygame.sprite.Sprite):
 
         super().__init__()
 
-        self.image, self.rect = load_png('%s_edge.png' % side)
+        self.image, self.rect = load_png('%s_edge' % side)
         self.visible = True
 
     def update(self):

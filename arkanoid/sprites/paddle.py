@@ -50,7 +50,7 @@ class Paddle(pygame.sprite.Sprite):
         self.visible = True
 
         # Load the default paddle image.
-        self.image, self.rect = load_png('paddle.png')
+        self.image, self.rect = load_png('paddle')
 
         # Create the area the paddle can move laterally in.
         screen = pygame.display.get_surface().get_rect()
@@ -285,7 +285,7 @@ class NormalState(PaddleState):
     def enter(self):
         """Set the default paddle graphic."""
         pos = self.paddle.rect.center
-        self.paddle.image, self.paddle.rect = load_png('paddle.png')
+        self.paddle.image, self.paddle.rect = load_png('paddle')
         self.paddle.rect.center = pos
 
     def update(self):
@@ -488,7 +488,7 @@ class LaserBullet(pygame.sprite.Sprite):
         """
         super().__init__()
         # Load the bullet and its rect.
-        self.image, self.rect = load_png('laser_bullet.png')
+        self.image, self.rect = load_png('laser_bullet')
 
         self._game = game
         self._position = position

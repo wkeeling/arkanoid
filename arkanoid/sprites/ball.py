@@ -63,7 +63,7 @@ class Ball(pygame.sprite.Sprite):
                 the edge of the screen.
         """
         super().__init__()
-        self.image, self.rect = load_png('ball.png')
+        self.image, self.rect = load_png('ball')
         self.rect.midbottom = start_pos
         self.visible = True
         self.speed = base_speed

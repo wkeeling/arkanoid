@@ -10,12 +10,14 @@ def load_png(filename):
 
     Args:
         filename:
-            The filename of the image.
+            The filename of the image, with or without the '.png' extension.
     Returns:
         A 2-tuple of the image and its Rect.
     Raises:
         FileNotFoundError if the image filename was not found.
     """
+    if not filename.lower().endswith('.png'):
+        filename = '{}.png'.format(filename)
     q_filename = os.path.join(os.path.dirname(__file__), 'data', 'graphics',
                               filename)
     if not os.path.exists(q_filename):

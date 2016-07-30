@@ -46,7 +46,7 @@ class Brick(pygame.sprite.Sprite):
         self.colour = colour
         self.value = value
         # Load the brick graphic.
-        self.image, self.rect = load_png('brick_{}.png'.format(colour))
+        self.image, self.rect = load_png('brick_{}'.format(colour))
 
         # Load the images/rects required for the shimmering animation.
         self._image_sequence = [image for image, _ in
