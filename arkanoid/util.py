@@ -18,11 +18,11 @@ def load_png(filename):
     """
     if not filename.lower().endswith('.png'):
         filename = '{}.png'.format(filename)
-    q_filename = os.path.join(os.path.dirname(__file__), 'data', 'graphics',
-                              filename)
-    if not os.path.exists(q_filename):
-        raise FileNotFoundError('File not found: {}'.format(q_filename))
-    image = pygame.image.load(q_filename)
+    fullpath = os.path.join(os.path.dirname(__file__), 'data', 'graphics',
+                            filename)
+    if not os.path.exists(fullpath):
+        raise FileNotFoundError('File not found: {}'.format(fullpath))
+    image = pygame.image.load(fullpath)
     if image.get_alpha is None:
         image = image.convert()
     else:
