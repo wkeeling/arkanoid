@@ -278,9 +278,7 @@ class NormalState(PaddleState):
     def __init__(self, paddle):
         super().__init__(paddle)
 
-        self._image_sequence = load_png_sequence('paddle')
-        self._animation = None
-        self._update_count = 0
+        self._pulsator = _PaddlePulsator(paddle, 'paddle')
 
     def enter(self):
         """Set the default paddle graphic."""
@@ -290,6 +288,30 @@ class NormalState(PaddleState):
 
     def update(self):
         """Pulsate the paddle lights."""
+        self._pulsator.update()
+
+
+class _PaddlePulsator:
+    """Helper class for pulsating the lights at the end of the paddle."""
+
+    def __init__(self, paddle, image_sequence_name):
+        """Initialise with the name of the image sequence corresponding to
+        each pulsating paddle frame.
+
+        Args:
+            paddle:
+                The paddle.
+            image_sequence_name:
+                The name of theimage sequence representing each pulsating
+                frame.
+        """
+        self._paddle = paddle
+        self._image_sequence = load_png_sequence(image_sequence_name)
+        self._animation = None
+        self._update_count = 0
+
+    def update(self):
+        """Update the paddle and pulsate the lights."""
         if self._update_count % 80 == 0:
             self._animation = itertools.chain(self._image_sequence,
                                               reversed(self._image_sequence))
@@ -297,7 +319,7 @@ class NormalState(PaddleState):
         elif self._animation:
             try:
                 if self._update_count % 4 == 0:
-                    self.paddle.image, _ = next(self._animation)
+                    self._paddle.image, _ = next(self._animation)
             except StopIteration:
                 self._animation = None
 
