@@ -7,7 +7,7 @@ from arkanoid.event import receiver
 from arkanoid.sprites.paddle import (LaserState,
                                      NormalState,
                                      WideState)
-from arkanoid.util import load_png
+from arkanoid.util import load_png_sequence
 
 LOG = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class PowerUp(pygame.sprite.Sprite):
     # The speed the powerup falls from a brick.
     _DEFAULT_FALL_SPEED = 3
 
-    def __init__(self, game, brick, pngs, speed=_DEFAULT_FALL_SPEED):
+    def __init__(self, game, brick, png_prefix, speed=_DEFAULT_FALL_SPEED):
         """
         Initialise a new PowerUp.
 
@@ -34,10 +34,9 @@ class PowerUp(pygame.sprite.Sprite):
                 The current game instance.
             brick:
                 The brick that triggered the powerup to drop.
-            pngs:
-                Iterator of png filenames used to animate the powerup. These
-                will be loaded from the data/graphics directory and must be
-                supplied in the correct order.
+            png_prefix:
+                The png file prefix that will be used to load the image
+                sequence for the powerup animation.
             speed:
                 Optional speed at which the powerup drops. Default 3 pixels
                 per frame.
@@ -45,7 +44,8 @@ class PowerUp(pygame.sprite.Sprite):
         super().__init__()
         self.game = game
         self._speed = speed
-        self._animation = itertools.cycle(load_png(png)[0] for png in pngs)
+        self._animation = itertools.cycle(
+            image for image, _ in load_png_sequence(png_prefix))
         self._animation_start = 0
 
         self.image = None
@@ -125,10 +125,8 @@ class ExtraLifePowerUp(PowerUp):
     the Paddle.
     """
 
-    _PNG_FILES = 'powerup_extra_life.png',
-
     def __init__(self, game, brick):
-        super().__init__(game, brick, self._PNG_FILES)
+        super().__init__(game, brick, 'powerup_extra_life')
 
     def _activate(self):
         """Add an extra life to the game."""
@@ -145,12 +143,11 @@ class ExtraLifePowerUp(PowerUp):
 class SlowBallPowerUp(PowerUp):
     """This PowerUp causes the ball to move more slowly."""
 
-    _PNG_FILES = 'powerup_slow_ball.png',
     # The ball will assume this base speed when the powerup is activated.
     _SLOW_BALL_SPEED = 6  # Pixels per frame.
 
     def __init__(self, game, brick):
-        super().__init__(game, brick, self._PNG_FILES)
+        super().__init__(game, brick, 'powerup_slow_ball')
 
         self._orig_speed = None
 
@@ -173,10 +170,8 @@ class SlowBallPowerUp(PowerUp):
 class ExpandPowerUp(PowerUp):
     """This PowerUp expands the paddle."""
 
-    _PNG_FILES = 'powerup_expand.png',
-
     def __init__(self, game, brick):
-        super().__init__(game, brick, self._PNG_FILES)
+        super().__init__(game, brick, 'powerup_expand')
 
     def _activate(self):
         """Tell the paddle that we want to transition to WideState next."""
@@ -206,10 +201,8 @@ class LaserPowerUp(PowerUp):
     Firing is controlled with the spacebar.
     """
 
-    _PNG_FILES = 'powerup_laser.png',
-
     def __init__(self, game, brick):
-        super().__init__(game, brick, self._PNG_FILES)
+        super().__init__(game, brick, 'powerup_laser')
 
     def _activate(self):
         """Tell the paddle that we want to transition to LaserState next."""
@@ -239,10 +232,8 @@ class CatchPowerUp(PowerUp):
     The ball is released by pressing the spacebar.
     """
 
-    _PNG_FILES = 'powerup_catch.png',
-
     def __init__(self, game, brick):
-        super().__init__(game, brick, self._PNG_FILES)
+        super().__init__(game, brick, 'powerup_catch')
 
     def _activate(self):
         """Add the ability to catch the ball when it collides with the
