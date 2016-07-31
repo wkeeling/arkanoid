@@ -456,6 +456,14 @@ class LaserState(PaddleState):
         pos = self.paddle.rect.center
         self.paddle.image, self.paddle.rect = next(self._laser_anim)
         self.paddle.rect.center = pos
+        while (not self.paddle.area.collidepoint(
+                self.paddle.rect.midleft)):
+            # Nudge the paddle back inside the game area.
+            self.paddle.rect = self.paddle.rect.move(1, 0)
+        while (not self.paddle.area.collidepoint(
+                self.paddle.rect.midright)):
+            # Nudge the paddle back inside the game area.
+            self.paddle.rect = self.paddle.rect.move(-1, 0)
 
     def exit(self, on_exit):
         """Trigger the animation to return to normal state.
