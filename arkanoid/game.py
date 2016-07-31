@@ -461,7 +461,7 @@ class RoundStartState(BaseState):
             # Anchor the ball to the paddle.
             self.game.ball.anchor(self.game.paddle,
                                   (self.game.paddle.rect.width // 2,
-                                   -self.game.paddle.rect.height))
+                                   -self.game.ball.rect.height))
             # Display the sprites.
             self.game.paddle.visible = True
             self.game.ball.visible = True

@@ -261,5 +261,13 @@ class CatchPowerUp(PowerUp):
         """Catch the ball when it collides with the paddle."""
         # Work out the position of the ball relative to the paddle.
         pos = self.game.ball.rect.bottomleft[0] - \
-            self.game.paddle.rect.topleft[0], -self.game.paddle.rect.height
+            self.game.paddle.rect.topleft[0], -self.game.ball.rect.height
         self.game.ball.anchor(self.game.paddle, pos)
+
+
+class DuplicatePowerUp(PowerUp):
+    pass
+
+
+class WarpPowerUp(PowerUp):
+    pass

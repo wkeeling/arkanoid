@@ -352,13 +352,13 @@ class WideState(PaddleState):
     def update(self):
         """Animate the paddle expanding from normal to wide or shrinking
         from wide to normal."""
+        if not self._expand and not self._shrink:
+            self._pulsator.update()
+
         if self._expand:
             self._expand_paddle()
         elif self._shrink:
             self._shrink_paddle()
-
-        if not self._expand and not self._shrink:
-            self._pulsator.update()
 
     def _expand_paddle(self):
         try:
