@@ -483,9 +483,9 @@ class LaserState(PaddleState):
             if len(self._bullets) < 3:
                 # Create the bullet sprites. We fire two bullets at once.
                 left, top = self.paddle.rect.bottomleft
-                bullet1 = LaserBullet(self._game, position=(left + 7, top))
+                bullet1 = LaserBullet(self._game, position=(left + 10, top))
                 bullet2 = LaserBullet(self._game, position=(
-                    left + self.paddle.rect.width - 7, top))
+                    left + self.paddle.rect.width - 10, top))
 
                 # Keep track of the bullets we're fired.
                 self._bullets.append(bullet1)
