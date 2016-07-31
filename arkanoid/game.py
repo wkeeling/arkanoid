@@ -118,24 +118,24 @@ class Arkanoid:
         self._screen.blit(image, (5, 0))
 
     def _display_score_titles(self):
+        player = font(MAIN_FONT, 18).render('1UP', False, (230, 0, 0))
+        self._screen.blit(player, (self._screen.get_width() -
+                                   player.get_width() - 10, 10))
         high_score = font(MAIN_FONT, 18).render('HIGH SCORE', False,
                                                 (230, 0, 0))
         self._screen.blit(high_score, (self._screen.get_width() -
-                                       high_score.get_width() - 10, 10))
-        player = font(MAIN_FONT, 18).render('1UP', False, (230, 0, 0))
-        self._screen.blit(player, (self._screen.get_width() -
-                                   player.get_width() - 10, 75))
+                                       high_score.get_width() - 10, 75))
 
     def _display_score(self, value):
         score = font(MAIN_FONT, 18).render(str(value), False, (255, 255, 255))
-        position = self._screen.get_width() - score.get_width() - 10, 100
+        position = self._screen.get_width() - score.get_width() - 10, 35
         self._screen.blit(self._background, position, score.get_rect())
         self._screen.blit(score, position)
 
     def _display_highscore(self, value):
         high_score = font(MAIN_FONT, 18).render(str(value), False,
                                                 (255, 255, 255))
-        position = self._screen.get_width() - high_score.get_width() - 10, 35
+        position = self._screen.get_width() - high_score.get_width() - 10, 100
         self._screen.blit(self._background, position, high_score.get_rect())
         self._screen.blit(high_score, position)
 
