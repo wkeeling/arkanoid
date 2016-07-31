@@ -419,6 +419,9 @@ class LaserState(PaddleState):
         # Whether we're converting to or from a laser paddle.
         self._to_laser, self._from_laser = True, False
 
+        # The pulsating animation.
+        self._pulsator = _PaddlePulsator(paddle, 'paddle_laser_pulsate')
+
         # Track the number of laser bullets currently in the air.
         self._bullets = []
 
@@ -430,6 +433,9 @@ class LaserState(PaddleState):
 
         Once converted to laser, start monitoring for spacebar presses.
         """
+        if not self._to_laser and not self._from_laser:
+            self._pulsator.update()
+
         if self._to_laser:
             self._convert_to_laser()
         elif self._from_laser:
