@@ -235,7 +235,7 @@ class Game:
         for life in range(self.lives - 1):
             self._life_rects.append(
                 self._screen.blit(self._life_img, (left, top)))
-            left += self._life_img.get_width() + 10
+            left += self._life_img.get_width() + 5
 
     def on_brick_collide(self, brick):
         """Called by a sprite when it collides with a brick.

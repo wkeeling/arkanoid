@@ -278,7 +278,7 @@ class NormalState(PaddleState):
     def __init__(self, paddle):
         super().__init__(paddle)
 
-        self._pulsator = _PaddlePulsator(paddle, 'paddle')
+        self._pulsator = _PaddlePulsator(paddle, 'paddle_pulsate')
 
     def enter(self):
         """Set the default paddle graphic."""
@@ -340,6 +340,9 @@ class WideState(PaddleState):
         self._image_sequence = load_png_sequence('paddle_wide')
         self._animation = iter(self._image_sequence)
 
+        # The pulsating animation.
+        self._pulsator = _PaddlePulsator(paddle, 'paddle_wide_pulsate')
+
         # Whether we're to expand or to shrink.
         self._expand, self._shrink = True, False
 
@@ -353,6 +356,9 @@ class WideState(PaddleState):
             self._expand_paddle()
         elif self._shrink:
             self._shrink_paddle()
+
+        if not self._expand and not self._shrink:
+            self._pulsator.update()
 
     def _expand_paddle(self):
         try:
