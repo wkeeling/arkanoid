@@ -108,8 +108,8 @@ class PowerUp(pygame.sprite.Sprite):
         Returns:
             True if appropriate to activate, false otherwise.
         """
-        if self.game.paddle.exploding:
-            # Don't activate when the paddle is exploding.
+        if self.game.paddle.exploding or not self.game.paddle.visible:
+            # Don't activate when the paddle is exploding or hidden.
             return False
         return True
 
