@@ -628,8 +628,8 @@ class ExplodingState(PaddleState):
     def update(self):
         """Run the exploding animation."""
         # Run the animation after a short delay.
-        if 10 < self._update_count < 110:
-            if self._update_count % 5 == 0:
+        if 10 < self._update_count:
+            if self._update_count % 4 == 0:
                 try:
                     self.paddle.image, self.paddle.rect = next(
                         self._exploding_animation)
