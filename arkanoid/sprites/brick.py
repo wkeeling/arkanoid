@@ -20,7 +20,7 @@ class Brick(pygame.sprite.Sprite):
         sequence named  'brick_<colour>_N.png' from the graphics folder
         which will be used to animate the brick when Brick.animate() is called.
         This image sequence is optional, and if it does not exist, then
-        Brick.animate() will have no effect.
+        triggering Brick.animate() will have no effect.
 
         Optionally specify the number of strikes by the ball that it takes to
         destroy the brick (default 1) via the destroy_after attribute. Also
