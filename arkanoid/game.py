@@ -8,8 +8,8 @@ from arkanoid.rounds.round1 import Round1
 from arkanoid.sprites.ball import Ball
 from arkanoid.sprites.paddle import (ExplodingState,
                                      Paddle,
-                                     NormalState
-                                     )
+                                     MaterializeState,
+                                     NormalState)
 from arkanoid.util import (font,
                            h_centre_pos,
                            load_png)
@@ -465,6 +465,9 @@ class RoundStartState(BaseState):
             # Display the sprites.
             self.game.paddle.visible = True
             self.game.ball.visible = True
+        if self._update_count == 151:
+            # Animate the paddle materializing onto the screen.
+            self.game.paddle.transition(MaterializeState(self.game.paddle))
         if self._update_count > 270:
             # Erase the text.
             self._screen.blit(self.game.round.background, caption, caption)

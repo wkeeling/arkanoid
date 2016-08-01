@@ -326,6 +326,36 @@ class _PaddlePulsator:
         self._update_count += 1
 
 
+class MaterializeState(PaddleState):
+    """This state animates the paddle as it first appears on the screen.
+
+    After the paddle has materialized, this state automatically transitions
+    to NormalState.
+    """
+
+    def __init__(self, paddle):
+        super().__init__(paddle)
+
+        self._image_sequence = load_png_sequence('paddle_materialize')
+        self._animation = iter(self._image_sequence)
+
+        self._update_count = 0
+
+    def update(self):
+        """Display the materialization effect, then transition to NormalState.
+        """
+        if self._update_count % 2 == 0:
+            try:
+                pos = self.paddle.rect.center
+                self.paddle.image, self.paddle.rect = next(self._animation)
+                self.paddle.rect.center = pos
+            except StopIteration:
+                # Transition to NormalState now we're done.
+                self.paddle.transition(NormalState(self.paddle))
+
+        self._update_count += 1
+
+
 class WideState(PaddleState):
     """This state represents the wide state of the paddle.
 
@@ -346,7 +376,7 @@ class WideState(PaddleState):
         # Whether we're to expand or to shrink.
         self._expand, self._shrink = True, False
 
-        # Exit callback
+        # Exit callback.
         self._on_exit = None
 
     def update(self):
@@ -642,3 +672,4 @@ class ExplodingState(PaddleState):
 
         self.paddle.stop()  # Prevent the paddle from moving when exploding.
         self._update_count += 1
+
