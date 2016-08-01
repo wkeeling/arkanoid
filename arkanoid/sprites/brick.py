@@ -17,16 +17,16 @@ class Brick(pygame.sprite.Sprite):
 
         When a Brick is initialised with the specified colour, a file named
         'brick_<colour>.png' will be loaded from the graphics folder and must
-        exist. In addition, a Brick will also attempt to load a file called
-        'brick_<colour>_anim.png' from the graphics folder which will be used
-        to animate the brick when Brick.animate() is called. This file is
-        optional, and if it does not exist, then Brick.animate() will have no
-        effect.
+        exist. In addition, a Brick will also attempt to load an image
+        sequence named  'brick_<colour>_N.png' from the graphics folder
+        which will be used to animate the brick when Brick.animate() is called.
+        This image sequence is optional, and if it does not exist, then
+        Brick.animate() will have no effect.
 
         Optionally specify the number of strikes by the ball that it takes to
         destroy the brick (default 1) via the destroy_after attribute. Also
         optionally specify the class of a powerup which will fall from the
-        brick when the brick is destroyed by the ball - via the powerup_cls
+        brick when the brick is struck by the ball - via the powerup_cls
         attribute.
 
         Args:
@@ -40,7 +40,7 @@ class Brick(pygame.sprite.Sprite):
                 brick (default 1).
             powerup_cls:
                 Optional class of a PowerUp that will be used when the ball
-                destroys this brick (default None).
+                strikes this brick (default None).
         """
         super().__init__()
         self.colour = colour
@@ -50,7 +50,7 @@ class Brick(pygame.sprite.Sprite):
 
         # Load the images/rects required for the shimmering animation.
         self._image_sequence = [image for image, _ in
-                                load_png_sequence('brick_silver')]
+                                load_png_sequence('brick_{}'.format(colour))]
         self._image_sequence.append(self.image)
         self._animation = None
 
