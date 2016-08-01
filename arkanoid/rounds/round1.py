@@ -44,7 +44,7 @@ class Round1(BaseRound):
         Returns:
             A pygame.sprite.Group of bricks.
         """
-        colours = 'green', 'blue', 'yellow', 'red', 'grey'
+        colours = 'green', 'blue', 'yellow', 'red', 'silver'
         values = 80, 100, 120, 160, 180
         brick_types = zip(colours, values)
 
@@ -65,8 +65,8 @@ class Round1(BaseRound):
 
         # Each coloured brick forms a new layer.
         for colour, value in brick_types:
-            # Grey bricks take 2 hits to destroy.
-            destroy_after = 2 if colour == 'grey' else 1
+            # Silver bricks take 2 hits to destroy.
+            destroy_after = 2 if colour == 'silver' else 1
 
             for _ in range(13):
                 powerup_class = None

@@ -45,7 +45,7 @@ class Round2(BaseRound):
         for i in reversed(range(13)):
             top = self._BOTTOM_ROW_VERTICAL_OFFSET
             if i > 0:
-                brick = Brick('grey', 80, destroy_after=2, powerup_cls=None)
+                brick = Brick('silver', 80, destroy_after=2, powerup_cls=None)
             else:
                 brick = Brick('red', 80, destroy_after=1, powerup_cls=None)
 
