@@ -266,8 +266,15 @@ class CatchPowerUp(PowerUp):
 
 
 class DuplicatePowerUp(PowerUp):
-    pass
+    """This powerup causes the ball to split into multiple duplicate balls."""
+
+    def __init__(self, game, brick):
+        super().__init__(game, brick, 'powerup_duplicate')
 
 
 class WarpPowerUp(PowerUp):
-    pass
+    """This powerup causes a warp gate to appear through which the Vaus can
+    transport to the next level.
+    """
+    def __init__(self, game, brick):
+        super().__init__(game, brick, 'powerup_warp')
