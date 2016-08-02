@@ -1,9 +1,15 @@
 import itertools
+import random
 
 import pygame
 
 from arkanoid.rounds.base import BaseRound
 from arkanoid.sprites.brick import Brick
+from arkanoid.sprites.powerup import (CatchPowerUp,
+                                      ExpandPowerUp,
+                                      ExtraLifePowerUp,
+                                      LaserPowerUp,
+                                      SlowBallPowerUp)
 
 
 class Round2(BaseRound):
@@ -27,7 +33,6 @@ class Round2(BaseRound):
     def _create_background(self):
         background = pygame.Surface(self.screen.get_size())
         background = background.convert()
-        # TODO: background image should be loaded from a file.
         background.fill((0, 128, 0))
         return background
 
@@ -41,26 +46,65 @@ class Round2(BaseRound):
                                   'blue', 'magenta', 'yellow'))
         left = self.edges.left.rect.width
         bricks = []
+        first_row_powerups = self._create_first_row_powerups()
+        remaining_powerups = self._create_remaining_powerups()
 
+        # Create a dict structure with the brick index as the key, and
+        # powerup class as the value.
+        first_row_powerup_indexes = dict(zip(random.sample(range(13),
+                                             len(first_row_powerups)),
+                                             first_row_powerups))
+        remaining_powerup_indexes = dict(zip(random.sample(range(91),
+                                             len(remaining_powerups)),
+                                             remaining_powerups))
+
+        count = 0
         for i in reversed(range(13)):
+            # Create the first row brick.
+            powerup = first_row_powerup_indexes.get(i)
             top = self._BOTTOM_ROW_VERTICAL_OFFSET
             if i > 0:
-                brick = Brick('silver', 80, destroy_after=2, powerup_cls=None)
+                brick = Brick('silver', 80, destroy_after=2,
+                              powerup_cls=powerup)
             else:
-                brick = Brick('red', 80, destroy_after=1, powerup_cls=None)
+                brick = Brick('red', 80, destroy_after=1,
+                              powerup_cls=powerup)
 
             bricks.append(self._blit_brick(brick, left, top))
 
             colour = next(colours)
             for _ in range(i):
+                # Create a vertical column of bricks above the first.
+                powerup = remaining_powerup_indexes.get(count)
                 top = top - brick.rect.height
                 brick = Brick(colour, 80 + ((i + 1) * 10),
-                              destroy_after=1, powerup_cls=None)
+                              destroy_after=1, powerup_cls=powerup)
                 bricks.append(self._blit_brick(brick, left, top))
+                count += 1
 
             left += brick.rect.width+1
 
         return bricks
+
+    def _create_first_row_powerups(self):
+        # Prioritise slow ball and catch for the first row, given the
+        # lack of space.
+        first_row_powerups = []
+        first_row_powerups.extend([SlowBallPowerUp] * 2)
+        first_row_powerups.extend([CatchPowerUp] * 2)
+        random.shuffle(first_row_powerups)
+        return first_row_powerups
+
+    def _create_remaining_powerups(self):
+        remaining_powerups = []
+        # Powerups for the other bricks
+        remaining_powerups.extend([ExtraLifePowerUp] * 3)
+        remaining_powerups.extend([LaserPowerUp] * 4)
+        remaining_powerups.extend([CatchPowerUp] * 2)
+        remaining_powerups.extend([ExpandPowerUp] * 4)
+        remaining_powerups.extend([SlowBallPowerUp] * 2)
+        random.shuffle(remaining_powerups)
+        return remaining_powerups
 
     def _blit_brick(self, brick, left, top):
         rect = self.screen.blit(brick.image, (left, top))
