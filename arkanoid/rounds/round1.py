@@ -34,7 +34,6 @@ class Round1(BaseRound):
     def _create_background(self):
         background = pygame.Surface(self.screen.get_size())
         background = background.convert()
-        # TODO: background image should be loaded from a file.
         background.fill((0, 0, 100))
         return background
 
@@ -58,7 +57,7 @@ class Round1(BaseRound):
         random.shuffle(powerup_classes)
 
         # Randomly select the indexes for the bricks that will contain
-        # powerups, for the bottom 4 rows.
+        # powerups.
         powerup_indexes = random.sample(range(65), len(powerup_classes))
 
         bricks, count = [], 0
