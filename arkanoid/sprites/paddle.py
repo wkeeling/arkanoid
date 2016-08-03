@@ -620,8 +620,7 @@ class LaserBullet(pygame.sprite.Sprite):
 
 
 class ExplodingState(PaddleState):
-    """This represents the exploding state of the paddle when the ball
-    goes offscreen.
+    """This state animates the paddle exploding when the ball goes offscreen.
 
     This state notifies the caller when the explosion animation has completed
     via the on_exploded no-args callback passed to the initialiser.
