@@ -328,7 +328,8 @@ class _PaddlePulsator:
 
 
 class MaterializeState(PaddleState):
-    """This state animates the paddle as it first appears on the screen.
+    """This special state animates the paddle as it first appears on the 
+    screen.
 
     After the paddle has materialized, this state automatically transitions
     to NormalState.
@@ -337,9 +338,7 @@ class MaterializeState(PaddleState):
     def __init__(self, paddle):
         super().__init__(paddle)
 
-        self._image_sequence = load_png_sequence('paddle_materialize')
-        self._animation = iter(self._image_sequence)
-
+        self._animation = iter(load_png_sequence('paddle_materialize'))
         self._update_count = 0
 
     def update(self):
