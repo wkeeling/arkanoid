@@ -4,7 +4,8 @@ import pygame
 
 from arkanoid.rounds.base import BaseRound
 from arkanoid.rounds.round2 import Round2
-from arkanoid.sprites.brick import Brick
+from arkanoid.sprites.brick import (Brick,
+                                    BrickColour)
 from arkanoid.sprites.powerup import (CatchPowerUp,
                                       ExpandPowerUp,
                                       ExtraLifePowerUp,
@@ -43,9 +44,8 @@ class Round1(BaseRound):
         Returns:
             A pygame.sprite.Group of bricks.
         """
-        colours = 'green', 'blue', 'yellow', 'red', 'silver'
-        values = 80, 100, 120, 160, 180
-        brick_types = zip(colours, values)
+        colours = (BrickColour.green, BrickColour.blue, BrickColour.yellow,
+                   BrickColour.red, BrickColour.silver)
 
         # Create the distribution of powerup classes.
         powerup_classes = []
@@ -63,9 +63,9 @@ class Round1(BaseRound):
         bricks, count = [], 0
 
         # Each coloured brick forms a new layer.
-        for colour, value in brick_types:
+        for colour in colours:
             # Silver bricks take 2 hits to destroy.
-            destroy_after = 2 if colour == 'silver' else 1
+            destroy_after = 2 if colour == BrickColour.silver else 1
 
             for _ in range(13):
                 powerup_class = None
@@ -73,7 +73,8 @@ class Round1(BaseRound):
                 if count in powerup_indexes:
                     powerup_class = powerup_classes.pop(0)
 
-                brick = Brick(colour, value, destroy_after=destroy_after,
+                brick = Brick(colour.name, colour.value,
+                              destroy_after=destroy_after,
                               powerup_cls=powerup_class)
 
                 bricks.append(brick)

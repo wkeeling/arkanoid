@@ -1,3 +1,4 @@
+import enum
 import logging
 
 import pygame
@@ -87,3 +88,21 @@ class Brick(pygame.sprite.Sprite):
     def animate(self):
         """Trigger animation of this brick."""
         self._animate = True
+
+
+class BrickColour(enum.Enum):
+
+    """Enumeration of brick colours and their corresponding score value."""
+
+    blue = 100
+    cyan = 70
+    # Gold bricks have no score because they are indestructable.
+    gold = 0
+    green = 80
+    orange = 60
+    pink = 110
+    red = 90
+    # The score for a silver brick is the value multiplied by the Round number
+    silver = 50
+    white = 40
+    yellow = 120

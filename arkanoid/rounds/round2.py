@@ -4,7 +4,8 @@ import random
 import pygame
 
 from arkanoid.rounds.base import BaseRound
-from arkanoid.sprites.brick import Brick
+from arkanoid.sprites.brick import (Brick,
+                                    BrickColour)
 from arkanoid.sprites.powerup import (CatchPowerUp,
                                       ExpandPowerUp,
                                       ExtraLifePowerUp,
@@ -42,8 +43,11 @@ class Round2(BaseRound):
         Returns:
             A pygame.sprite.Group of bricks.
         """
-        colours = itertools.cycle(('white', 'amber', 'cyan', 'green', 'red',
-                                  'blue', 'magenta', 'yellow'))
+        colours = itertools.cycle((BrickColour.white, BrickColour.orange,
+                                   BrickColour.cyan, BrickColour.green,
+                                   BrickColour.red,
+                                   BrickColour.blue, BrickColour.pink,
+                                   BrickColour.yellow))
         left = self.edges.left.rect.width
         bricks = []
         first_row_powerups = self._create_first_row_powerups()
@@ -64,10 +68,12 @@ class Round2(BaseRound):
             powerup = first_row_powerup_indexes.get(i)
             top = self._BOTTOM_ROW_VERTICAL_OFFSET
             if i > 0:
-                brick = Brick('silver', 80, destroy_after=2,
+                brick = Brick(BrickColour.silver.name,
+                              BrickColour.silver.value * 2, destroy_after=2,
                               powerup_cls=powerup)
             else:
-                brick = Brick('red', 80, destroy_after=1,
+                brick = Brick(BrickColour.red.name, BrickColour.red.value,
+                              destroy_after=1,
                               powerup_cls=powerup)
 
             bricks.append(self._blit_brick(brick, left, top))
@@ -77,7 +83,7 @@ class Round2(BaseRound):
                 # Create a vertical column of bricks above the first.
                 powerup = remaining_powerup_indexes.get(count)
                 top = top - brick.rect.height
-                brick = Brick(colour, 80 + ((i + 1) * 10),
+                brick = Brick(colour.name, colour.value,
                               destroy_after=1, powerup_cls=powerup)
                 bricks.append(self._blit_brick(brick, left, top))
                 count += 1
