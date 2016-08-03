@@ -386,9 +386,6 @@ class RoundStartState(BaseState):
         # Set the ball up with the round's collidable objects.
         self._configure_ball()
 
-        # Make sure we start with the paddle in its normal state.
-        self.game.paddle.transition(NormalState(self.game.paddle))
-
         # Initialise the sprites' display state.
         self._screen = pygame.display.get_surface()
         self.game.ball.reset()
@@ -407,6 +404,10 @@ class RoundStartState(BaseState):
                                                  (255, 255, 255))
         self._ready_pos = (h_centre_pos(self._ready),
                            self._caption_pos[1] + 50)
+
+        # Deactivate any active powerup.
+        if self.game.active_powerup:
+            self.game.active_powerup.deactivate()
 
         # Whether we've reset the paddle
         self._paddle_reset = False
