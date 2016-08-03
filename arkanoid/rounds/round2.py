@@ -96,7 +96,7 @@ class Round2(BaseRound):
         # Prioritise slow ball and catch for the first row, given the
         # lack of space.
         first_row_powerups = []
-        first_row_powerups.extend([SlowBallPowerUp] * 2)
+        first_row_powerups.extend([SlowBallPowerUp] * 3)
         first_row_powerups.extend([CatchPowerUp] * 2)
         random.shuffle(first_row_powerups)
         return first_row_powerups
