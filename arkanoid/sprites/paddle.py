@@ -243,6 +243,7 @@ class PaddleState:
                 The Paddle instance.
         """
         self.paddle = paddle
+        LOG.debug('Initialised {}'.format(type(self).__name__))
 
     def enter(self):
         """Perform any initialisation when the state is first entered."""
