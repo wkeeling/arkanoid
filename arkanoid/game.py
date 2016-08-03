@@ -8,8 +8,7 @@ from arkanoid.rounds.round1 import Round1
 from arkanoid.sprites.ball import Ball
 from arkanoid.sprites.paddle import (ExplodingState,
                                      Paddle,
-                                     MaterializeState,
-                                     NormalState)
+                                     MaterializeState)
 from arkanoid.util import (font,
                            h_centre_pos,
                            load_png)
