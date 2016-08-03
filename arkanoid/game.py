@@ -570,28 +570,15 @@ class RoundEndState(BaseState):
     def __init__(self, game):
         super().__init__(game)
 
-        self._screen = pygame.display.get_surface()
-
-        # Initialise the text.
-        self._completed = font(MAIN_FONT, 18).render(
-            '%s complete' % self.game.round.name,
-            False, (255, 255, 255))
-        self._completed_pos = (h_centre_pos(self._completed),
-                               self.game.paddle.rect.center[1] - 150)
-
         self._update_count = 0
 
     def update(self):
         # Stop the ball and pause for a short period.
         self.game.ball.speed = 0
-        completed = None
+        self.game.ball.visible = False
+        self.game.paddle.visible = False
 
-        if self._update_count > 60:
-            # Display the 'round completed' message.
-            completed = self._screen.blit(self._completed, self._completed_pos)
-        if self._update_count > 280:
-            # Erase the text.
-            self._screen.blit(self.game.round.background, completed, completed)
+        if self._update_count > 120:
             # Move on to the next round.
             self.game.round = self.game.round.next_round(TOP_OFFSET)
             self.game.state = RoundStartState(self.game)
