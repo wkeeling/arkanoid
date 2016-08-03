@@ -408,6 +408,9 @@ class RoundStartState(BaseState):
         self._ready_pos = (h_centre_pos(self._ready),
                            self._caption_pos[1] + 50)
 
+        # Whether we've reset the paddle
+        self._paddle_reset = False
+
         # Keep track of the number of update cycles.
         self._update_count = 0
 
@@ -463,6 +466,9 @@ class RoundStartState(BaseState):
                                   (self.game.paddle.rect.width // 2,
                                    -self.game.ball.rect.height))
             # Display the sprites.
+            if not self._paddle_reset:
+                self.game.paddle.reset()
+                self._paddle_reset = True
             self.game.paddle.visible = True
             self.game.ball.visible = True
         if self._update_count == 151:
@@ -540,9 +546,6 @@ class RoundRestartState(RoundStartState):
         # The new number of lives since restarting.
         self._lives = game.lives - 1
 
-        # Whether we've reset the paddle.
-        self._paddle_reset = False
-
     def _setup_sprites(self):
         """No need to setup the sprites again on round restart."""
         pass
@@ -558,10 +561,6 @@ class RoundRestartState(RoundStartState):
         if self._update_count > 60:
             # Update the number of lives when we display the caption.
             self.game.lives = self._lives
-
-        if not self._paddle_reset:
-            self.game.paddle.reset()
-            self._paddle_reset = True
 
 
 class GameEndState(BaseState):
