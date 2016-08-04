@@ -7,6 +7,7 @@ from arkanoid.rounds.base import BaseRound
 from arkanoid.sprites.brick import (Brick,
                                     BrickColour)
 from arkanoid.sprites.powerup import (CatchPowerUp,
+                                      DuplicatePowerUp,
                                       ExpandPowerUp,
                                       ExtraLifePowerUp,
                                       LaserPowerUp,
@@ -109,6 +110,7 @@ class Round2(BaseRound):
         remaining_powerups.extend([CatchPowerUp] * 2)
         remaining_powerups.extend([ExpandPowerUp] * 4)
         remaining_powerups.extend([SlowBallPowerUp] * 2)
+        remaining_powerups.extend([DuplicatePowerUp] * 2)
         random.shuffle(remaining_powerups)
         return remaining_powerups
 

@@ -51,7 +51,7 @@ class BaseRound:
         Returns:
             True if the round has been completed. False otherwise.
         """
-        return self._bricks_destroyed == len(self.bricks)
+        return self._bricks_destroyed >= len(self.bricks)
 
     def brick_destroyed(self):
         """Conveys to the Round that a brick has been destroyed in the game."""

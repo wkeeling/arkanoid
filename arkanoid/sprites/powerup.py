@@ -1,5 +1,6 @@
 import itertools
 import logging
+import math
 
 import pygame
 
@@ -141,7 +142,7 @@ class ExtraLifePowerUp(PowerUp):
 
 
 class SlowBallPowerUp(PowerUp):
-    """This PowerUp causes the ball to move more slowly."""
+    """This PowerUp causes the ball(s) to move more slowly."""
 
     # The ball will assume this base speed when the powerup is activated.
     _SLOW_BALL_SPEED = 6  # Pixels per frame.
@@ -152,19 +153,21 @@ class SlowBallPowerUp(PowerUp):
         self._orig_speed = None
 
     def _activate(self):
-        """Slow the ball down."""
+        """Slow the ball(s) down."""
         # Remember the original speed of the ball.
-        self._orig_speed = self.game.ball.base_speed
+        self._orig_speed = self.game.balls[0].base_speed
 
-        # Slow the ball down.
-        self.game.ball.speed = self._SLOW_BALL_SPEED
-        self.game.ball.base_speed = self._SLOW_BALL_SPEED
+        # Slow the balls down.
+        for ball in self.game.balls:
+            ball.speed = self._SLOW_BALL_SPEED
+            ball.base_speed = self._SLOW_BALL_SPEED
 
     def deactivate(self):
-        """Deactivate the SlowBallPowerUp by returning the ball back to
-        its original speed."""
-        self.game.ball.speed = self._orig_speed
-        self.game.ball.base_speed = self._orig_speed
+        """Deactivate the SlowBallPowerUp by returning the ball(s) back to
+        their original speed."""
+        for ball in self.game.balls:
+            ball.speed = self._orig_speed
+            ball.base_speed = self._orig_speed
 
 
 class ExpandPowerUp(PowerUp):
@@ -175,16 +178,18 @@ class ExpandPowerUp(PowerUp):
 
     def _activate(self):
         """Tell the paddle that we want to transition to WideState next."""
-        # Increase the speed of the ball slightly now the player has the
+        # Increase the speed of the ball(s) slightly now the player has the
         # advantage of a wider paddle.
         self.game.paddle.transition(WideState(self.game.paddle))
-        self.game.ball.base_speed += 1
+        for ball in self.game.balls:
+            ball.base_speed += 1
 
     def deactivate(self):
         """Deactivate the ExpandPowerUp by returning the paddle back to
         its original size."""
         self.game.paddle.transition(NormalState(self.game.paddle))
-        self.game.ball.base_speed -= 1
+        for ball in self.game.balls:
+            ball.base_speed -= 1
 
     def _can_activate(self):
         can_activate = super()._can_activate()
@@ -206,16 +211,18 @@ class LaserPowerUp(PowerUp):
 
     def _activate(self):
         """Tell the paddle that we want to transition to LaserState next."""
-        # Increase the speed of the ball slightly now the player has the
+        # Increase the speed of the ball(s) slightly now the player has the
         # advantage of the laser.
         self.game.paddle.transition(LaserState(self.game.paddle, self.game))
-        self.game.ball.base_speed += 1
+        for ball in self.game.balls:
+            ball.base_speed += 1
 
     def deactivate(self):
         """Deactivate the LaserPowerUp by turning the paddle back to a
         normal paddle."""
         self.game.paddle.transition(NormalState(self.game.paddle))
-        self.game.ball.base_speed -= 1
+        for ball in self.game.balls:
+            ball.base_speed -= 1
 
     def _can_activate(self):
         can_activate = super()._can_activate()
@@ -227,16 +234,16 @@ class LaserPowerUp(PowerUp):
 
 
 class CatchPowerUp(PowerUp):
-    """This PowerUp allows the paddle to catch the ball.
+    """This PowerUp allows the paddle to catch a ball.
 
-    The ball is released by pressing the spacebar.
+    A ball is released by pressing the spacebar.
     """
 
     def __init__(self, game, brick):
         super().__init__(game, brick, 'powerup_catch')
 
     def _activate(self):
-        """Add the ability to catch the ball when it collides with the
+        """Add the ability to catch a ball when it collides with the
         paddle.
         """
         self.game.paddle.ball_collide_callbacks.append(self._catch)
@@ -250,19 +257,25 @@ class CatchPowerUp(PowerUp):
         """
         self.game.paddle.ball_collide_callbacks.remove(self._catch)
         receiver.unregister_handler(self._release_ball)
-        self.game.ball.release()  # Release a currently caught ball.
+        for ball in self.game.balls:
+            ball.release()  # Release a currently caught ball.
 
     def _release_ball(self, event):
         """Release a caught ball when the spacebar is pressed."""
         if event.key == pygame.K_SPACE:
-            self.game.ball.release()
+            for ball in self.game.balls:
+                ball.release()
 
-    def _catch(self):
-        """Catch the ball when it collides with the paddle."""
+    def _catch(self, ball):
+        """Catch the ball when it collides with the paddle.
+        Args:
+            ball:
+                The ball to be caught.
+        """
         # Work out the position of the ball relative to the paddle.
-        pos = self.game.ball.rect.bottomleft[0] - \
-            self.game.paddle.rect.topleft[0], -self.game.ball.rect.height
-        self.game.ball.anchor(self.game.paddle, pos)
+        pos = (ball.rect.bottomleft[0] - self.game.paddle.rect.topleft[0],
+               -ball.rect.height)
+        ball.anchor(self.game.paddle, pos)
 
 
 class DuplicatePowerUp(PowerUp):
@@ -270,6 +283,51 @@ class DuplicatePowerUp(PowerUp):
 
     def __init__(self, game, brick):
         super().__init__(game, brick, 'powerup_duplicate')
+
+    def _activate(self):
+        """Create 2 duplicate balls, so there will be 3 in play.
+
+        The dupliate balls have the same speed as the current ball, but
+        slightly differing angles so they all split away from each other.
+        """
+        # The current single ball on-screen.
+        ball = self.game.balls[0]
+
+        # Capture the current attributes of the ball.
+        start_pos = ball.rect.center
+
+        # Clone the ball twice, with a varying start angle.
+        start_angle = ball.angle + 0.2
+        if start_angle > 2 * math.pi:
+            start_angle -= 2 * math.pi
+
+        ball1 = ball.clone(start_pos=start_pos,
+                           start_angle=start_angle)
+
+        start_angle = abs(ball.angle - 0.2)
+
+        ball2 = ball.clone(start_pos=start_pos,
+                           start_angle=start_angle)
+
+        # Bring the cloned balls into the game.
+        self.game.balls.append(ball1)
+        self.game.balls.append(ball2)
+
+        # Allow them to be displayed.
+        self.game.sprites.append(ball1)
+        self.game.sprites.append(ball2)
+
+    def deactivate(self):
+        # No specific deactivation for this powerup. When duplicate balls are
+        # in play, they just remain in play until they go off-screen.
+        pass
+
+    def _can_activate(self):
+        can_activate = super()._can_activate()
+        if can_activate:
+            # Don't activate if there is already more than 1 ball in play.
+            can_activate = len(self.game.balls) == 1
+        return can_activate
 
 
 class WarpPowerUp(PowerUp):

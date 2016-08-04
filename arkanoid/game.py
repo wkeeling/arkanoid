@@ -174,12 +174,15 @@ class Game:
                              bottom_offset=60,
                              speed=PADDLE_SPEED)
 
-        self.ball = Ball(start_pos=self.paddle.rect.midtop,
-                         start_angle=BALL_START_ANGLE_RAD,
-                         base_speed=BALL_BASE_SPEED,
-                         top_speed=BALL_TOP_SPEED,
-                         normalisation_rate=BALL_SPEED_NORMALISATION_RATE,
-                         off_screen_callback=self._off_screen)
+        ball = Ball(start_pos=self.paddle.rect.midtop,
+                    start_angle=BALL_START_ANGLE_RAD,
+                    base_speed=BALL_BASE_SPEED,
+                    top_speed=BALL_TOP_SPEED,
+                    normalisation_rate=BALL_SPEED_NORMALISATION_RATE,
+                    off_screen_callback=self._off_screen)
+
+        # The game starts with a single ball in play initially.
+        self.balls = [ball]
 
         # The currently applied powerup, if any.
         self.active_powerup = None
@@ -236,7 +239,7 @@ class Game:
                 self._screen.blit(self._life_img, (left, top)))
             left += self._life_img.get_width() + 5
 
-    def on_brick_collide(self, brick):
+    def on_brick_collide(self, brick, sprite):
         """Called by a sprite when it collides with a brick.
 
         In this case a sprite might be the ball, or a laser beam from the
@@ -245,6 +248,8 @@ class Game:
         Args:
             brick:
                 The Brick instance the sprite collided with.
+            sprite:
+                The sprite instance that struck the brick.
         """
         # Increment the collision count.
         brick.collision_count += 1
@@ -259,8 +264,9 @@ class Game:
                 # Add this brick's value to the score.
                 self.score += brick.value
 
-            # Tell the ball that the brick has gone.
-            self.ball.remove_collidable_sprite(brick)
+            # Tell the balls that the brick has gone.
+            for ball in self.balls:
+                ball.remove_collidable_sprite(brick)
 
             # Tell the round that a brick has gone, so that it can decide
             # whether the round is completed.
@@ -268,7 +274,7 @@ class Game:
 
         if brick.powerup_cls:
             # There is a powerup in the brick.
-            # Figure out whether we shouls release it.
+            # Figure out whether we should release it.
             release = not brick.visible  # Always release on brick destruction
 
             if not release:
@@ -283,10 +289,24 @@ class Game:
                 # Display the powerup.
                 self.sprites.append(powerup)
 
-    def _off_screen(self):
-        """Callback called by the ball when it goes offscreen."""
-        if not isinstance(self.state, BallOffScreenState):
-            self.state = BallOffScreenState(self)
+    def _off_screen(self, ball):
+        """Callback called by a ball when it goes offscreen.
+
+        Args:
+            ball:
+                The ball that left the screen.
+        """
+        if len(self.balls) > 1:
+            # There are multiple balls in play, so just take this ball
+            # out of play.
+            self.balls.remove(ball)
+            self.sprites.remove(ball)
+            ball.visible = False
+        else:
+            # This ball is the last in play, so transition to the
+            # BallOffScreenState which handles end of life.
+            if not isinstance(self.state, BallOffScreenState):
+                self.state = BallOffScreenState(self)
 
     def _create_event_handlers(self):
         """Create the event handlers for paddle movement."""
@@ -355,7 +375,7 @@ class GameStartState(BaseState):
 
         # The ball and paddle are kept invisible at the very start.
         self.game.paddle.visible = False
-        self.game.ball.visible = False
+        self.game.balls[0].visible = False
 
         # Register the event handlers for paddle control.
         receiver.register_handler(pygame.KEYDOWN,
@@ -387,12 +407,12 @@ class RoundStartState(BaseState):
 
         # Initialise the sprites' display state.
         self._screen = pygame.display.get_surface()
-        self.game.ball.reset()
+        self.game.balls[0].reset()
         self.game.paddle.visible = False
-        self.game.ball.visible = False
+        self.game.balls[0].visible = False
         # Anchor the ball whilst it's invisible.
-        self.game.ball.anchor((self._screen.get_width() / 2,
-                               self._screen.get_height() - 100))
+        self.game.balls[0].anchor((self._screen.get_width() / 2,
+                                  self._screen.get_height() - 100))
 
         # Initialise the text.
         self._caption = font(MAIN_FONT, 18).render(self.game.round.name,
@@ -418,7 +438,7 @@ class RoundStartState(BaseState):
         """Make all the sprites available for rendering."""
         self.game.sprites.clear()
         self.game.sprites.append(self.game.paddle)
-        self.game.sprites.append(self.game.ball)
+        self.game.sprites += self.game.balls
         self.game.sprites += self.game.round.edges
         self.game.sprites += self.game.round.bricks
 
@@ -426,16 +446,16 @@ class RoundStartState(BaseState):
         """Configure the ball with all the objects from the current round
         that it could potentially collide with.
         """
-        self.game.ball.remove_all_collidable_sprites()
+        self.game.balls[0].remove_all_collidable_sprites()
 
         for edge in self.game.round.edges:
             # Every collision with a wall momentarily increases the speed
             # of the ball.
-            self.game.ball.add_collidable_sprite(
+            self.game.balls[0].add_collidable_sprite(
                 edge,
                 speed_adjust=WALL_SPEED_ADJUST)
 
-        self.game.ball.add_collidable_sprite(
+        self.game.balls[0].add_collidable_sprite(
             self.game.paddle,
             bounce_strategy=self.game.paddle.bounce_strategy,
             on_collide=self.game.paddle.on_ball_collide)
@@ -444,7 +464,7 @@ class RoundStartState(BaseState):
             # Make the ball aware of the bricks it might collide with.
             # Every brick collision momentarily increases the speed of
             # the ball.
-            self.game.ball.add_collidable_sprite(
+            self.game.balls[0].add_collidable_sprite(
                 brick,
                 speed_adjust=BRICK_SPEED_ADJUST,
                 on_collide=self.game.on_brick_collide)
@@ -462,15 +482,15 @@ class RoundStartState(BaseState):
             # Display the "Ready" message.
             ready = self._screen.blit(self._ready, self._ready_pos)
             # Anchor the ball to the paddle.
-            self.game.ball.anchor(self.game.paddle,
-                                  (self.game.paddle.rect.width // 2,
-                                   -self.game.ball.rect.height))
+            self.game.balls[0].anchor(self.game.paddle,
+                                      (self.game.paddle.rect.width // 2,
+                                       -self.game.balls[0].rect.height))
             # Display the sprites.
             if not self._paddle_reset:
                 self.game.paddle.reset()
                 self._paddle_reset = True
             self.game.paddle.visible = True
-            self.game.ball.visible = True
+            self.game.balls[0].visible = True
         if self._update_count == 151:
             # Animate the paddle materializing onto the screen.
             self.game.paddle.transition(MaterializeState(self.game.paddle))
@@ -480,7 +500,7 @@ class RoundStartState(BaseState):
             self._screen.blit(self.game.round.background, ready, ready)
         if self._update_count > 300:
             # Release the anchor.
-            self.game.ball.release()
+            self.game.balls[0].release()
             # Normal gameplay begins.
             self.game.state = RoundPlayState(self.game)
 
@@ -572,13 +592,15 @@ class RoundEndState(BaseState):
         self._update_count = 0
 
     def update(self):
-        # Stop the ball and pause for a short period.
-        self.game.ball.speed = 0
-        self.game.ball.visible = False
+        # Stop the ball(s) and pause for a short period.
+        for ball in self.game.balls:
+            ball.speed = 0
+            ball.visible = False
         self.game.paddle.visible = False
 
         if self._update_count > 120:
-            # Move on to the next round.
+            # Move on to the next round, carrying over a single ball.
+            self.game.balls = self.game.balls[:1]
             self.game.round = self.game.round.next_round(TOP_OFFSET)
             self.game.state = RoundStartState(self.game)
 

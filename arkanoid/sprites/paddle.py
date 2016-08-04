@@ -143,19 +143,22 @@ class Paddle(pygame.sprite.Sprite):
         """Reset the position of the paddle to its start position."""
         self.rect.center = self.area.center
 
-    def on_ball_collide(self, paddle):
+    def on_ball_collide(self, paddle, ball):
         """Called when the ball collides with the paddle.
 
         This implementation delegates to the instance level
         ball_collide_callbacks list. To monitor for ball collisions, add
-        a callback to that list.
+        a callback to that list. A callback will be passed the ball instance
+        that collided.
 
         Args:
             paddle:
                 The paddle that was struck.
+            ball:
+                The ball that struck the paddle.
         """
         for callback in self.ball_collide_callbacks:
-            callback()
+            callback(ball)
 
     @property
     def exploding(self):
@@ -610,7 +613,7 @@ class LaserBullet(pygame.sprite.Sprite):
                     # sprite rather than a brick specifically. The callback
                     # can then decide whether this sprite should be destroyed
                     # and return boolean to indicate that here.
-                    self._game.on_brick_collide(brick)
+                    self._game.on_brick_collide(brick, self)
 
                     # Since we've collided, we're no longer visible.
                     self.visible = False
