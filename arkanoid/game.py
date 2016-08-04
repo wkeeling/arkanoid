@@ -492,8 +492,8 @@ class RoundStartState(BaseState):
 
 
 class RoundPlayState(BaseState):
-    """This state handles actual gameplay itself, when the user is controlling
-    the paddle and ball.
+    """This state is active when the game is running and the user is 
+    controlling the paddle and ball.
     """
 
     def __init__(self, game):
