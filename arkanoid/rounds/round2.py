@@ -94,8 +94,8 @@ class Round2(BaseRound):
         return bricks
 
     def _create_first_row_powerups(self):
-        # Prioritise slow ball and catch for the first row, given the
-        # lack of space.
+        # Create slow ball and catch for the first row, given the
+        # lack of space beneath.
         first_row_powerups = []
         first_row_powerups.extend([SlowBallPowerUp] * 3)
         first_row_powerups.extend([CatchPowerUp] * 2)
