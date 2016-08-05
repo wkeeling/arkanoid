@@ -267,7 +267,7 @@ class CatchPowerUp(PowerUp):
                 ball.release()
 
     def _catch(self, ball):
-        """Catch the ball when it collides with the paddle.
+        """Catch the a when it collides with the paddle.
         Args:
             ball:
                 The ball to be caught.
@@ -309,7 +309,7 @@ class DuplicatePowerUp(PowerUp):
         ball2 = ball.clone(start_pos=start_pos,
                            start_angle=start_angle)
 
-        # Bring the cloned balls into the game.
+        # Tell the game about the new balls..
         self.game.balls.append(ball1)
         self.game.balls.append(ball2)
 
