@@ -438,7 +438,8 @@ class RoundStartState(BaseState):
         """Make all the sprites available for rendering."""
         self.game.sprites.clear()
         self.game.sprites.append(self.game.paddle)
-        self.game.sprites += self.game.balls
+        # There will be only one ball at round start.
+        self.game.sprites.append(self.game.balls[0])
         self.game.sprites += self.game.round.edges
         self.game.sprites += self.game.round.bricks
 
