@@ -2,7 +2,8 @@ import random
 
 import pygame
 
-from arkanoid.rounds.base import BaseRound
+from arkanoid.rounds.base import (BaseRound,
+                                  DARK_BLUE)
 from arkanoid.rounds.round2 import Round2
 from arkanoid.sprites.brick import (Brick,
                                     BrickColour)
@@ -36,7 +37,7 @@ class Round1(BaseRound):
     def _create_background(self):
         background = pygame.Surface(self.screen.get_size())
         background = background.convert()
-        background.fill((0, 0, 100))
+        background.fill(DARK_BLUE)
         return background
 
     def _create_bricks(self):

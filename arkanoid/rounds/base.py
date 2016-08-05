@@ -6,6 +6,11 @@ from arkanoid.sprites.edge import (TopEdge,
                                    SideEdge)
 
 
+# RGB sequences for background colours.
+DARK_BLUE = (0, 0, 100)
+LIGHT_GREEN = (0, 128, 0)
+
+
 class BaseRound:
     """Abstract base class for all Arkanoid rounds.
 
@@ -99,3 +104,4 @@ class BaseRound:
             A pygame.sprite.Group of bricks.
         """
         raise NotImplementedError('Subclasses must implement _create_bricks()')
+

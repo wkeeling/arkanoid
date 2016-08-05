@@ -528,7 +528,7 @@ class RoundStartState(BaseState):
 
 
 class RoundPlayState(BaseState):
-    """This state is active when the game is running and the user is 
+    """This state is active when the game is running and the user is
     controlling the paddle and ball.
     """
 
