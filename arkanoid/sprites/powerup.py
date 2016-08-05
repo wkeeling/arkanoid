@@ -281,6 +281,9 @@ class CatchPowerUp(PowerUp):
 class DuplicatePowerUp(PowerUp):
     """This powerup causes the ball to split into multiple duplicate balls."""
 
+    # The relative angle at which a cloned will split away from the main ball.
+    _SPLIT_ANGLE_RAD = 0.4  # Radians
+
     def __init__(self, game, brick):
         super().__init__(game, brick, 'powerup_duplicate')
 
@@ -297,14 +300,14 @@ class DuplicatePowerUp(PowerUp):
         start_pos = ball.rect.center
 
         # Clone the ball twice, with a varying start angle.
-        start_angle = ball.angle + 0.2
+        start_angle = ball.angle + self._SPLIT_ANGLE_RAD
         if start_angle > 2 * math.pi:
             start_angle -= 2 * math.pi
 
         ball1 = ball.clone(start_pos=start_pos,
                            start_angle=start_angle)
 
-        start_angle = abs(ball.angle - 0.2)
+        start_angle = abs(ball.angle - self._SPLIT_ANGLE_RAD)
 
         ball2 = ball.clone(start_pos=start_pos,
                            start_angle=start_angle)
