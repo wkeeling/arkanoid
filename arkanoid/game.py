@@ -516,7 +516,7 @@ class RoundStartState(BaseState):
             self._screen.blit(self.game.round.background, ready, ready)
         if self._update_count > 300:
             # Release the anchor.
-            self.game.ball.release()
+            self.game.ball.release(BALL_START_ANGLE_RAD)
             # Normal gameplay begins.
             self.game.state = RoundPlayState(self.game)
 
