@@ -155,7 +155,7 @@ class SlowBallPowerUp(PowerUp):
     def _activate(self):
         """Slow the ball(s) down."""
         # Remember the original speed of the ball.
-        self._orig_speed = self.game.balls[0].base_speed
+        self._orig_speed = self.game.ball.base_speed
 
         # Slow the balls down.
         for ball in self.game.balls:
@@ -293,24 +293,22 @@ class DuplicatePowerUp(PowerUp):
         The dupliate balls have the same speed as the current ball, but
         slightly differing angles so they all split away from each other.
         """
-        # The current single ball on-screen.
-        ball = self.game.balls[0]
 
         # Capture the current attributes of the ball.
-        start_pos = ball.rect.center
+        start_pos = self.game.ball.rect.center
 
         # Clone the ball twice, with a varying start angle.
-        start_angle = ball.angle + self._SPLIT_ANGLE_RAD
+        start_angle = self.game.ball.angle + self._SPLIT_ANGLE_RAD
         if start_angle > 2 * math.pi:
             start_angle -= 2 * math.pi
 
-        ball1 = ball.clone(start_pos=start_pos,
-                           start_angle=start_angle)
+        ball1 = self.game.ball.clone(start_pos=start_pos,
+                                     start_angle=start_angle)
 
-        start_angle = abs(ball.angle - self._SPLIT_ANGLE_RAD)
+        start_angle = abs(self.game.ball.angle - self._SPLIT_ANGLE_RAD)
 
-        ball2 = ball.clone(start_pos=start_pos,
-                           start_angle=start_angle)
+        ball2 = self.game.ball.clone(start_pos=start_pos,
+                                     start_angle=start_angle)
 
         # Tell the game about the new balls..
         self.game.balls.append(ball1)
