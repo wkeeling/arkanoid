@@ -4,6 +4,9 @@ import os
 import pygame
 
 
+HIGH_SCORE_FILE = os.path.join(os.path.expanduser('~'), '.highscore')
+
+
 def load_png(filename):
     """Load a png image with the specified filename from the
     data/graphics directory and return it and its Rect.
@@ -93,3 +96,37 @@ def h_centre_pos(surface):
     """
     screen = pygame.display.get_surface()
     return (screen.get_width() / 2) - (surface.get_width() / 2)
+
+
+def save_high_score(value):
+    """Save the high score value.
+
+    The high score is saved in a file called .highscore in the current user's
+    home directory.
+
+    Args:
+         value:
+            The high score.
+    """
+    with open(HIGH_SCORE_FILE, 'w') as file:
+        file.write(str(value))
+
+
+def load_high_score():
+    """Load the current high score value.
+
+    The high score is loaded from a file called .highscore in the current
+    user's home directory.
+
+    Returns:
+        The high score or zero if no previous high score (the .highscore file
+        does not exist).
+    """
+    if not os.path.exists(HIGH_SCORE_FILE):
+        # Explicitly test for file existence rather than trying to catch
+        # an IOError on open(), as the IOError might indicate something
+        # other than file not found (although unlikely).
+        return 0
+
+    with open(HIGH_SCORE_FILE) as file:
+        return int(file.read().strip())

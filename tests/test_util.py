@@ -1,11 +1,19 @@
+import os
+
 from unittest.mock import Mock
 from unittest.mock import patch
 from unittest import TestCase
 
 from arkanoid.util import h_centre_pos
+from arkanoid.util import save_high_score
+from arkanoid.util import load_high_score
 
 
 class TestUtil(TestCase):
+
+    def setUp(self):
+        self._high_score_file = os.path.join(os.path.expanduser('~'),
+                                             '.highscore')
 
     @patch('arkanoid.util.pygame')
     def test_returns_left_pos_for_horizontal_centre(self, mock_pygame):
@@ -17,3 +25,28 @@ class TestUtil(TestCase):
         mock_surface.get_width.return_value = 100
 
         self.assertEqual(h_centre_pos(mock_surface), 250)
+
+    def test_saves_high_score(self):
+        high_score = 1000
+        save_high_score(high_score)
+
+        with open(self._high_score_file) as file:
+            saved_score = int(file.read().strip())
+            self.assertEqual(saved_score, high_score)
+
+    def test_loads_high_score_when_file_exists(self):
+        high_score = 2000
+
+        with open(self._high_score_file, 'w') as file:
+            file.write(str(high_score))
+
+        self.assertEqual(load_high_score(), high_score)
+
+    def test_loads_high_score_when_file_not_exists(self):
+        try:
+            os.remove(self._high_score_file)
+        except OSError:
+            pass
+
+        self.assertEqual(load_high_score(), 0)
+

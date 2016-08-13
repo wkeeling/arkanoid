@@ -11,7 +11,9 @@ from arkanoid.sprites.paddle import (ExplodingState,
                                      MaterializeState)
 from arkanoid.util import (font,
                            h_centre_pos,
-                           load_png)
+                           load_high_score,
+                           load_png,
+                           save_high_score)
 
 LOG = logging.getLogger(__name__)
 
@@ -58,7 +60,8 @@ class Arkanoid:
         self._display_logo()
         self._display_score_titles()
         self._display_score(0)
-        self._display_highscore(0)
+        self._high_score = load_high_score()
+        self._display_highscore(self._high_score)
 
         # Reference to a running game, when one is in play.
         self._game = None
@@ -92,6 +95,10 @@ class Arkanoid:
             self._display_score(self._game.score)
 
             if self._game.over:
+                if self._game.score > self._high_score:
+                    self._high_score = self._game.score
+                    self._display_highscore(self._high_score)
+                    save_high_score(self._high_score)
                 self._running = False
 
             # Display all updates.
