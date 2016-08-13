@@ -102,7 +102,7 @@ class BrickColour(enum.Enum):
     orange = 60
     pink = 110
     red = 90
-    # The score for a silver brick is the value multiplied by the Round number
+    # The score for a silver brick is the value multiplied by the Round number.
     silver = 50
     white = 40
     yellow = 120

@@ -108,9 +108,6 @@ class Paddle(pygame.sprite.Sprite):
         to exit, before switching to the new state. There therefore may be a
         delay before the supplied state becomes active.
 
-        Callers can supply an optional on_complete no-args callback to be
-        notified when the transition to the requested state is complete.
-
         Args:
             state:
                 The state to transition to.
