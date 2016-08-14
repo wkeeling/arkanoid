@@ -57,4 +57,3 @@ class TestUtil(TestCase):
             pass
 
         self.assertEqual(load_high_score(), 0)
-

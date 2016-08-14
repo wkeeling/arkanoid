@@ -1,7 +1,7 @@
 import math
 from unittest import TestCase
-from unittest.mock import Mock
-from unittest.mock import patch
+from unittest.mock import (Mock,
+                           patch)
 
 import pygame
 
@@ -139,4 +139,3 @@ class TestPaddle(TestCase):
         self.assertEqual(angles[3], -80)
         self.assertEqual(angles[4], -65)
         self.assertEqual(angles[5], -40)
-

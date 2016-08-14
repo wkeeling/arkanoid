@@ -51,7 +51,7 @@ class Ball(pygame.sprite.Sprite):
                 momentarily increase/decrease the speed of the ball, but the
                 ball will always try to gradually settle back to the base
                 speed.
-            top_speed
+            top_speed:
                 The maximum permitted speed of the ball. Collisions with
                 objects may increase the speed of the ball, but the speed
                 will never go above the top_speed.
@@ -66,7 +66,7 @@ class Ball(pygame.sprite.Sprite):
         """
         super().__init__()
         self.image, self.rect = load_png('ball')
-        self.rect.midbottom = start_pos
+        self.rect.x, self.rect.y = start_pos
         self.visible = True
         self.speed = base_speed
         self.base_speed = base_speed
@@ -181,9 +181,10 @@ class Ball(pygame.sprite.Sprite):
         return ball
 
     def update(self):
-        """Update the ball. Check whether the ball has collided with
-        anything and if so, update its angle and speed and invoke any
-        associated actions.
+        """Update the ball's position.
+
+        Check whether the ball has collided with anything and if so, update
+        its angle and speed and invoke any associated actions.
         """
         # Get the new position of the ball.
         self.rect = self._calc_new_pos()
