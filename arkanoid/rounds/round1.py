@@ -8,7 +8,6 @@ from arkanoid.rounds.round2 import Round2
 from arkanoid.sprites.brick import (Brick,
                                     BrickColour)
 from arkanoid.sprites.powerup import (CatchPowerUp,
-                                      DuplicatePowerUp,
                                       ExpandPowerUp,
                                       ExtraLifePowerUp,
                                       LaserPowerUp,
@@ -50,7 +49,7 @@ class Round1(BaseRound):
                    BrickColour.red, BrickColour.silver)
 
         # Create the distribution of powerup classes.
-        powerup_classes = [DuplicatePowerUp]
+        powerup_classes = []
         powerup_classes.extend([CatchPowerUp] * 3)
         powerup_classes.extend([ExpandPowerUp] * 4)
         powerup_classes.extend([ExtraLifePowerUp] * 2)
