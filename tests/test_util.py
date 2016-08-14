@@ -14,6 +14,14 @@ class TestUtil(TestCase):
     def setUp(self):
         self._high_score_file = os.path.join(os.path.expanduser('~'),
                                              '.highscore')
+        self._high_score_file_backup = os.path.join(os.path.expanduser('~'),
+                                                    '.highscore.bak')
+        if os.path.exists(self._high_score_file):
+            os.rename(self._high_score_file, self._high_score_file_backup)
+
+    def tearDown(self):
+        if os.path.exists(self._high_score_file_backup):
+            os.rename(self._high_score_file_backup, self._high_score_file)
 
     @patch('arkanoid.util.pygame')
     def test_returns_left_pos_for_horizontal_centre(self, mock_pygame):
