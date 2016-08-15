@@ -4,9 +4,9 @@ from unittest.mock import Mock
 from unittest.mock import patch
 from unittest import TestCase
 
-from arkanoid.util import h_centre_pos
-from arkanoid.util import save_high_score
-from arkanoid.util import load_high_score
+from arkanoid.util import (h_centre_pos,
+                           save_high_score,
+                           load_high_score)
 
 
 class TestUtil(TestCase):

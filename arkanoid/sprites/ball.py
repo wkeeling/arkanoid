@@ -9,6 +9,9 @@ from arkanoid.util import load_png
 LOG = logging.getLogger(__name__)
 TWO_PI = math.pi * 2
 HALF_PI = math.pi / 2
+# A value will be chosen at random between this and it's negative
+# to apply to the angle of bounce for top/bottom/side collisions of the ball.
+RANDOM_RANGE = 0.05  # Radians
 
 
 class Ball(pygame.sprite.Sprite):
@@ -320,7 +323,8 @@ class Ball(pygame.sprite.Sprite):
             # Add a small amount of randomness to the bounce to make it a
             # little more unpredictable, and to prevent the ball from getting
             # stuck in a repeating bounce loop.
-            angle += random.uniform(-0.05, 0.05)
+            angle = round(angle, 2)
+            angle += random.uniform(-RANDOM_RANGE, RANDOM_RANGE)
 
         LOG.debug('New angle: %s', angle)
 
