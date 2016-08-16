@@ -11,16 +11,23 @@ from arkanoid.sprites.ball import (Ball,
 
 class TestBall(TestCase):
 
-    @patch('arkanoid.sprites.ball.load_png')
-    @patch('arkanoid.sprites.ball.pygame')
-    def test_calculate_new_position(self, mock_pygame, mock_load_png):
-        mock_image, mock_screen, mock_area = Mock(), Mock(), Mock()
+    def _configure_mocks(self, mock_pygame, mock_load_png, offscreen=True):
+        (mock_image,
+         mock_screen,
+         mock_area,
+         mock_sprite) = Mock(), Mock(), Mock(), Mock()
 
-        # Use a real pygame.Rect for the rect value.
         mock_load_png.return_value = mock_image, pygame.Rect(0, 0, 10, 10)
         mock_pygame.display.get_surface.return_value = mock_screen
         mock_screen.get_rect.return_value = mock_area
-        mock_area.contains.return_value = True
+        mock_area.contains.return_value = offscreen
+
+        return mock_sprite
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calculate_new_position(self, mock_pygame, mock_load_png):
+        self._configure_mocks(mock_pygame, mock_load_png)
 
         mock_pygame.sprite.spritecollide.return_value = []
 
@@ -37,13 +44,7 @@ class TestBall(TestCase):
     @patch('arkanoid.sprites.ball.pygame')
     def test_invoke_offscreen_callback(self, mock_pygame,
                                        mock_load_png):
-        mock_image, mock_screen, mock_area = Mock(), Mock(), Mock()
-
-        # Use a real pygame.Rect for the rect value.
-        mock_load_png.return_value = mock_image, pygame.Rect(0, 0, 10, 10)
-        mock_pygame.display.get_surface.return_value = mock_screen
-        mock_screen.get_rect.return_value = mock_area
-        mock_area.contains.return_value = False
+        self._configure_mocks(mock_pygame, mock_load_png, offscreen=False)
 
         mock_pygame.sprite.spritecollide.return_value = []
         mock_offscreen_callback = Mock()
@@ -59,13 +60,7 @@ class TestBall(TestCase):
     @patch('arkanoid.sprites.ball.pygame')
     def test_speed_normalised_down_when_no_collision(self, mock_pygame,
                                                      mock_load_png):
-        mock_image, mock_screen, mock_area = Mock(), Mock(), Mock()
-
-        # Use a real pygame.Rect for the rect value.
-        mock_load_png.return_value = mock_image, pygame.Rect(0, 0, 10, 10)
-        mock_pygame.display.get_surface.return_value = mock_screen
-        mock_screen.get_rect.return_value = mock_area
-        mock_area.contains.return_value = True
+        self._configure_mocks(mock_pygame, mock_load_png)
 
         mock_pygame.sprite.spritecollide.return_value = []
 
@@ -80,13 +75,7 @@ class TestBall(TestCase):
     @patch('arkanoid.sprites.ball.pygame')
     def test_speed_normalised_up_when_no_collision(self, mock_pygame,
                                                    mock_load_png):
-        mock_image, mock_screen, mock_area = Mock(), Mock(), Mock()
-
-        # Use a real pygame.Rect for the rect value.
-        mock_load_png.return_value = mock_image, pygame.Rect(0, 0, 10, 10)
-        mock_pygame.display.get_surface.return_value = mock_screen
-        mock_screen.get_rect.return_value = mock_area
-        mock_area.contains.return_value = True
+        self._configure_mocks(mock_pygame, mock_load_png)
 
         mock_pygame.sprite.spritecollide.return_value = []
 
@@ -105,7 +94,8 @@ class TestBall(TestCase):
 
         ball = Ball((100, 100), 2.36, 8)
 
-        ball.add_collidable_sprite(mock_sprite, bounce_strategy=mock_bounce,
+        ball.add_collidable_sprite(mock_sprite,
+                                   bounce_strategy=mock_bounce,
                                    speed_adjust=0.05,
                                    on_collide=mock_on_collide)
 
@@ -161,18 +151,8 @@ class TestBall(TestCase):
         a collision callback invoked when the ball collides with a single
         sprite.
         """
-        (mock_image,
-         mock_screen,
-         mock_area,
-         mock_sprite,
-         mock_bounce,
-         mock_on_collide) = Mock(), Mock(), Mock(), Mock(), Mock(), Mock()
-
-        # Use a real pygame.Rect for the rect value.
-        mock_load_png.return_value = mock_image, pygame.Rect(0, 0, 10, 10)
-        mock_pygame.display.get_surface.return_value = mock_screen
-        mock_screen.get_rect.return_value = mock_area
-        mock_area.contains.return_value = True
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+        mock_bounce, mock_on_collide = Mock(), Mock()
 
         mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
 
@@ -197,18 +177,8 @@ class TestBall(TestCase):
         a single sprites which does not have an associated ball bounce
         strategy callback.
         """
-        (mock_image,
-         mock_screen,
-         mock_area,
-         mock_sprite,
-         mock_on_collide,
-         mock_calc_new_angle) = Mock(), Mock(), Mock(), Mock(), Mock(), Mock()
-
-        # Use a real pygame.Rect for the rect value.
-        mock_load_png.return_value = mock_image, pygame.Rect(0, 0, 10, 10)
-        mock_pygame.display.get_surface.return_value = mock_screen
-        mock_screen.get_rect.return_value = mock_area
-        mock_area.contains.return_value = True
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+        mock_on_collide, mock_calc_new_angle = Mock(), Mock()
 
         mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
 
@@ -229,32 +199,21 @@ class TestBall(TestCase):
         adjusted, and collision callbacks invoked when the ball collides with
         multiple sprites.
         """
-        (mock_image,
-         mock_screen,
-         mock_area,
-         mock_sprite1,
-         mock_sprite2,
-         mock_sprite3,
-         mock_bounce,
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+        (mock_bounce,
          mock_on_collide,
-         mock_calc_new_angle) = (
-            Mock(), Mock(), Mock(), Mock(), Mock(), Mock(), Mock(), Mock(),
-            Mock())
+         mock_calc_new_angle,
+         mock_sprite2,
+         mock_sprite3) = (Mock(), Mock(), Mock(), Mock(), Mock())
 
-        # Use a real pygame.Rect for the rect value.
-        mock_load_png.return_value = mock_image, pygame.Rect(0, 0, 10, 10)
-        mock_pygame.display.get_surface.return_value = mock_screen
-        mock_screen.get_rect.return_value = mock_area
-        mock_area.contains.return_value = True
-
-        mock_pygame.sprite.spritecollide.return_value = [mock_sprite1,
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite,
                                                          mock_sprite2,
                                                          mock_sprite3]
 
         mock_bounce.return_value = 3.2
 
         ball = Ball((100, 100), 2.36, 8, top_speed=9)
-        ball.add_collidable_sprite(mock_sprite1, bounce_strategy=mock_bounce,
+        ball.add_collidable_sprite(mock_sprite, bounce_strategy=mock_bounce,
                                    speed_adjust=0.5,
                                    on_collide=mock_on_collide)
         ball.add_collidable_sprite(mock_sprite2, bounce_strategy=mock_bounce,
@@ -267,10 +226,10 @@ class TestBall(TestCase):
         ball.update()
 
         self.assertEqual(ball.speed, 9.0)  # Gone up, but not above top speed.
-        mock_on_collide.assert_has_calls([call(mock_sprite1, ball),
+        mock_on_collide.assert_has_calls([call(mock_sprite, ball),
                                           call(mock_sprite2, ball),
                                           call(mock_sprite3, ball)])
-        mock_calc_new_angle.assert_called_once_with([mock_sprite1.rect,
+        mock_calc_new_angle.assert_called_once_with([mock_sprite.rect,
                                                      mock_sprite2.rect,
                                                      mock_sprite3.rect])
 
@@ -280,7 +239,7 @@ class TestBall(TestCase):
         """Test that the default bounce calculation correctly calculates
         the angle when the ball collides with a single corner of a sprite.
         """
-        mock_sprite = self._configure_mocks(mock_load_png, mock_pygame)
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
 
         mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
 
@@ -295,26 +254,13 @@ class TestBall(TestCase):
 
         self.assertAlmostEqual(ball.angle, 5.5, places=1)
 
-    def _configure_mocks(self, mock_load_png, mock_pygame):
-        (mock_image,
-         mock_screen,
-         mock_area,
-         mock_sprite) = Mock(), Mock(), Mock(), Mock()
-
-        mock_load_png.return_value = mock_image, pygame.Rect(0, 0, 10, 10)
-        mock_pygame.display.get_surface.return_value = mock_screen
-        mock_screen.get_rect.return_value = mock_area
-        mock_area.contains.return_value = True
-
-        return mock_sprite
-
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
     def test_calc_new_angle_three_corners(self, mock_pygame, mock_load_png):
         """Test that the default bounce calculation correctly calculates
         the angle when the ball collides with three corners of a sprite.
         """
-        mock_sprite = self._configure_mocks(mock_load_png, mock_pygame)
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
         mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
 
         def collidepoint(point):
@@ -336,7 +282,7 @@ class TestBall(TestCase):
         the angle when the ball collides with all corners of a sprite (is
         effectively inside the sprite).
         """
-        mock_sprite = self._configure_mocks(mock_load_png, mock_pygame)
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
         mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
 
         mock_sprite.rect.collidepoint.return_value = True
@@ -353,7 +299,7 @@ class TestBall(TestCase):
         """Test that the default bounce calculation correctly calculates
         the angle when the top of the ball collides with another sprite.
         """
-        mock_sprite = self._configure_mocks(mock_load_png, mock_pygame)
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
         mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
 
         def collidepoint(point):
@@ -375,7 +321,7 @@ class TestBall(TestCase):
         """Test that the default bounce calculation correctly calculates
         the angle when the bottom of the ball collides with another sprite.
         """
-        mock_sprite = self._configure_mocks(mock_load_png, mock_pygame)
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
         mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
 
         def collidepoint(point):
@@ -393,7 +339,7 @@ class TestBall(TestCase):
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
-    def test_calc_new_angle_invalid(self, mock_pygame, mock_load_png):
+    def test_calc_new_angle_top_invalid(self, mock_pygame, mock_load_png):
         """Test that the default bounce calculation does not calculate a new
         angle when the top of the ball collides but the angle is invalid for
         a top collision.
@@ -402,7 +348,7 @@ class TestBall(TestCase):
         for a top collision to occur, the ball must be travelling at an angle
         greater than 3.14. An angle less than this would be an invalid state.
         """
-        mock_sprite = self._configure_mocks(mock_load_png, mock_pygame)
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
         mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
 
         def collidepoint(point):
@@ -419,4 +365,161 @@ class TestBall(TestCase):
         self.assertGreater(ball.angle, 2.32 - RANDOM_RANGE)
         self.assertLess(ball.angle, 2.32 + RANDOM_RANGE)
 
-    #TODO: left collision/right collision plus invalid state
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_left_collision_1(self, mock_pygame, mock_load_png):
+        """Test that the default bounce calculation correctly calculates
+        the angle when the left of the ball collides with another sprite and
+        the current angle is less than PI.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            points = [(95.0, 105.0), (95.0, 115.0)]
+            return point in points
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100), 2.32, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreater(ball.angle, 0.82 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 0.82 + RANDOM_RANGE)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_left_collision_2(self, mock_pygame, mock_load_png):
+        """Test that the default bounce calculation correctly calculates
+        the angle when the left of the ball collides with another sprite and
+        the current angle is greater than PI.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            points = [(95.0, 94.0), (95.0, 104.0)]
+            return point in points
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100), 4.01, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreater(ball.angle, 5.41 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 5.41 + RANDOM_RANGE)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_left_invalid(self, mock_pygame, mock_load_png):
+        """Test that the default bounce calculation does not calculate a new
+        angle when the left of the ball collides but the angle is invalid for
+        a left collision.
+
+        Angles are calculated clockwise from the righthand x-axis, so in order
+        for a left collision to occur, the ball must be travelling at an angle
+        greater than 1.57 and less than 4.71.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            points = [(101.0, 93.0), (101.0, 103.0)]
+            return point in points
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100), 4.9, 8)  # Invalid angle for left collision.
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        # Due to the invalid state, the ball's angle is not recalculated.
+        self.assertGreater(ball.angle, 4.9 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 4.9 + RANDOM_RANGE)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_right_collision_1(self, mock_pygame,
+                                              mock_load_png):
+        """Test that the default bounce calculation correctly calculates
+        the angle when the right of the ball collides with another sprite and
+        the current angle is less than PI.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            points = [(112.0, 107.0), (112.0, 117.0)]
+            return point in points
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100), 1.2, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreater(ball.angle, 1.94 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 1.94 + RANDOM_RANGE)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_right_collision_2(self, mock_pygame,
+                                              mock_load_png):
+        """Test that the default bounce calculation correctly calculates
+        the angle when the right of the ball collides with another sprite and
+        the current angle is greater than PI.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            points = [(111.0, 93.0), (111.0, 103.0)]
+            return point in points
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100), 4.9, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreater(ball.angle, 4.5 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 4.5 + RANDOM_RANGE)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_right_invalid(self, mock_pygame, mock_load_png):
+        """Test that the default bounce calculation does not calculate a new
+        angle when the right of the ball collides but the angle is invalid for
+        a right collision.
+
+        Angles are calculated clockwise from the righthand x-axis, so in order
+        for a right collision to occur, the ball must be travelling at an angle
+        greater than 4.71 or less than 1.57.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            points = [(111.0, 93.0), (111.0, 103.0)]
+            return point in points
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100), 2.32, 8)  # Invalid angle for right collision.
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        # Due to the invalid state, the ball's angle is not recalculated.
+        self.assertGreater(ball.angle, 2.32 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 2.32 + RANDOM_RANGE)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_clone_ball(self, mock_pygame, mock_load_png):
+        self._configure_mocks(mock_pygame, mock_load_png)
+
+        ball = Ball((100, 100), 2.32, 8)
+
+        # TODO: assert that collidable sprites are shared.
