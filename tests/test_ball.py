@@ -522,4 +522,26 @@ class TestBall(TestCase):
 
         ball = Ball((100, 100), 2.32, 8)
 
-        # TODO: assert that collidable sprites are shared.
+        sprite, bounce, on_collide, offscreen = Mock(), Mock(), Mock(), Mock()
+        ball._collidable_sprites.__iter__.return_value = [sprite]
+
+        ball.add_collidable_sprite(sprite,
+                                   bounce_strategy=bounce,
+                                   speed_adjust=2,
+                                   on_collide=on_collide)
+
+        clone = ball.clone(start_pos=(200, 200),
+                           start_angle=3.01,
+                           base_speed=9,
+                           top_speed=14,
+                           normalisation_rate=0.3,
+                           off_screen_callback=offscreen)
+
+        self.assertEqual(clone._start_pos, (200, 200))
+        self.assertEqual(clone._start_angle, 3.01)
+        self.assertEqual(clone.base_speed, 9)
+        self.assertEqual(clone._top_speed, 14)
+        self.assertEqual(clone._normalisation_rate, 0.3)
+        self.assertEqual(clone._off_screen_callback, offscreen)
+        clone._collidable_sprites.add.assert__calls([call(sprite)])
+        self.assertEqual(clone._collision_data, ball._collision_data)
