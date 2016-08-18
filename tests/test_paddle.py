@@ -5,7 +5,8 @@ from unittest.mock import (Mock,
 
 import pygame
 
-from arkanoid.sprites.paddle import Paddle
+from arkanoid.sprites.paddle import (LaserState,
+                                     Paddle)
 
 
 class TestPaddle(TestCase):
@@ -153,3 +154,44 @@ class TestPaddle(TestCase):
         self.assertEqual(angles[3], 280)
         self.assertEqual(angles[4], 295)
         self.assertEqual(angles[5], 320)
+
+
+class TestLaserState(TestCase):
+
+    @patch('arkanoid.sprites.paddle._PaddlePulsator')
+    @patch('arkanoid.sprites.paddle.receiver')
+    @patch('arkanoid.sprites.paddle.load_png_sequence')
+    def test_convert_to_laser(self, mock_load_png_sequence, mock_receiver,
+                              mock_pulsator):
+        img1, rect1, img2, rect2, img3, rect3 = (
+            Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
+        mock_image_sequence = [(img1, rect1), (img2, rect2), (img3, rect3)]
+        mock_load_png_sequence.return_value = mock_image_sequence
+        mock_paddle = Mock()
+        mock_paddle.rect.center = (100, 100)
+
+        state = LaserState(mock_paddle, None)
+
+        state.update()
+
+        self.assertEqual(state.paddle.image, img1)
+        self.assertEqual(state.paddle.rect, rect1)
+        self.assertEqual(rect1.center, (100, 100))
+
+        state.update()
+
+        self.assertEqual(state.paddle.image, img2)
+        self.assertEqual(state.paddle.rect, rect2)
+        self.assertEqual(rect2.center, (100, 100))
+
+        state.update()
+
+        self.assertEqual(state.paddle.image, img3)
+        self.assertEqual(state.paddle.rect, rect3)
+        self.assertEqual(rect3.center, (100, 100))
+
+        state.update()
+
+        self.assertEqual(state._to_laser, False)
+        mock_receiver.register_handler.assert_called_once_with(pygame.KEYUP,
+                                                               state._fire)
