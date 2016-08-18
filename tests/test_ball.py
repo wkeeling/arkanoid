@@ -312,8 +312,8 @@ class TestBall(TestCase):
         ball.add_collidable_sprite(mock_sprite)
         ball.update()
 
-        self.assertGreater(ball.angle, 2.27 - RANDOM_RANGE)
-        self.assertLess(ball.angle, 2.27 + RANDOM_RANGE)
+        self.assertGreaterEqual(ball.angle, 2.27 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 2.27 + RANDOM_RANGE + 0.03)
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
@@ -334,8 +334,8 @@ class TestBall(TestCase):
         ball.add_collidable_sprite(mock_sprite)
         ball.update()
 
-        self.assertGreater(ball.angle, 3.96 - RANDOM_RANGE)
-        self.assertLess(ball.angle, 3.96 + RANDOM_RANGE)
+        self.assertGreaterEqual(ball.angle, 3.96 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 3.96 + RANDOM_RANGE + 0.03)
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
@@ -362,8 +362,8 @@ class TestBall(TestCase):
         ball.update()
 
         # Due to the invalid state, the ball's angle is not recalculated.
-        self.assertGreater(ball.angle, 2.32 - RANDOM_RANGE)
-        self.assertLess(ball.angle, 2.32 + RANDOM_RANGE)
+        self.assertGreaterEqual(ball.angle, 2.32 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 2.32 + RANDOM_RANGE + 0.03)
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
@@ -385,8 +385,8 @@ class TestBall(TestCase):
         ball.add_collidable_sprite(mock_sprite)
         ball.update()
 
-        self.assertGreater(ball.angle, 0.82 - RANDOM_RANGE)
-        self.assertLess(ball.angle, 0.82 + RANDOM_RANGE)
+        self.assertGreaterEqual(ball.angle, 0.82 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 0.82 + RANDOM_RANGE + 0.03)
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
@@ -408,8 +408,8 @@ class TestBall(TestCase):
         ball.add_collidable_sprite(mock_sprite)
         ball.update()
 
-        self.assertGreater(ball.angle, 5.41 - RANDOM_RANGE)
-        self.assertLess(ball.angle, 5.41 + RANDOM_RANGE)
+        self.assertGreaterEqual(ball.angle, 5.41 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 5.41 + RANDOM_RANGE + 0.03)
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
@@ -436,8 +436,8 @@ class TestBall(TestCase):
         ball.update()
 
         # Due to the invalid state, the ball's angle is not recalculated.
-        self.assertGreater(ball.angle, 4.9 - RANDOM_RANGE)
-        self.assertLess(ball.angle, 4.9 + RANDOM_RANGE)
+        self.assertGreaterEqual(ball.angle, 4.9 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 4.9 + RANDOM_RANGE + 0.03)
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
@@ -460,8 +460,8 @@ class TestBall(TestCase):
         ball.add_collidable_sprite(mock_sprite)
         ball.update()
 
-        self.assertGreater(ball.angle, 1.94 - RANDOM_RANGE)
-        self.assertLess(ball.angle, 1.94 + RANDOM_RANGE)
+        self.assertGreaterEqual(ball.angle, 1.94 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 1.94 + RANDOM_RANGE + 0.03)
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
@@ -484,8 +484,8 @@ class TestBall(TestCase):
         ball.add_collidable_sprite(mock_sprite)
         ball.update()
 
-        self.assertGreater(ball.angle, 4.5 - RANDOM_RANGE)
-        self.assertLess(ball.angle, 4.5 + RANDOM_RANGE)
+        self.assertGreaterEqual(ball.angle, 4.5 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 4.5 + RANDOM_RANGE + 0.03)
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
@@ -512,8 +512,8 @@ class TestBall(TestCase):
         ball.update()
 
         # Due to the invalid state, the ball's angle is not recalculated.
-        self.assertGreater(ball.angle, 2.32 - RANDOM_RANGE)
-        self.assertLess(ball.angle, 2.32 + RANDOM_RANGE)
+        self.assertGreaterEqual(ball.angle, 2.32 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 2.32 + RANDOM_RANGE + 0.03)
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
