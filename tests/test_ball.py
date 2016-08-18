@@ -545,3 +545,57 @@ class TestBall(TestCase):
         self.assertEqual(clone._off_screen_callback, offscreen)
         clone._collidable_sprites.add.assert__calls([call(sprite)])
         self.assertEqual(clone._collision_data, ball._collision_data)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_anchor_static_object(self, mock_pygame, mock_load_png):
+        """Test that the ball's position is not recalculated when the ball is
+        anchored to a static object.
+        """
+        self._configure_mocks(mock_pygame, mock_load_png)
+
+        mock_pygame.sprite.spritecollide.return_value = []
+
+        ball = Ball((100, 100), 2.32, 8)
+        ball.anchor((200, 200))
+        ball.update()
+
+        # Assert that a new Rectangle mock was called with the fixed
+        # position and dimensions of the anchored ball.
+        mock_pygame.Rect.assert_called_once_with((200, 200), (10, 10))
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_anchor_sprite(self, mock_pygame, mock_load_png):
+        """Test that the ball's position is not recalculated when the ball is
+        anchored relative to another sprite.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+        mock_sprite.rect.left = 305
+        mock_sprite.rect.top = 429
+
+        mock_pygame.sprite.spritecollide.return_value = []
+
+        ball = Ball((100, 100), 2.32, 8)
+        ball.anchor(mock_sprite, rel_pos=(5, 5))
+        ball.update()
+
+        # Assert that a new Rectangle mock was called with the position
+        # of the sprite taking into account the relative position.
+        mock_pygame.Rect.assert_called_once_with(305 + 5, 429 + 5, 10, 10)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_release_anchor(self, mock_pygame, mock_load_png):
+        """Test that an anchored ball is released."""
+        self._configure_mocks(mock_pygame, mock_load_png)
+
+        mock_pygame.sprite.spritecollide.return_value = []
+
+        ball = Ball((100, 100), 2.32, 8)
+        ball.anchor((200, 200))
+        ball.update()
+        ball.release(4.01)
+
+        self.assertIsNone(ball._anchor)
+        self.assertEqual(ball.angle, 4.01)
