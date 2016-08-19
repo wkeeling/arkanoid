@@ -509,6 +509,7 @@ class LaserState(PaddleState):
                 No-args callable invoked when the laser has converted back
                 to a normal paddle.
         """
+        self._to_laser = False
         self._from_laser = True
         self._on_exit = on_exit
         self._laser_anim = iter(reversed(self._image_sequence))

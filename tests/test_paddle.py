@@ -1,6 +1,7 @@
 import math
 from unittest import TestCase
-from unittest.mock import (Mock,
+from unittest.mock import (call,
+                           Mock,
                            patch)
 
 import pygame
@@ -195,3 +196,180 @@ class TestLaserState(TestCase):
         self.assertEqual(state._to_laser, False)
         mock_receiver.register_handler.assert_called_once_with(pygame.KEYUP,
                                                                state._fire)
+
+    @patch('arkanoid.sprites.paddle._PaddlePulsator')
+    @patch('arkanoid.sprites.paddle.receiver')
+    @patch('arkanoid.sprites.paddle.load_png_sequence')
+    def test_convert_from_laser(self, mock_load_png_sequence, mock_receiver,
+                                mock_pulsator):
+        img1, rect1, img2, rect2, img3, rect3 = (
+            Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
+        mock_image_sequence = [(img1, rect1), (img2, rect2), (img3, rect3)]
+        mock_load_png_sequence.return_value = mock_image_sequence
+        mock_paddle = Mock()
+        mock_paddle.rect.center = (100, 100)
+        mock_on_exit = Mock()
+
+        state = LaserState(mock_paddle, None)
+        state.exit(on_exit=mock_on_exit)
+
+        state.update()
+
+        self.assertEqual(state.paddle.image, img3)
+        self.assertEqual(state.paddle.rect, rect3)
+        self.assertEqual(rect3.center, (100, 100))
+
+        state.update()
+
+        self.assertEqual(state.paddle.image, img2)
+        self.assertEqual(state.paddle.rect, rect2)
+        self.assertEqual(rect2.center, (100, 100))
+
+        state.update()
+
+        self.assertEqual(state.paddle.image, img1)
+        self.assertEqual(state.paddle.rect, rect1)
+        self.assertEqual(rect1.center, (100, 100))
+
+        state.update()
+
+        self.assertEqual(state._from_laser, False)
+        mock_receiver.unregister_handler.assert_caleld_once_with(state._fire)
+        mock_on_exit.assert_called_once_with()
+
+    @patch('arkanoid.sprites.paddle._PaddlePulsator')
+    @patch('arkanoid.sprites.paddle.load_png_sequence')
+    def test_nudge_right_on_convert(self, mock_load_png_sequence,
+                                    mock_pulsator):
+        img, rect = Mock(), Mock()
+        rect.move.return_value = rect
+        mock_image_sequence = [(img, rect)]
+        mock_load_png_sequence.return_value = mock_image_sequence
+        mock_paddle = Mock()
+        mock_paddle.rect.center = (100, 100)
+        mock_paddle.area.collidepoint.side_effect = False, False, True
+
+        state = LaserState(mock_paddle, None)
+        state.update()
+
+        mock_paddle.rect.move.assert_has_calls([call(1, 0), call(1, 0)])
+
+    @patch('arkanoid.sprites.paddle._PaddlePulsator')
+    @patch('arkanoid.sprites.paddle.load_png_sequence')
+    def test_nudge_left_on_convert(self, mock_load_png_sequence,
+                                   mock_pulsator):
+        img, rect = Mock(), Mock()
+        rect.move.return_value = rect
+        mock_image_sequence = [(img, rect)]
+        mock_load_png_sequence.return_value = mock_image_sequence
+        mock_paddle = Mock()
+        mock_paddle.rect.center = (100, 100)
+        mock_paddle.area.collidepoint.side_effect = True, False, False, True
+
+        state = LaserState(mock_paddle, None)
+        state.update()
+
+        mock_paddle.rect.move.assert_has_calls([call(-1, 0), call(-1, 0)])
+
+    @patch('arkanoid.sprites.paddle.LaserBullet')
+    @patch('arkanoid.sprites.paddle._PaddlePulsator')
+    @patch('arkanoid.sprites.paddle.load_png_sequence')
+    def test_fire(self, mock_load_png_sequence, mock_pulsator,
+                  mock_bullet_class):
+        img, rect = Mock(), Mock()
+        mock_image_sequence = [(img, rect)]
+        mock_load_png_sequence.return_value = mock_image_sequence
+        mock_paddle = Mock()
+        mock_paddle.rect.center = (100, 100)
+        mock_paddle.rect.bottomleft = (60, 120)
+        mock_paddle.rect.width = 50
+        mock_game = Mock()
+        mock_event = Mock()
+        mock_event.key = pygame.K_SPACE
+        mock_bullet1, mock_bullet2 = Mock(), Mock()
+        mock_bullet_class.side_effect = mock_bullet1, mock_bullet2
+
+        state = LaserState(mock_paddle, mock_game)
+        state._fire(mock_event)
+
+        mock_bullet_class.assert_has_calls(
+            [call(mock_game, position=(70, 120)),
+             call(mock_game, position=(100, 120))])
+        self.assertEqual(len(state._bullets), 2)
+        mock_game.sprites.append.assert_has_calls([call(mock_bullet1),
+                                                   call(mock_bullet2)])
+        mock_bullet1.release.assert_called_once_with()
+        mock_bullet2.release.assert_called_once_with()
+
+    @patch('arkanoid.sprites.paddle.LaserBullet')
+    @patch('arkanoid.sprites.paddle._PaddlePulsator')
+    @patch('arkanoid.sprites.paddle.load_png_sequence')
+    def test_fire_second_pair(self, mock_load_png_sequence, mock_pulsator,
+                              mock_bullet_class):
+        """Test it is possible to fire 2 more bullets if there are already
+        2 in the air.
+        """
+        img, rect = Mock(), Mock()
+        mock_image_sequence = [(img, rect)]
+        mock_load_png_sequence.return_value = mock_image_sequence
+        mock_paddle = Mock()
+        mock_paddle.rect.center = (100, 100)
+        mock_paddle.rect.bottomleft = (60, 120)
+        mock_paddle.rect.width = 50
+        mock_game = Mock()
+        mock_event = Mock()
+        mock_event.key = pygame.K_SPACE
+
+        state = LaserState(mock_paddle, mock_game)
+        state._bullets.extend([Mock(), Mock()])
+        state._fire(mock_event)
+
+        self.assertEqual(mock_bullet_class.call_count, 2)
+
+    @patch('arkanoid.sprites.paddle.LaserBullet')
+    @patch('arkanoid.sprites.paddle._PaddlePulsator')
+    @patch('arkanoid.sprites.paddle.load_png_sequence')
+    def test_fire_max(self, mock_load_png_sequence, mock_pulsator,
+                      mock_bullet_class):
+        """Test that it is not possible to fire 2 more bullets if there are
+        already 3 or more in the air.
+        """
+        img, rect = Mock(), Mock()
+        mock_image_sequence = [(img, rect)]
+        mock_load_png_sequence.return_value = mock_image_sequence
+        mock_paddle = Mock()
+        mock_paddle.rect.center = (100, 100)
+        mock_paddle.rect.bottomleft = (60, 120)
+        mock_paddle.rect.width = 50
+        mock_game = Mock()
+        mock_event = Mock()
+        mock_event.key = pygame.K_SPACE
+
+        state = LaserState(mock_paddle, mock_game)
+        state._bullets.extend([Mock()] * 3)
+        state._fire(mock_event)
+
+        self.assertEqual(mock_bullet_class.call_count, 0)
+
+    @patch('arkanoid.sprites.paddle.LaserBullet')
+    @patch('arkanoid.sprites.paddle._PaddlePulsator')
+    @patch('arkanoid.sprites.paddle.load_png_sequence')
+    def test_fire_no_space(self, mock_load_png_sequence, mock_pulsator,
+                           mock_bullet_class):
+        """Test that fire does not happen when spacebar not pressed.
+        """
+        img, rect = Mock(), Mock()
+        mock_image_sequence = [(img, rect)]
+        mock_load_png_sequence.return_value = mock_image_sequence
+        mock_paddle = Mock()
+        mock_paddle.rect.center = (100, 100)
+        mock_paddle.rect.bottomleft = (60, 120)
+        mock_paddle.rect.width = 50
+        mock_game = Mock()
+        mock_event = Mock()
+        mock_event.key = pygame.KEYUP
+
+        state = LaserState(mock_paddle, mock_game)
+        state._fire(mock_event)
+
+        self.assertEqual(mock_bullet_class.call_count, 0)
