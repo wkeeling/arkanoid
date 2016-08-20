@@ -279,56 +279,52 @@ class CatchPowerUp(PowerUp):
 
 
 class DuplicatePowerUp(PowerUp):
-    """This powerup causes the ball to split into multiple duplicate balls."""
+    """This powerup causes the ball(s) to split into multiple duplicate balls.
+    """
 
-    # The relative angle at which a cloned will split away from the main ball.
+    # The relative angle at which a clone will split away from the original
+    # ball.
     _SPLIT_ANGLE_RAD = 0.4  # Radians
 
     def __init__(self, game, brick):
         super().__init__(game, brick, 'powerup_duplicate')
 
     def _activate(self):
-        """Create 2 duplicate balls, so there will be 3 in play.
+        """Create 2 duplicate balls from each existing ball in the game.
 
-        The dupliate balls have the same speed as the current ball, but
+        The dupliate balls have the same speed as the existing ball, but
         slightly differing angles so they all split away from each other.
         """
 
-        # Capture the current attributes of the ball.
-        start_pos = self.game.ball.rect.center
+        for ball in list(self.game.balls):
+            # Capture the current attributes of the ball.
+            start_pos = ball.rect.center
 
-        # Clone the ball twice, with a varying start angle.
-        start_angle = self.game.ball.angle + self._SPLIT_ANGLE_RAD
-        if start_angle > 2 * math.pi:
-            start_angle -= 2 * math.pi
+            # Clone the ball twice, with a varying start angle.
+            start_angle = ball.angle + self._SPLIT_ANGLE_RAD
+            if start_angle > 2 * math.pi:
+                start_angle -= 2 * math.pi
 
-        ball1 = self.game.ball.clone(start_pos=start_pos,
-                                     start_angle=start_angle)
+            ball1 = ball.clone(start_pos=start_pos,
+                               start_angle=start_angle)
 
-        start_angle = abs(self.game.ball.angle - self._SPLIT_ANGLE_RAD)
+            start_angle = abs(ball.angle - self._SPLIT_ANGLE_RAD)
 
-        ball2 = self.game.ball.clone(start_pos=start_pos,
-                                     start_angle=start_angle)
+            ball2 = ball.clone(start_pos=start_pos,
+                               start_angle=start_angle)
 
-        # Tell the game about the new balls..
-        self.game.balls.append(ball1)
-        self.game.balls.append(ball2)
+            # Tell the game about the new balls..
+            self.game.balls.append(ball1)
+            self.game.balls.append(ball2)
 
-        # Allow them to be displayed.
-        self.game.sprites.append(ball1)
-        self.game.sprites.append(ball2)
+            # Allow them to be displayed.
+            self.game.sprites.append(ball1)
+            self.game.sprites.append(ball2)
 
     def deactivate(self):
-        # No specific deactivation for this powerup. When duplicate balls are
+        # No specific deactivation for this powerup. Once duplicate balls are
         # in play, they just remain in play until they go off-screen.
         pass
-
-    def _can_activate(self):
-        can_activate = super()._can_activate()
-        if can_activate:
-            # Don't activate if there is already more than 1 ball in play.
-            can_activate = len(self.game.balls) == 1
-        return can_activate
 
 
 class WarpPowerUp(PowerUp):

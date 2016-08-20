@@ -6,7 +6,8 @@ from unittest.mock import (call,
 
 import pygame
 
-from arkanoid.sprites.paddle import (LaserState,
+from arkanoid.sprites.paddle import (LaserBullet,
+                                     LaserState,
                                      Paddle)
 
 
@@ -192,10 +193,14 @@ class TestLaserState(TestCase):
         self.assertEqual(rect3.center, (100, 100))
 
         state.update()
+        state.update()
 
         self.assertEqual(state._to_laser, False)
         mock_receiver.register_handler.assert_called_once_with(pygame.KEYUP,
                                                                state._fire)
+        mock_pulsator.assert_called_once_with(mock_paddle,
+                                              'paddle_laser_pulsate')
+        mock_pulsator.return_value.update.assert_called_once_with()
 
     @patch('arkanoid.sprites.paddle._PaddlePulsator')
     @patch('arkanoid.sprites.paddle.receiver')
@@ -373,3 +378,88 @@ class TestLaserState(TestCase):
         state._fire(mock_event)
 
         self.assertEqual(mock_bullet_class.call_count, 0)
+
+
+class TestLaserBullet(TestCase):
+
+    @patch('arkanoid.sprites.paddle.load_png')
+    @patch('arkanoid.sprites.paddle.pygame')
+    def test_initialise(self, mock_pygame, mock_load_png):
+        mock_load_png.return_value = Mock(), Mock()
+        bullet = LaserBullet(Mock(), Mock())
+
+        mock_load_png.assert_called_once_with('laser_bullet')
+        mock_pygame.display.get_surface.assert_called_once_with()
+        mock_pygame.display.get_surface.return_value.\
+            get_rect.assert_called_once_with()
+        self.assertFalse(bullet.visible)
+
+    @patch('arkanoid.sprites.paddle.load_png')
+    @patch('arkanoid.sprites.paddle.pygame')
+    def test_release(self, mock_pygame, mock_load_png):
+        mock_rect = Mock()
+        mock_load_png.return_value = Mock(), mock_rect
+        bullet = LaserBullet(Mock(), (20, 20))
+
+        bullet.release()
+
+        self.assertEqual(mock_rect.midbottom, (20, 20))
+        self.assertTrue(bullet.visible)
+
+    @patch('arkanoid.sprites.paddle.load_png')
+    @patch('arkanoid.sprites.paddle.pygame')
+    def test_collide_brick(self, mock_pygame, mock_load_png):
+        mock_game, mock_rect = Mock(), Mock()
+        mock_load_png.return_value = Mock(), mock_rect
+        bullet = LaserBullet(mock_game, Mock())
+        bullet.release()
+        mock_rect.move.return_value = mock_rect
+        mock_game.round.edges.top.rect.colliderect.return_value = False
+        visible_bricks = [Mock()]
+        mock_game.round.bricks = visible_bricks
+        mock_pygame.sprite.spritecollide.return_value = visible_bricks
+
+        bullet.update()
+
+        mock_rect.move.assert_called_once_with(0, -15)
+        mock_game.round.edges.top.rect.colliderect.\
+            assert_called_once_with(mock_rect)
+        mock_pygame.sprite.spritecollide. \
+            assert_called_once_with(bullet, visible_bricks, False)
+        mock_brick = visible_bricks[0]
+        self.assertEqual(mock_brick.value, 0)
+        self.assertIsNone(mock_brick.powerup_cls)
+        mock_game.on_brick_collide.assert_called_once_with(mock_brick, bullet)
+        self.assertFalse(bullet.visible)
+
+    @patch('arkanoid.sprites.paddle.load_png')
+    @patch('arkanoid.sprites.paddle.pygame')
+    def test_no_collide_brick(self, mock_pygame, mock_load_png):
+        mock_game, mock_rect = Mock(), Mock()
+        mock_load_png.return_value = Mock(), mock_rect
+        bullet = LaserBullet(mock_game, Mock())
+        bullet.release()
+        mock_rect.move.return_value = mock_rect
+        mock_game.round.edges.top.rect.colliderect.return_value = False
+        visible_bricks = [Mock()]
+        mock_game.round.bricks = visible_bricks
+        mock_pygame.sprite.spritecollide.return_value = []  # No brick collide
+
+        bullet.update()
+
+        self.assertEqual(mock_game.on_brick_collide.call_count, 0)
+        self.assertTrue(bullet.visible)
+
+    @patch('arkanoid.sprites.paddle.load_png')
+    @patch('arkanoid.sprites.paddle.pygame')
+    def test_collide_edge(self, mock_pygame, mock_load_png):
+        mock_game, mock_rect = Mock(), Mock()
+        mock_load_png.return_value = Mock(), mock_rect
+        bullet = LaserBullet(mock_game, Mock())
+        bullet.release()
+        mock_rect.move.return_value = mock_rect
+        mock_game.round.edges.top.rect.colliderect.return_value = True
+
+        bullet.update()
+
+        self.assertFalse(bullet.visible)

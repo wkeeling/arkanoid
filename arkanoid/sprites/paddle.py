@@ -557,7 +557,8 @@ class LaserBullet(pygame.sprite.Sprite):
             position:
                 The position the bullet starts from.
             speed:
-                The speed at which the bullet travels.
+                Optional speed at which the bullet travels. Default is 15
+                pixels per frame.
         """
         super().__init__()
         # Load the bullet and its rect.
@@ -626,7 +627,8 @@ class ExplodingState(PaddleState):
     This state notifies the caller when the explosion animation has completed
     via the on_exploded no-args callback passed to the initialiser.
 
-    Note that this state leaves the paddle invisible when it has completed.
+    Note that this state leaves the paddle invisible when it has completed
+    (when on_exploded is called).
     """
 
     def __init__(self, paddle, on_exploded):
@@ -667,7 +669,7 @@ class ExplodingState(PaddleState):
                 except StopIteration:
                     # Animation finished, notify the client that we're done.
                     self._on_explode_complete()
-                    # We leave the paddle invisible, since it's exploded.
+                    # We leave the paddle invisible, since it exploded.
                     self.paddle.visible = False
 
         self.paddle.stop()  # Prevent the paddle from moving when exploding.
