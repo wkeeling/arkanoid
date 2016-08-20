@@ -51,7 +51,6 @@ class Brick(pygame.sprite.Sprite):
         # Load the images/rects required for the shimmering animation.
         self._image_sequence = [image for image, _ in
                                 load_png_sequence('brick_{}'.format(colour))]
-        self._image_sequence.append(self.image)
         self._animation = None
 
         # The number of ball collisions after which the brick is destroyed.
