@@ -12,6 +12,9 @@ from arkanoid.util import load_png_sequence
 
 LOG = logging.getLogger(__name__)
 
+# The speed the powerup falls from a brick.
+DEFAULT_FALL_SPEED = 3
+
 
 class PowerUp(pygame.sprite.Sprite):
     """A PowerUp represents the capsule that falls from a brick and enhances
@@ -23,10 +26,7 @@ class PowerUp(pygame.sprite.Sprite):
     that actions happen at the right time.
     """
 
-    # The speed the powerup falls from a brick.
-    _DEFAULT_FALL_SPEED = 3
-
-    def __init__(self, game, brick, png_prefix, speed=_DEFAULT_FALL_SPEED):
+    def __init__(self, game, brick, png_prefix, speed=DEFAULT_FALL_SPEED):
         """
         Initialise a new PowerUp.
 
