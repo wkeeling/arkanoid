@@ -5,6 +5,7 @@ import pygame
 
 from arkanoid.event import receiver
 from arkanoid.rounds.round1 import Round1
+from arkanoid.sprites.enemy import Enemy
 from arkanoid.sprites.ball import Ball
 from arkanoid.sprites.paddle import (ExplodingState,
                                      Paddle,
@@ -194,6 +195,9 @@ class Game:
         # The currently applied powerup, if any.
         self.active_powerup = None
 
+        # The current enemies in the game.
+        self.enemies = []
+
         # Hold a reference to all the sprites for redrawing purposes.
         self.sprites = []
 
@@ -274,6 +278,10 @@ class Game:
             # Tell the balls that the brick has gone.
             for ball in self.balls:
                 ball.remove_collidable_sprite(brick)
+
+            # Tell the enemies that the brick has gone.
+            for enemy in self.enemies:
+                enemy.collidable_sprites.remove(brick)
 
             # Tell the round that a brick has gone, so that it can decide
             # whether the round is completed.
@@ -465,6 +473,21 @@ class RoundStartState(BaseState):
         self.game.sprites += self.game.round.edges
         self.game.sprites += self.game.round.bricks
 
+        # TODO: enemies should be brought into the game at a predetermined
+        # time. This, plus the number and type of enemies is determined by
+        # the round.
+        def off_screen(enemy):
+            # TODO: prefer enemy.respawn() ?
+            enemy.rect.x, enemy.rect.y = enemy.start_pos
+        self.game.enemies.append(Enemy(self.game, (200, 200), off_screen))
+        # self.game.enemies.append(Enemy(self.game, (300, 200), off_screen))
+        # self.game.enemies.append(Enemy(self.game, (400, 200), off_screen))
+        for enemy in self.game.enemies:
+            enemy.collidable_sprites.add(self.game.ball)
+            enemy.collidable_sprites.add(self.game.round.edges)
+            enemy.collidable_sprites.add(self.game.round.bricks)
+        self.game.sprites += self.game.enemies
+
     def _configure_ball(self):
         """Configure the ball with all the objects from the current round
         that it could potentially collide with.
@@ -491,6 +514,9 @@ class RoundStartState(BaseState):
                 brick,
                 speed_adjust=BRICK_SPEED_ADJUST,
                 on_collide=self.game.on_brick_collide)
+
+        for enemy in self.game.enemies:
+            self.game.ball.add_collidable_sprite(enemy)
 
     def update(self):
         """Handle the sequence of events that happen at the beginning of a
