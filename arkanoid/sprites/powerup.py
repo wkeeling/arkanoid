@@ -313,9 +313,14 @@ class DuplicatePowerUp(PowerUp):
             ball2 = ball.clone(start_pos=start_pos,
                                start_angle=start_angle)
 
-            # Tell the game about the new balls..
+            # Tell the game about the new balls.
             self.game.balls.append(ball1)
             self.game.balls.append(ball2)
+
+            # Tell the enemies about the new balls.
+            for enemy in self.game.enemies:
+                enemy.add_collidable_sprites(ball1, destroy=True)
+                enemy.add_collidable_sprites(ball2, destroy=True)
 
             # Allow them to be displayed.
             self.game.sprites.append(ball1)

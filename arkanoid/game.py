@@ -5,7 +5,8 @@ import pygame
 
 from arkanoid.event import receiver
 from arkanoid.rounds.round1 import Round1
-from arkanoid.sprites.enemy import Enemy
+from arkanoid.sprites.enemy import (Enemy,
+                                    EnemyType)
 from arkanoid.sprites.ball import Ball
 from arkanoid.sprites.paddle import (ExplodingState,
                                      Paddle,
@@ -317,6 +318,9 @@ class Game:
             self.balls.remove(ball)
             self.sprites.remove(ball)
             ball.visible = False
+
+            for enemy in self.enemies:
+                enemy.remove_collidable_sprite(ball)
         else:
             # This ball is the last in play, so transition to the
             # BallOffScreenState which handles end of life.
@@ -476,16 +480,19 @@ class RoundStartState(BaseState):
         # TODO: enemies should be brought into the game at a predetermined
         # time. This, plus the number and type of enemies is determined by
         # the round.
-        def off_screen(enemy):
+        def on_destroyed(enemy):
             # TODO: prefer enemy.respawn() ?
             enemy.rect.x, enemy.rect.y = enemy.start_pos
-        self.game.enemies.append(Enemy(self.game, (200, 200), off_screen))
+
+        self.game.enemies.append(
+            Enemy(EnemyType.cone, (200, 200), self.game.paddle, on_destroyed))
         # self.game.enemies.append(Enemy(self.game, (300, 200), off_screen))
         # self.game.enemies.append(Enemy(self.game, (400, 200), off_screen))
         for enemy in self.game.enemies:
-            enemy.collidable_sprites.add(self.game.ball)
-            enemy.collidable_sprites.add(self.game.round.edges)
-            enemy.collidable_sprites.add(self.game.round.bricks)
+            enemy.add_collidable_sprites(*self.game.balls, destroy=True)
+            enemy.add_collidable_sprites(self.game.paddle, destroy=True)
+            enemy.add_collidable_sprites(*self.game.round.edges)
+            enemy.add_collidable_sprites(*self.game.round.bricks)
         self.game.sprites += self.game.enemies
 
     def _configure_ball(self):
@@ -514,9 +521,6 @@ class RoundStartState(BaseState):
                 brick,
                 speed_adjust=BRICK_SPEED_ADJUST,
                 on_collide=self.game.on_brick_collide)
-
-        for enemy in self.game.enemies:
-            self.game.ball.add_collidable_sprite(enemy)
 
     def update(self):
         """Handle the sequence of events that happen at the beginning of a
@@ -641,12 +645,14 @@ class RoundEndState(BaseState):
         self._update_count = 0
 
     def update(self):
-        # Stop the ball(s) and pause for a short period.
+        for enemy in self.game.enemies:
+            enemy.visible = False
         for ball in self.game.balls:
             ball.speed = 0
             ball.visible = False
         self.game.paddle.visible = False
 
+        # Pause for a short period after stopping the ball(s).
         if self._update_count > 120:
             # Move on to the next round, carrying over a single ball.
             self.game.balls = self.game.balls[:1]
