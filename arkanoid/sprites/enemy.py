@@ -29,10 +29,12 @@ HALF_PI = math.pi / 2
 
 class EnemyType(enum.Enum):
 
-    """Enumeration of enemy types and their image sequence prefix."""
+    """Enumeration of enemy types to their image sequence prefix and
+    score value.
+    """
 
     cone = 'enemy_cone'
-    pyramin = 'enemy_pyramid'
+    pyramid = 'enemy_pyramid'
     sphere = 'enemy_sphere'
     cube = 'enemy_cube'
 
@@ -41,9 +43,9 @@ class Enemy(pygame.sprite.Sprite):
     """An enemy is released from the doors in the top edge and travels
     downwards towards the paddle.
 
-    If it collides with the ball or paddle it is destroyed in an explosion
-    animation and increases the game's score. Colliding with a brick or with
-    the game edges will just cause the enemy to change direction.
+    It can be told about other sprites it can collide with via
+    add_collidable_sprite(). Colliding with another sprite will cause the
+    enemy to change direction.
     """
 
     def __init__(self, enemy_type, start_pos, paddle, on_destroyed):
@@ -71,9 +73,7 @@ class Enemy(pygame.sprite.Sprite):
 
         # The sprites in the game that cause the enemy sprite to change
         # direction when it collides with them.
-        self.collidable_sprites = pygame.sprite.Group()
-        # The sprites that are capable of destroying us.
-        self._destroyable_sprites = set()
+        self._collidable_sprites = pygame.sprite.Group()
 
         # The current direction of travel of the sprite.
         self._direction = 1.57  # Initialised in downwards direction.
@@ -111,28 +111,18 @@ class Enemy(pygame.sprite.Sprite):
 
         return itertools.cycle(sequence), max_width, max_height
 
-    def add_collidable_sprites(self, *sprites, destroy=False):
+    def add_collidable_sprites(self, *sprites):
         """Add collidable sprites to this enemy.
 
         The enemy sprite will change direction when it collides with a
-        collidable sprite, unless the optional destroy attribute is set to
-        True, in which case the enemy sprite will explode.
+        collidable sprite.
 
         Args:
             sprites:
                 One or more collidable sprites.
-            destroy:
-                Whether the sprite destroys the enemy when it collides.
         """
         for sprite in sprites:
-            self.collidable_sprites.add(sprite)
-            if destroy:
-                self._destroyable_sprites.add(sprite)
-
-    def remove_collidable_sprite(self, sprite):
-        self.collidable_sprites.remove(sprite)
-        if sprite in self._destroyable_sprites:
-            self._destroyable_sprites.remove(sprite)
+            self._collidable_sprites.add(sprite)
 
     def update(self):
         """Update the enemy's position, handling any collisions."""
@@ -148,7 +138,8 @@ class Enemy(pygame.sprite.Sprite):
 
             if self._area.contains(self.rect):
                 sprites_collided = pygame.sprite.spritecollide(
-                    self, self.collidable_sprites, None)
+                    self, [sprite for sprite in self._collidable_sprites if
+                           sprite.visible], None)
 
                 if sprites_collided:
                     self._handle_collision(sprites_collided)
@@ -188,39 +179,33 @@ class Enemy(pygame.sprite.Sprite):
         return self.rect.move(offset_x, offset_y)
 
     def _handle_collision(self, sprites_collided):
-        if set(sprites_collided) & self._destroyable_sprites:
-            # One or more of the sprites we've collided with
-            # can destroy us.
-            self._explode_animation = iter(
-                load_png_sequence('enemy_explosion'))
-        else:
-            rects = [sprite.rect for sprite in sprites_collided]
-            left, right, top, bottom = False, False, False, False
+        rects = [sprite.rect for sprite in sprites_collided]
+        left, right, top, bottom = False, False, False, False
 
-            for rect in rects:
-                # Work out which of our sides are in contact.
-                left = (left or rect.collidepoint(
-                    self.rect.topleft) or rect.collidepoint(
-                    self.rect.midleft) or rect.collidepoint(
-                    self.rect.bottomleft))
+        for rect in rects:
+            # Work out which of our sides are in contact.
+            left = (left or rect.collidepoint(
+                self.rect.topleft) or rect.collidepoint(
+                self.rect.midleft) or rect.collidepoint(
+                self.rect.bottomleft))
 
-                right = (right or rect.collidepoint(
-                    self.rect.topright) or rect.collidepoint(
-                    self.rect.midright) or rect.collidepoint(
-                    self.rect.bottomright))
+            right = (right or rect.collidepoint(
+                self.rect.topright) or rect.collidepoint(
+                self.rect.midright) or rect.collidepoint(
+                self.rect.bottomright))
 
-                top = (top or rect.collidepoint(
-                    self.rect.topleft) or rect.collidepoint(
-                    self.rect.midtop) or rect.collidepoint(
-                    self.rect.topright))
+            top = (top or rect.collidepoint(
+                self.rect.topleft) or rect.collidepoint(
+                self.rect.midtop) or rect.collidepoint(
+                self.rect.topright))
 
-                bottom = (bottom or rect.collidepoint(
-                    self.rect.bottomleft) or rect.collidepoint(
-                    self.rect.midbottom) or rect.collidepoint(
-                    self.rect.bottomright))
+            bottom = (bottom or rect.collidepoint(
+                self.rect.bottomleft) or rect.collidepoint(
+                self.rect.midbottom) or rect.collidepoint(
+                self.rect.bottomright))
 
-            # Work out the new direction based on what we've collided with.
-            self._direction = self._calc_direction(left, right, top, bottom)
+        # Work out the new direction based on what we've collided with.
+        self._direction = self._calc_direction(left, right, top, bottom)
 
     def _calc_direction(self, *args):
         """Calculate the direction of travel.
@@ -263,3 +248,7 @@ class Enemy(pygame.sprite.Sprite):
             direction += random.uniform(-RANDOM_RANGE, RANDOM_RANGE)
 
         return direction
+
+    def explode(self):
+        """Trigger an explosion of the enemy sprite."""
+        self._explode_animation = iter(load_png_sequence('enemy_explosion'))

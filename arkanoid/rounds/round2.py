@@ -111,7 +111,7 @@ class Round2(BaseRound):
         remaining_powerups.extend([CatchPowerUp] * 2)
         remaining_powerups.extend([ExpandPowerUp] * 4)
         remaining_powerups.extend([SlowBallPowerUp] * 2)
-        remaining_powerups.extend([DuplicatePowerUp] * 20)
+        remaining_powerups.extend([DuplicatePowerUp] * 2)
         random.shuffle(remaining_powerups)
         return remaining_powerups
 

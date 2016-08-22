@@ -590,32 +590,37 @@ class LaserBullet(pygame.sprite.Sprite):
         if self.visible:
             # Calculate the new position.
             self.rect = self.rect.move(0, -self._speed)
+            top_edge_collision = pygame.sprite.spritecollide(
+                self,
+                [self._game.round.edges.top],
+                False)
 
-            if not self._game.round.edges.top.rect.colliderect(self.rect):
+            if not top_edge_collision:
                 # We haven't collided with the top of the game area, so
-                # check whether we've collided with a brick.
+                # check whether we've collided with anything.
                 visible_bricks = [brick for brick in self._game.round.bricks
                                   if brick.visible]
-                collided = pygame.sprite.spritecollide(self, visible_bricks,
-                                                       False)
+                brick_collide = pygame.sprite.spritecollide(self,
+                                                            visible_bricks,
+                                                            False)
 
-                if collided:
-                    # We've collided with a brick.
-                    brick = collided[0]
+                if brick_collide:
+                    brick = brick_collide[0]
                     # The game's score is not increased when a laser destroys
                     # a brick.
                     brick.value = 0
                     # Powerups aren't released when laser destroys a brick.
                     brick.powerup_cls = None
-                    # Invoke the collision callback.
-                    # TODO: the on_collide callback should probably accept a
-                    # sprite rather than a brick specifically. The callback
-                    # can then decide whether this sprite should be destroyed
-                    # and return boolean to indicate that here.
                     self._game.on_brick_collide(brick, self)
-
-                    # Since we've collided, we're no longer visible.
                     self.visible = False
+                else:
+                    enemy_collide = pygame.sprite.spritecollide(
+                        self,
+                        self._game.enemies,
+                        False)
+                    if enemy_collide:
+                        self._game.on_enemy_collide(enemy_collide[0], self)
+                        self.visible = False
             else:
                 # We've collided with the top edge of the game area.
                 self.visible = False

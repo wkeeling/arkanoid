@@ -280,10 +280,6 @@ class Game:
             for ball in self.balls:
                 ball.remove_collidable_sprite(brick)
 
-            # Tell the enemies that the brick has gone.
-            for enemy in self.enemies:
-                enemy.collidable_sprites.remove(brick)
-
             # Tell the round that a brick has gone, so that it can decide
             # whether the round is completed.
             self.round.brick_destroyed()
@@ -305,6 +301,21 @@ class Game:
                 # Display the powerup.
                 self.sprites.append(powerup)
 
+    def on_enemy_collide(self, enemy, sprite):
+        """Called by a sprite when it collides with an enemy.
+
+        In this case a sprite might be the ball, or a laser beam from the
+        laser paddle.
+
+        Args:
+            enemy:
+                The Enemy instance the sprite collided with.
+            sprite:
+                The sprite instance that struck the enemy.
+        """
+        enemy.explode()
+        self.score += 500
+
     def _off_screen(self, ball):
         """Callback called by a ball when it goes offscreen.
 
@@ -318,9 +329,6 @@ class Game:
             self.balls.remove(ball)
             self.sprites.remove(ball)
             ball.visible = False
-
-            for enemy in self.enemies:
-                enemy.remove_collidable_sprite(ball)
         else:
             # This ball is the last in play, so transition to the
             # BallOffScreenState which handles end of life.
@@ -489,8 +497,6 @@ class RoundStartState(BaseState):
         # self.game.enemies.append(Enemy(self.game, (300, 200), off_screen))
         # self.game.enemies.append(Enemy(self.game, (400, 200), off_screen))
         for enemy in self.game.enemies:
-            enemy.add_collidable_sprites(*self.game.balls, destroy=True)
-            enemy.add_collidable_sprites(self.game.paddle, destroy=True)
             enemy.add_collidable_sprites(*self.game.round.edges)
             enemy.add_collidable_sprites(*self.game.round.bricks)
         self.game.sprites += self.game.enemies
@@ -521,6 +527,13 @@ class RoundStartState(BaseState):
                 brick,
                 speed_adjust=BRICK_SPEED_ADJUST,
                 on_collide=self.game.on_brick_collide)
+
+        for enemy in self.game.enemies:
+            # Tell the ball about the enemies that it can collide with and
+            # destroy.
+            self.game.ball.add_collidable_sprite(
+                enemy,
+                on_collide=self.game.on_enemy_collide)
 
     def update(self):
         """Handle the sequence of events that happen at the beginning of a
