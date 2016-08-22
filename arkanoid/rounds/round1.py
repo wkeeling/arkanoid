@@ -36,8 +36,8 @@ class Round1(BaseRound):
         self.enemy_type = EnemyType.cone
         self.num_enemies = 3
 
-    def can_release_enemy(self):
-        """Release the enemy when half of the bricks have been destroyed."""
+    def can_release_enemies(self):
+        """Release the enemies when half of the bricks have been destroyed."""
         return True
         # return self._bricks_destroyed >= self.bricks // 2
 

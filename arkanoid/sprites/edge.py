@@ -30,19 +30,28 @@ class TopEdge(pygame.sprite.Sprite):
         }
         self._door_open_animation = None
         self._door_close_animation = None
-        self._on_open = None
-        self._delay = 0
+        self._open_queue = []
 
         self._update_count = 0
 
         self.visible = True
 
     def update(self):
-        if self._update_count >= self._delay:
-            if self._door_open_animation:
-                self._animate_open_door()
-            elif self._door_close_animation:
-                self._animate_close_door()
+        if not self._door_open_animation and not self._door_close_animation:
+            if self._open_queue:
+                # Have a peek at the front of the queue.
+                delay, door, _ = self._open_queue[0]
+
+                if self._update_count >= delay:
+                    # The first item in the queue has exceeded its delay so
+                    # we can open the door.
+                    self._door_open_animation = iter(
+                        self._image_sequence[door])
+
+        if self._door_open_animation:
+            self._animate_open_door()
+        elif self._door_close_animation:
+            self._animate_close_door()
 
         self._update_count += 1
 
@@ -51,33 +60,42 @@ class TopEdge(pygame.sprite.Sprite):
             try:
                 self.image, _ = next(self._door_open_animation)
             except StopIteration:
+                # Now we've opened the door, we can pop the item that
+                # triggered it from the front of the queue.
+                _, door, on_open = self._open_queue.pop(0)
+
+                # Set up the door close animation.
+                self._door_close_animation = iter(
+                    reversed(self._image_sequence[door]))
                 self._door_open_animation = None
-                self._delay = 0
-                self._on_open()
+
+                # Tell the client that the door is now open.
+                on_open()
 
     def _animate_close_door(self):
         if self._update_count % 4 == 0:
-            LOG.debug('Animating close door')
             try:
-                LOG.debug('setting image')
                 self.image, _ = next(self._door_close_animation)
             except StopIteration:
-                LOG.debug('door closed')
                 self._door_close_animation = None
-                self._delay = 0
 
     def open_door(self, door, delay, on_open):
-        LOG.debug('open door triggered')
-        self._door_open_animation = iter(self._image_sequence[door])
-        self._door_close_animation = None
-        self._on_open = lambda: on_open(COORDS[door])
-        self._delay = self._update_count + delay
+        """Open a door after a given delay and then call the on_open
+        callback before automatically closing the door after a short delay.
 
-    def close_door(self, door, delay):
-        LOG.debug('close door triggered')
-        self._door_close_animation = iter(reversed(self._image_sequence[door]))
-        self._door_open_animation = None
-        self._delay = self._update_count + delay
+        Args:
+            door:
+                The door to open.
+            delay:
+                The delay before opening the door (cycles).
+            on_open:
+                A callback that will be invoked after the door has opened
+                and before it is closed. The callback accepts a single
+                argument: a 2-tuple of the x,y coordinates of the door.
+        """
+        delay += self._update_count
+        self._open_queue.append((delay, door, lambda: on_open(COORDS[door])))
+        self._open_queue.sort(key=lambda x: x[0])
 
 
 class SideEdge(pygame.sprite.Sprite):

@@ -73,14 +73,14 @@ class BaseRound:
         """Conveys to the Round that a brick has been destroyed in the game."""
         self._bricks_destroyed += 1
 
-    def can_release_enemy(self):
+    def can_release_enemies(self):
         """Whether the enemies can be released into the game.
 
         This is round specific, so concrete round subclasses should implement
         this method.
         """
         raise NotImplementedError('Subclasses must implement '
-                                  'can_release_enemy()')
+                                  'can_release_enemies()')
 
     def _create_background(self):
         """Create the background surface for the round.

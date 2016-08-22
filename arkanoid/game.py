@@ -45,9 +45,9 @@ WALL_SPEED_ADJUST = 0.2
 # The speed the paddle moves.
 PADDLE_SPEED = 10
 # Minimum delay before opening a top door.
-DOOR_OPEN_DELAY_MIN = 10  # Frames
+DOOR_OPEN_DELAY_MIN = 60  # Frames
 # Maximum delay before opening a top door.
-DOOR_OPEN_DELAY_MAX = 20  # Frames
+DOOR_OPEN_DELAY_MAX = 600  # Frames
 # The main font.
 MAIN_FONT = 'emulogic.ttf'
 
@@ -303,9 +303,15 @@ class Game:
                 # Display the powerup.
                 self.sprites.append(powerup)
 
-        if not self.enemies and self.round.can_release_enemy():
-            # We can release the enemy into the game.
-            self._release_enemy()
+        if not self.enemies and self.round.can_release_enemies():
+            # Setup the enemy sprites.
+            self._setup_enemies()
+
+            # Release them into the game.
+            # Note that once an enemy is destroyed, it will call Game.release()
+            # itself to respawn itself.
+            for enemy in self.enemies:
+                self.release(enemy)
 
     def on_enemy_collide(self, enemy, sprite):
         """Called by a sprite when it collides with an enemy.
@@ -322,42 +328,22 @@ class Game:
         enemy.explode()
         self.score += 500
 
-    def _release_enemy(self):
-        """Open the top doors, bring the enemy sprites into the game, then
-        close the doors.
-        """
-        # Create the callbacks responsible for releasing the enemy sprites
-        # through the top doors.
-        def release(enemy):
-            enemy.rect.x, enemy.rect.y = -100, -100
-            # Randomise the door we use.
-            door = random.choice((DOOR_TOP_LEFT, DOOR_TOP_RIGHT))
-
-            def door_open(coords):
-                enemy.reset()
-                enemy.rect.topleft = coords
-                self.round.edges.top.close_door(door, delay=10)
-
-            # Add a random delay before opening the door.
-            delay = random.choice(range(DOOR_OPEN_DELAY_MIN,
-                                        DOOR_OPEN_DELAY_MAX))
-
-            # Trigger opening the door.
-            self.round.edges.top.open_door(door, delay=delay,
-                                           on_open=door_open)
-
+    def _setup_enemies(self):
+        """Set up the enemy sprites ready for release into the game."""
         collidable_sprites = []
         collidable_sprites += self.round.edges
         collidable_sprites += self.round.bricks
 
-        # for _ in range(self.round.num_enemies):
-        for _ in range(1):
+        for _ in range(self.round.num_enemies):
+            # Enemies can collide with one another.
+            collidable_sprites += self.enemies
+
             # Create the sprite.
             enemy_sprite = Enemy(EnemyType.cone,
                                  self.paddle,
                                  self.on_enemy_collide,
                                  collidable_sprites,
-                                 on_destroyed=release)
+                                 on_destroyed=self.release)
 
             # Tell the ball about it.
             self.ball.add_collidable_sprite(enemy_sprite,
@@ -369,9 +355,35 @@ class Game:
             # Allow the sprite to be displayed.
             self.sprites.append(enemy_sprite)
 
-            # Release it. Note that once an enemy is destroyed, it will
-            # call release() itself to respawn itself.
-            release(enemy_sprite)
+    def release(self, enemy):
+        """Release an enemy through one of the top doors.
+
+        This method will select a top door at random, open it and then
+        release the enemy sprite through it before closing it.
+
+        Note that a random delay is added before the door is opened.
+
+        Args:
+            enemy:
+                The enemy sprite to release through one of the doors.
+        """
+        # Keep the enemy on the screen but hide it.
+        enemy.rect.x, enemy.rect.y = self._screen.get_rect().center
+        enemy.visible = False
+        # Randomly select the door we use.
+        door = random.choice((DOOR_TOP_LEFT, DOOR_TOP_RIGHT))
+
+        def door_open(coords):
+            enemy.reset()
+            enemy.rect.topleft = coords
+
+        # Add a random delay before opening the door.
+        delay = random.choice(range(DOOR_OPEN_DELAY_MIN,
+                                    DOOR_OPEN_DELAY_MAX))
+
+        # Trigger opening the door.
+        self.round.edges.top.open_door(door, delay=delay,
+                                       on_open=door_open)
 
     def _off_screen(self, ball):
         """Callback called by a ball when it goes offscreen.
@@ -665,6 +677,10 @@ class RoundRestartState(RoundStartState):
         # The new number of lives since restarting.
         self._lives = game.lives - 1
 
+        # Hide any enemy sprites.
+        for enemy in self.game.enemies:
+            enemy.visible = False
+
     def _setup_sprites(self):
         """No need to setup the sprites again on round restart."""
         pass
@@ -680,6 +696,10 @@ class RoundRestartState(RoundStartState):
         if self._update_count > 60:
             # Update the number of lives when we display the caption.
             self.game.lives = self._lives
+        if self._update_count > 300:
+            # Re-release any enemies that were previously active.
+            for enemy in self.game.enemies:
+                self.game.release(enemy)
 
 
 class RoundEndState(BaseState):

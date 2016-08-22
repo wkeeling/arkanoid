@@ -266,4 +266,4 @@ class Enemy(pygame.sprite.Sprite):
         self._direction = START_DIRECTION
         self._duration = START_DURATION
         self._on_destroyed_called = False
-
+        self.visible = True
