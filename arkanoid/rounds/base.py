@@ -46,6 +46,17 @@ class BaseRound:
         # The name of the round displayed on the screen when the round starts.
         self.name = 'Round name not set!'
 
+        # Reference to the next round, to be overriden by subclasses.
+        self.next_round = None
+
+        # The class of the enemy to release in this round. Subclasses to
+        # override with the specific class.
+        self.enemy_type = None
+
+        # The number of enemies to release. Subclasses to override with a
+        # specific number.
+        self.num_enemies = 0
+
         # Keep track of the number of destroyed bricks.
         self._bricks_destroyed = 0
 
@@ -61,6 +72,15 @@ class BaseRound:
     def brick_destroyed(self):
         """Conveys to the Round that a brick has been destroyed in the game."""
         self._bricks_destroyed += 1
+
+    def can_release_enemy(self):
+        """Whether the enemies can be released into the game.
+
+        This is round specific, so concrete round subclasses should implement
+        this method.
+        """
+        raise NotImplementedError('Subclasses must implement '
+                                  'can_release_enemy()')
 
     def _create_background(self):
         """Create the background surface for the round.

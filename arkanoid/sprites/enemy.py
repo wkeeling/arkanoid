@@ -13,6 +13,11 @@ LOG = logging.getLogger(__name__)
 # The speed the enemy sprite moves in pixels/frame.
 SPEED = 2
 
+# The enemy sprite is started in a downwards direction.
+START_DIRECTION = 1.57  # Radians
+# The enemy sprite travels in the start direction for this duration.
+START_DURATION = 75  # Frames
+
 # A value between these two bounds will be randomly selected for the
 # duration of travel (i.e. number of frames) in a given direction.
 MIN_DURATION = 30
@@ -54,6 +59,7 @@ class Enemy(pygame.sprite.Sprite):
         self._paddle = paddle
         self._on_paddle_collide = on_paddle_collide
         self._on_destroyed = on_destroyed
+        self._on_destroyed_called = False
 
         # Set up the sequence of images that will animate the enemy sprite.
         self._animation, width, height = self._load_animation_sequence(
@@ -79,12 +85,12 @@ class Enemy(pygame.sprite.Sprite):
             self._collidable_sprites.add(sprite)
 
         # The current direction of travel of the sprite.
-        self._direction = 1.57  # Initialised in downwards direction.
+        self._direction = START_DIRECTION
 
         # The duration which the sprite will travel in a set direction.
         # This is an update count value. When the update count reaches this
         # value, the direction will be recalculated.
-        self._duration = 50  # The initial duration of downwards movement.
+        self._duration = START_DURATION
 
         # Track the number of update cycles.
         self._update_count = 0
@@ -150,7 +156,9 @@ class Enemy(pygame.sprite.Sprite):
                         self._duration = 0
             else:
                 # We've dropped off the bottom of the screen.
-                self._on_destroyed(self)
+                if not self._on_destroyed_called:
+                    self._on_destroyed(self)
+                    self._on_destroyed_called = True
 
         self._update_count += 1
 
@@ -252,3 +260,10 @@ class Enemy(pygame.sprite.Sprite):
     def explode(self):
         """Trigger an explosion of the enemy sprite."""
         self._explode_animation = iter(load_png_sequence('enemy_explosion'))
+
+    def reset(self):
+        """Reset the enemy state back to its starting state."""
+        self._direction = START_DIRECTION
+        self._duration = START_DURATION
+        self._on_destroyed_called = False
+

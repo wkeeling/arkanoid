@@ -5,6 +5,8 @@ import pygame
 
 from arkanoid.event import receiver
 from arkanoid.rounds.round1 import Round1
+from arkanoid.sprites.edge import (DOOR_TOP_LEFT,
+                                   DOOR_TOP_RIGHT)
 from arkanoid.sprites.enemy import (Enemy,
                                     EnemyType)
 from arkanoid.sprites.ball import Ball
@@ -42,6 +44,10 @@ BRICK_SPEED_ADJUST = 0.5
 WALL_SPEED_ADJUST = 0.2
 # The speed the paddle moves.
 PADDLE_SPEED = 10
+# Minimum delay before opening a top door.
+DOOR_OPEN_DELAY_MIN = 10  # Frames
+# Maximum delay before opening a top door.
+DOOR_OPEN_DELAY_MAX = 20  # Frames
 # The main font.
 MAIN_FONT = 'emulogic.ttf'
 
@@ -297,6 +303,10 @@ class Game:
                 # Display the powerup.
                 self.sprites.append(powerup)
 
+        if not self.enemies and self.round.can_release_enemy():
+            # We can release the enemy into the game.
+            self._release_enemy()
+
     def on_enemy_collide(self, enemy, sprite):
         """Called by a sprite when it collides with an enemy.
 
@@ -311,6 +321,57 @@ class Game:
         """
         enemy.explode()
         self.score += 500
+
+    def _release_enemy(self):
+        """Open the top doors, bring the enemy sprites into the game, then
+        close the doors.
+        """
+        # Create the callbacks responsible for releasing the enemy sprites
+        # through the top doors.
+        def release(enemy):
+            enemy.rect.x, enemy.rect.y = -100, -100
+            # Randomise the door we use.
+            door = random.choice((DOOR_TOP_LEFT, DOOR_TOP_RIGHT))
+
+            def door_open(coords):
+                enemy.reset()
+                enemy.rect.topleft = coords
+                self.round.edges.top.close_door(door, delay=10)
+
+            # Add a random delay before opening the door.
+            delay = random.choice(range(DOOR_OPEN_DELAY_MIN,
+                                        DOOR_OPEN_DELAY_MAX))
+
+            # Trigger opening the door.
+            self.round.edges.top.open_door(door, delay=delay,
+                                           on_open=door_open)
+
+        collidable_sprites = []
+        collidable_sprites += self.round.edges
+        collidable_sprites += self.round.bricks
+
+        # for _ in range(self.round.num_enemies):
+        for _ in range(1):
+            # Create the sprite.
+            enemy_sprite = Enemy(EnemyType.cone,
+                                 self.paddle,
+                                 self.on_enemy_collide,
+                                 collidable_sprites,
+                                 on_destroyed=release)
+
+            # Tell the ball about it.
+            self.ball.add_collidable_sprite(enemy_sprite,
+                                            on_collide=self.on_enemy_collide)
+
+            # Keep track of the enemy sprites currently in the game.
+            self.enemies.append(enemy_sprite)
+
+            # Allow the sprite to be displayed.
+            self.sprites.append(enemy_sprite)
+
+            # Release it. Note that once an enemy is destroyed, it will
+            # call release() itself to respawn itself.
+            release(enemy_sprite)
 
     def _off_screen(self, ball):
         """Callback called by a ball when it goes offscreen.
@@ -481,26 +542,6 @@ class RoundStartState(BaseState):
         self.game.sprites += self.game.round.edges
         self.game.sprites += self.game.round.bricks
 
-        # TODO: enemies should be brought into the game at a predetermined
-        # time. This, plus the number and type of enemies is determined by
-        # the round.
-        def on_destroyed(enemy):
-            # TODO: prefer enemy.respawn() ?
-            enemy.rect.center = 300, 200
-
-        collidable_sprites = []
-        collidable_sprites += self.game.round.edges
-        collidable_sprites += self.game.round.bricks
-        enemy = Enemy(EnemyType.cone,
-                      self.game.paddle,
-                      self.game.on_enemy_collide,
-                      collidable_sprites,
-                      on_destroyed)
-        enemy.rect.center = 300, 200
-        self.game.enemies.append(enemy)
-
-        self.game.sprites += self.game.enemies
-
     def _configure_ball(self):
         """Configure the ball with all the objects from the current round
         that it could potentially collide with.
@@ -527,13 +568,6 @@ class RoundStartState(BaseState):
                 brick,
                 speed_adjust=BRICK_SPEED_ADJUST,
                 on_collide=self.game.on_brick_collide)
-
-        for enemy in self.game.enemies:
-            # Tell the ball about the enemies that it can collide with and
-            # destroy.
-            self.game.ball.add_collidable_sprite(
-                enemy,
-                on_collide=self.game.on_enemy_collide)
 
     def update(self):
         """Handle the sequence of events that happen at the beginning of a
@@ -658,12 +692,15 @@ class RoundEndState(BaseState):
         self._update_count = 0
 
     def update(self):
-        for enemy in self.game.enemies:
-            enemy.visible = False
         for ball in self.game.balls:
             ball.speed = 0
             ball.visible = False
+
         self.game.paddle.visible = False
+
+        for enemy in self.game.enemies:
+            enemy.visible = False
+        self.game.enemies.clear()
 
         # Pause for a short period after stopping the ball(s).
         if self._update_count > 120:

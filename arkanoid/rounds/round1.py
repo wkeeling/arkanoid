@@ -7,6 +7,7 @@ from arkanoid.rounds.base import (BaseRound,
 from arkanoid.rounds.round2 import Round2
 from arkanoid.sprites.brick import (Brick,
                                     BrickColour)
+from arkanoid.sprites.enemy import EnemyType
 from arkanoid.sprites.powerup import (CatchPowerUp,
                                       ExpandPowerUp,
                                       ExtraLifePowerUp,
@@ -32,6 +33,13 @@ class Round1(BaseRound):
 
         self.name = 'Round 1'
         self.next_round = Round2
+        self.enemy_type = EnemyType.cone
+        self.num_enemies = 3
+
+    def can_release_enemy(self):
+        """Release the enemy when half of the bricks have been destroyed."""
+        return True
+        # return self._bricks_destroyed >= self.bricks // 2
 
     def _create_background(self):
         background = pygame.Surface(self.screen.get_size())
