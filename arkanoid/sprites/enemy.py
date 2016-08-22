@@ -48,9 +48,8 @@ class Enemy(pygame.sprite.Sprite):
     enemy to change direction.
     """
 
-    def __init__(self, enemy_type, start_pos, paddle, on_destroyed):
+    def __init__(self, enemy_type, paddle, collidable_sprites, on_destroyed):
         super().__init__()
-        self.start_pos = start_pos
         self._paddle = paddle
         self._on_destroyed = on_destroyed
 
@@ -61,7 +60,7 @@ class Enemy(pygame.sprite.Sprite):
         # Set up the rect that defines the starting position of the sprite,
         # and which also defines its dimensions - which must be big enough
         # to fit the largest of the frames in the animation.
-        self.rect = pygame.Rect(start_pos, (width, height))
+        self.rect = pygame.Rect((0, 0), (width, height))
         self.image = None
 
         # The exploding animation when we've been struck by the ball or paddle.
@@ -74,6 +73,8 @@ class Enemy(pygame.sprite.Sprite):
         # The sprites in the game that cause the enemy sprite to change
         # direction when it collides with them.
         self._collidable_sprites = pygame.sprite.Group()
+        for sprite in collidable_sprites:
+            self._collidable_sprites.add(sprite)
 
         # The current direction of travel of the sprite.
         self._direction = 1.57  # Initialised in downwards direction.
@@ -110,19 +111,6 @@ class Enemy(pygame.sprite.Sprite):
                 max_height = rect.height
 
         return itertools.cycle(sequence), max_width, max_height
-
-    def add_collidable_sprites(self, *sprites):
-        """Add collidable sprites to this enemy.
-
-        The enemy sprite will change direction when it collides with a
-        collidable sprite.
-
-        Args:
-            sprites:
-                One or more collidable sprites.
-        """
-        for sprite in sprites:
-            self._collidable_sprites.add(sprite)
 
     def update(self):
         """Update the enemy's position, handling any collisions."""

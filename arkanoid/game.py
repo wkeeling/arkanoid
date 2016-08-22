@@ -490,15 +490,16 @@ class RoundStartState(BaseState):
         # the round.
         def on_destroyed(enemy):
             # TODO: prefer enemy.respawn() ?
-            enemy.rect.x, enemy.rect.y = enemy.start_pos
+            enemy.rect.center = 300, 200
 
-        self.game.enemies.append(
-            Enemy(EnemyType.cone, (200, 200), self.game.paddle, on_destroyed))
-        # self.game.enemies.append(Enemy(self.game, (300, 200), off_screen))
-        # self.game.enemies.append(Enemy(self.game, (400, 200), off_screen))
-        for enemy in self.game.enemies:
-            enemy.add_collidable_sprites(*self.game.round.edges)
-            enemy.add_collidable_sprites(*self.game.round.bricks)
+        collidable_sprites = []
+        collidable_sprites += self.game.round.edges
+        collidable_sprites += self.game.round.bricks
+        enemy = Enemy(EnemyType.cone, self.game.paddle, collidable_sprites,
+                      on_destroyed)
+        enemy.rect.center = 300, 200
+        self.game.enemies.append(enemy)
+
         self.game.sprites += self.game.enemies
 
     def _configure_ball(self):
