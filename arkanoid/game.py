@@ -276,10 +276,6 @@ class Game:
                 # Add this brick's value to the score.
                 self.score += brick.value
 
-            # Tell the balls that the brick has gone.
-            for ball in self.balls:
-                ball.remove_collidable_sprite(brick)
-
             # Tell the round that a brick has gone, so that it can decide
             # whether the round is completed.
             self.round.brick_destroyed()
