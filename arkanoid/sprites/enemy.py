@@ -48,9 +48,11 @@ class Enemy(pygame.sprite.Sprite):
     enemy to change direction.
     """
 
-    def __init__(self, enemy_type, paddle, collidable_sprites, on_destroyed):
+    def __init__(self, enemy_type, paddle, on_paddle_collide,
+                 collidable_sprites, on_destroyed):
         super().__init__()
         self._paddle = paddle
+        self._on_paddle_collide = on_paddle_collide
         self._on_destroyed = on_destroyed
 
         # Set up the sequence of images that will animate the enemy sprite.
@@ -125,24 +127,27 @@ class Enemy(pygame.sprite.Sprite):
             self.rect = self._calc_new_position()
 
             if self._area.contains(self.rect):
-                sprites_collided = pygame.sprite.spritecollide(
-                    self, [sprite for sprite in self._collidable_sprites if
-                           sprite.visible], None)
+                if pygame.sprite.spritecollide(self, [self._paddle], False):
+                    self._on_paddle_collide(self, self._paddle)
+                else:
+                    sprites_collided = pygame.sprite.spritecollide(
+                        self, [sprite for sprite in self._collidable_sprites if
+                               sprite.visible], None)
 
-                if sprites_collided:
-                    self._handle_collision(sprites_collided)
-                elif not self._duration:
-                    # The duration of the previous direction of movement
-                    # has elapsed, so calculate a new direction with a new
-                    # duration.
-                    self._direction = self._calc_direction()
-                    self._duration = self._update_count + random.choice(
-                        range(MIN_DURATION, MAX_DURATION))
-                elif self._update_count >= self._duration:
-                    # We've reached the maximum duration in the given
-                    # direction, so reset in order for the direction to be
-                    # modified next cycle.
-                    self._duration = 0
+                    if sprites_collided:
+                        self._handle_collision(sprites_collided)
+                    elif not self._duration:
+                        # The duration of the previous direction of movement
+                        # has elapsed, so calculate a new direction with a new
+                        # duration.
+                        self._direction = self._calc_direction()
+                        self._duration = self._update_count + random.choice(
+                            range(MIN_DURATION, MAX_DURATION))
+                    elif self._update_count >= self._duration:
+                        # We've reached the maximum duration in the given
+                        # direction, so reset in order for the direction to be
+                        # modified next cycle.
+                        self._duration = 0
             else:
                 # We've dropped off the bottom of the screen.
                 self._on_destroyed(self)
@@ -167,6 +172,13 @@ class Enemy(pygame.sprite.Sprite):
         return self.rect.move(offset_x, offset_y)
 
     def _handle_collision(self, sprites_collided):
+        """Handle a collision with one or more sprites and determine our
+        new direction.
+
+        Args:
+            sprites_collided:
+                A list of sprites that we have collided with.
+        """
         rects = [sprite.rect for sprite in sprites_collided]
         left, right, top, bottom = False, False, False, False
 

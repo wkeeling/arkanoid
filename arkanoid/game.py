@@ -491,7 +491,10 @@ class RoundStartState(BaseState):
         collidable_sprites = []
         collidable_sprites += self.game.round.edges
         collidable_sprites += self.game.round.bricks
-        enemy = Enemy(EnemyType.cone, self.game.paddle, collidable_sprites,
+        enemy = Enemy(EnemyType.cone,
+                      self.game.paddle,
+                      self.game.on_enemy_collide,
+                      collidable_sprites,
                       on_destroyed)
         enemy.rect.center = 300, 200
         self.game.enemies.append(enemy)
