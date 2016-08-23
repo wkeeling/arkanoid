@@ -4,6 +4,10 @@ Setup
 Project
 --------
 
+- Install virtualenvwrapper by following the instructions
+    https://virtualenvwrapper.readthedocs.io/en/latest/
+- Ensure you export the PROJECT_HOME environment variable to point at your arkanoid project folder
+
 - Create virtualenv 'arkanoid' using virtualenvwrapper:
     mkproject -p /usr/bin/python3 -f arkanoid
 
