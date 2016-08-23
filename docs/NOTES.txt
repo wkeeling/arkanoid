@@ -24,6 +24,9 @@ http://stackoverflow.com/questions/17869101/unable-to-install-pygame-using-pip)
 - Install system-wide build depedencies (Mac OSX):
     brew install sdl sdl_image sdl_mixer sdl_ttf smpeg portmidi 
     
+- Install Mercurial (Mac OSX)
+    brew install mercurial
+    
 - Clone the project out of GitHub and then run:
     pip install -r requirements.txt
 
