@@ -7,6 +7,7 @@ from arkanoid.rounds.base import (BaseRound,
                                   LIGHT_GREEN)
 from arkanoid.sprites.brick import (Brick,
                                     BrickColour)
+from arkanoid.sprites.enemy import EnemyType
 from arkanoid.sprites.powerup import (CatchPowerUp,
                                       DuplicatePowerUp,
                                       ExpandPowerUp,
@@ -32,6 +33,12 @@ class Round2(BaseRound):
         super().__init__(top_offset)
 
         self.name = 'Round 2'
+        self.enemy_type = EnemyType.pyramid
+        self.num_enemies = 3
+
+    def can_release_enemies(self):
+        """Release the enemies right at the start."""
+        return True
 
     def _create_background(self):
         background = pygame.Surface(self.screen.get_size())

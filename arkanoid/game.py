@@ -364,14 +364,13 @@ class Game:
             enemy:
                 The enemy sprite to release through one of the doors.
         """
-        # Keep the enemy on the screen but hide it.
-        enemy.rect.x, enemy.rect.y = self._screen.get_rect().center
-        enemy.visible = False
+        # Conceal the enemy until the door opens.
+        enemy.conceal()
         # Randomly select the door we use.
         door = random.choice((DOOR_TOP_LEFT, DOOR_TOP_RIGHT))
 
         def door_open(coords):
-            enemy.reset()
+            enemy.reset()  # Show the enemy and re-init its movement.
             enemy.rect.topleft = coords
 
         # Trigger opening the door.
@@ -669,9 +668,15 @@ class RoundRestartState(RoundStartState):
         # The new number of lives since restarting.
         self._lives = game.lives - 1
 
-        # Hide any enemy sprites.
+        # Conceal any enemy sprites.
         for enemy in self.game.enemies:
-            enemy.visible = False
+            enemy.conceal()
+
+        # Cancel any existing open door requests.
+        self.game.round.edges.top.cancel_open_door()
+
+        # Whether the enemies have been re-released for this round restart.
+        self._enemies_rereleased = False
 
     def _setup_sprites(self):
         """No need to setup the sprites again on round restart."""
@@ -690,8 +695,10 @@ class RoundRestartState(RoundStartState):
             self.game.lives = self._lives
         if self._update_count > 300:
             # Re-release any enemies that were previously active.
-            for enemy in self.game.enemies:
-                self.game.release(enemy)
+            if not self._enemies_rereleased:
+                for enemy in self.game.enemies:
+                    self.game.release(enemy)
+                self._enemies_rereleased = True
 
 
 class RoundEndState(BaseState):

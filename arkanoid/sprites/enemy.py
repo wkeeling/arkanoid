@@ -61,6 +61,10 @@ class Enemy(pygame.sprite.Sprite):
         self._on_destroyed = on_destroyed
         self._on_destroyed_called = False
 
+        # Define the area within which the sprite will move.
+        screen = pygame.display.get_surface()
+        self._area = screen.get_rect()
+
         # Set up the sequence of images that will animate the enemy sprite.
         self._animation, width, height = self._load_animation_sequence(
             enemy_type.value)
@@ -68,15 +72,11 @@ class Enemy(pygame.sprite.Sprite):
         # Set up the rect that defines the starting position of the sprite,
         # and which also defines its dimensions - which must be big enough
         # to fit the largest of the frames in the animation.
-        self.rect = pygame.Rect((0, 0), (width, height))
+        self.rect = pygame.Rect(self._area.center, (width, height))
         self.image = None
 
         # The exploding animation when we've been struck by the ball or paddle.
         self._explode_animation = None
-
-        # Define the area within which the sprite will move.
-        screen = pygame.display.get_surface()
-        self._area = screen.get_rect()
 
         # The sprites in the game that cause the enemy sprite to change
         # direction when it collides with them.
@@ -91,6 +91,9 @@ class Enemy(pygame.sprite.Sprite):
         # This is an update count value. When the update count reaches this
         # value, the direction will be recalculated.
         self._duration = START_DURATION
+
+        # When concealed, an enemy sprite is invisible and does not move.
+        self._concealed = False
 
         # Track the number of update cycles.
         self._update_count = 0
@@ -129,36 +132,40 @@ class Enemy(pygame.sprite.Sprite):
                 # Animate the sprite.
                 self.image, _ = next(self._animation)
 
-            # Calculate a new position based on the current direction.
-            self.rect = self._calc_new_position()
+            if not self._concealed:
+                # Calculate a new position based on the current direction.
+                self.rect = self._calc_new_position()
 
-            if self._area.contains(self.rect):
-                if pygame.sprite.spritecollide(self, [self._paddle], False):
-                    self._on_paddle_collide(self, self._paddle)
+                if self._area.contains(self.rect):
+                    if pygame.sprite.spritecollide(self, [self._paddle],
+                                                   False):
+                        self._on_paddle_collide(self, self._paddle)
+                    else:
+                        sprites_collided = pygame.sprite.spritecollide(
+                            self,
+                            [sprite for sprite in self._collidable_sprites if
+                             sprite.visible], None)
+
+                        if sprites_collided:
+                            self._handle_collision(sprites_collided)
+                        elif not self._duration:
+                            # The duration of the previous direction of
+                            # movement has elapsed, so calculate a new
+                            # direction with a new duration.
+                            self._direction = self._calc_direction()
+                            self._duration = (
+                                self._update_count + random.choice(
+                                    range(MIN_DURATION, MAX_DURATION)))
+                        elif self._update_count >= self._duration:
+                            # We've reached the maximum duration in the given
+                            # direction, so reset in order for the direction
+                            # to be modified next cycle.
+                            self._duration = 0
                 else:
-                    sprites_collided = pygame.sprite.spritecollide(
-                        self, [sprite for sprite in self._collidable_sprites if
-                               sprite.visible], None)
-
-                    if sprites_collided:
-                        self._handle_collision(sprites_collided)
-                    elif not self._duration:
-                        # The duration of the previous direction of movement
-                        # has elapsed, so calculate a new direction with a new
-                        # duration.
-                        self._direction = self._calc_direction()
-                        self._duration = self._update_count + random.choice(
-                            range(MIN_DURATION, MAX_DURATION))
-                    elif self._update_count >= self._duration:
-                        # We've reached the maximum duration in the given
-                        # direction, so reset in order for the direction to be
-                        # modified next cycle.
-                        self._duration = 0
-            else:
-                # We've dropped off the bottom of the screen.
-                if not self._on_destroyed_called:
-                    self._on_destroyed(self)
-                    self._on_destroyed_called = True
+                    # We've dropped off the bottom of the screen.
+                    if not self._on_destroyed_called:
+                        self._on_destroyed(self)
+                        self._on_destroyed_called = True
 
         self._update_count += 1
 
@@ -261,9 +268,15 @@ class Enemy(pygame.sprite.Sprite):
         """Trigger an explosion of the enemy sprite."""
         self._explode_animation = iter(load_png_sequence('enemy_explosion'))
 
+    def conceal(self):
+        """Hide the enemy sprite and stop it from moving and colliding."""
+        self.visible = False
+        self._concealed = True
+
     def reset(self):
         """Reset the enemy state back to its starting state."""
         self._direction = START_DIRECTION
         self._duration = START_DURATION
         self._on_destroyed_called = False
         self.visible = True
+        self._concealed = False

@@ -93,10 +93,14 @@ class TopEdge(pygame.sprite.Sprite):
                 self._door_close_animation = None
 
     def open_door(self, door, on_open):
-        """Open a door after a random delay and then call the on_open
-        callback before automatically closing the door after a short delay.
+        """Request to open the specified door.
 
-        See module level constants for controlling the random delay.
+        The door will not necessarily be opened immediately, but will open
+        after a short random delay. Once opened, the door will remain open
+        for a short delay and the on_open callback invoked, before the door
+        is automatically closed.
+
+        See module level constants for controlling the initial random delay.
 
         Args:
             door:
@@ -111,6 +115,18 @@ class TopEdge(pygame.sprite.Sprite):
         delay += self._update_count
         self._open_queue.append((delay, door, lambda: on_open(COORDS[door])))
         self._open_queue.sort(key=operator.itemgetter(0))
+
+    def cancel_open_door(self):
+        """Cancel any requests to open a door.
+
+        A request may have been made to open the door, but the door may not
+        yet be open, as a short random delay happens before the door is opened.
+        This method will cancel such requests.
+        """
+        self._open_queue.clear()
+        self._door_open_animation = None
+        self._door_close_animation = None
+        self.image, _ = load_png('edge_top')
 
 
 class SideEdge(pygame.sprite.Sprite):
