@@ -335,7 +335,7 @@ class Game:
             collidable_sprites += self.enemies
 
             # Create the sprite.
-            enemy_sprite = Enemy(EnemyType.cone,
+            enemy_sprite = Enemy(self.round.enemy_type,
                                  self.paddle,
                                  self.on_enemy_collide,
                                  collidable_sprites,
