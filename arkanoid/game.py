@@ -44,10 +44,6 @@ BRICK_SPEED_ADJUST = 0.5
 WALL_SPEED_ADJUST = 0.2
 # The speed the paddle moves.
 PADDLE_SPEED = 10
-# Minimum delay before opening a top door.
-DOOR_OPEN_DELAY_MIN = 60  # Frames
-# Maximum delay before opening a top door.
-DOOR_OPEN_DELAY_MAX = 600  # Frames
 # The main font.
 MAIN_FONT = 'emulogic.ttf'
 
@@ -361,7 +357,8 @@ class Game:
         This method will select a top door at random, open it and then
         release the enemy sprite through it before closing it.
 
-        Note that a random delay is added before the door is opened.
+        Note that the door does not open immediately. A random delay occurs
+        before the door opens.
 
         Args:
             enemy:
@@ -377,13 +374,8 @@ class Game:
             enemy.reset()
             enemy.rect.topleft = coords
 
-        # Add a random delay before opening the door.
-        delay = random.choice(range(DOOR_OPEN_DELAY_MIN,
-                                    DOOR_OPEN_DELAY_MAX))
-
         # Trigger opening the door.
-        self.round.edges.top.open_door(door, delay=delay,
-                                       on_open=door_open)
+        self.round.edges.top.open_door(door, on_open=door_open)
 
     def _off_screen(self, ball):
         """Callback called by a ball when it goes offscreen.
