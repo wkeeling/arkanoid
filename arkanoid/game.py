@@ -7,8 +7,7 @@ from arkanoid.event import receiver
 from arkanoid.rounds.round1 import Round1
 from arkanoid.sprites.edge import (DOOR_TOP_LEFT,
                                    DOOR_TOP_RIGHT)
-from arkanoid.sprites.enemy import (Enemy,
-                                    EnemyType)
+from arkanoid.sprites.enemy import (Enemy)
 from arkanoid.sprites.ball import Ball
 from arkanoid.sprites.paddle import (ExplodingState,
                                      Paddle,
