@@ -304,10 +304,10 @@ class Game:
             self._setup_enemies()
 
             # Release them into the game.
-            # Note that once an enemy is destroyed, it will call Game.release()
-            # itself to respawn itself.
+            # Note that once an enemy is destroyed, it will call
+            # Game.release_enemy() itself to respawn itself.
             for enemy in self.enemies:
-                self.release(enemy)
+                self.release_enemy(enemy)
 
     def on_enemy_collide(self, enemy, sprite):
         """Called by a sprite when it collides with an enemy.
@@ -339,11 +339,7 @@ class Game:
                                  self.paddle,
                                  self.on_enemy_collide,
                                  collidable_sprites,
-                                 on_destroyed=self.release)
-
-            # Tell the ball about it.
-            self.ball.add_collidable_sprite(enemy_sprite,
-                                            on_collide=self.on_enemy_collide)
+                                 on_destroyed=self.release_enemy)
 
             # Keep track of the enemy sprites currently in the game.
             self.enemies.append(enemy_sprite)
@@ -351,7 +347,7 @@ class Game:
             # Allow the sprite to be displayed.
             self.sprites.append(enemy_sprite)
 
-    def release(self, enemy):
+    def release_enemy(self, enemy):
         """Release an enemy through one of the top doors.
 
         This method will select a top door at random, open it and then
@@ -369,9 +365,16 @@ class Game:
         # Randomly select the door we use.
         door = random.choice((DOOR_TOP_LEFT, DOOR_TOP_RIGHT))
 
+        def on_enemy_collide_ball(enemy, ball):
+            self.on_enemy_collide(enemy, ball)
+            ball.remove_collidable_sprite(enemy)
+
         def door_open(coords):
             enemy.reset()  # Show the enemy and re-init its movement.
             enemy.rect.topleft = coords
+            # Tell the ball about it.
+            self.ball.add_collidable_sprite(enemy,
+                                            on_collide=on_enemy_collide_ball)
 
         # Trigger opening the door.
         self.round.edges.top.open_door(door, on_open=door_open)
@@ -697,7 +700,7 @@ class RoundRestartState(RoundStartState):
             # Re-release any enemies that were previously active.
             if not self._enemies_rereleased:
                 for enemy in self.game.enemies:
-                    self.game.release(enemy)
+                    self.game.release_enemy(enemy)
                 self._enemies_rereleased = True
 
 

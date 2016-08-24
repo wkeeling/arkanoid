@@ -134,6 +134,16 @@ class Ball(pygame.sprite.Sprite):
         self._collision_data[sprite] = (
             bounce_strategy, speed_adjust, on_collide)
 
+    def remove_collidable_sprite(self, sprite):
+        """Remove a sprite so that the ball can no longer collide with it.
+
+        Args:
+            sprite:
+                The collidable sprite to remove.
+        """
+        self._collidable_sprites.remove(sprite)
+        del self._collision_data[sprite]
+
     def remove_all_collidable_sprites(self):
         """Remove all collidable sprites from the ball."""
         self._collidable_sprites.empty()

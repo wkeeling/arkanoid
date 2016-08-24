@@ -266,7 +266,8 @@ class Enemy(pygame.sprite.Sprite):
 
     def explode(self):
         """Trigger an explosion of the enemy sprite."""
-        self._explode_animation = iter(load_png_sequence('enemy_explosion'))
+        if not self._explode_animation:
+            self._explode_animation = iter(load_png_sequence('enemy_explosion'))
 
     def conceal(self):
         """Hide the enemy sprite and stop it from moving and colliding."""
