@@ -36,6 +36,8 @@ http://stackoverflow.com/questions/17869101/unable-to-install-pygame-using-pip)
 NOTE: OSX El Capitan cannot run pygame inside a virtualenv. So need to do
 the following as sudo after brew installing python3 system-wide.
 
+- May need to do: sudo apt-get install python3-devel
+
 - Clone the project out of GitHub and then run:
     pip install -r requirements.txt
 

@@ -92,8 +92,8 @@ class Enemy(pygame.sprite.Sprite):
         # value, the direction will be recalculated.
         self._duration = START_DURATION
 
-        # When concealed, an enemy sprite is invisible and does not move.
-        self._concealed = False
+        # When frozen, an enemy sprite does not move.
+        self.freeze = False
 
         # Track the number of update cycles.
         self._update_count = 0
@@ -132,7 +132,7 @@ class Enemy(pygame.sprite.Sprite):
                 # Animate the sprite.
                 self.image, _ = next(self._animation)
 
-            if not self._concealed:
+            if not self.freeze:
                 # Calculate a new position based on the current direction.
                 self.rect = self._calc_new_position()
 
@@ -267,12 +267,8 @@ class Enemy(pygame.sprite.Sprite):
     def explode(self):
         """Trigger an explosion of the enemy sprite."""
         if not self._explode_animation:
-            self._explode_animation = iter(load_png_sequence('enemy_explosion'))
-
-    def conceal(self):
-        """Hide the enemy sprite and stop it from moving and colliding."""
-        self.visible = False
-        self._concealed = True
+            self._explode_animation = iter(
+                load_png_sequence('enemy_explosion'))
 
     def reset(self):
         """Reset the enemy state back to its starting state."""
@@ -280,4 +276,4 @@ class Enemy(pygame.sprite.Sprite):
         self._duration = START_DURATION
         self._on_destroyed_called = False
         self.visible = True
-        self._concealed = False
+        self.freeze = False

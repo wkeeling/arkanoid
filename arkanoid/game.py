@@ -360,7 +360,8 @@ class Game:
                 The enemy sprite to release through one of the doors.
         """
         # Conceal the enemy until the door opens.
-        enemy.conceal()
+        enemy.freeze = True
+        enemy.visible = False
         # Randomly select the door we use.
         door = random.choice((DOOR_TOP_LEFT, DOOR_TOP_RIGHT))
 
@@ -672,7 +673,8 @@ class RoundRestartState(RoundStartState):
 
         # Conceal any enemy sprites.
         for enemy in self.game.enemies:
-            enemy.conceal()
+            enemy.freeze = True
+            enemy.visible = False
 
         # Cancel any existing open door requests.
         self.game.round.edges.top.cancel_open_door()
