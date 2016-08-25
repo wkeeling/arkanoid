@@ -113,6 +113,12 @@ class Enemy(pygame.sprite.Sprite):
         # value, the direction will be recalculated.
         self._duration = START_DURATION
 
+        # The enemy sprite is in contact mode after it collides with another
+        # sprite that causes it to change direction (rather than destroy it).
+        # It remains in contact mode for a number of cycles after the last
+        # collision. This attribute tracks the last cycle a contact was made.
+        self._last_contact = 0
+
         # When frozen, an enemy sprite does not move.
         self.freeze = False
 
@@ -168,20 +174,26 @@ class Enemy(pygame.sprite.Sprite):
                              sprite.visible], None)
 
                         if sprites_collided:
-                            self._handle_collision(sprites_collided)
-                        elif not self._duration:
-                            # The duration of the previous direction of
-                            # movement has elapsed, so calculate a new
-                            # direction with a new duration.
-                            self._direction = self._calc_direction()
-                            self._duration = (
-                                self._update_count + random.choice(
-                                    range(MIN_DURATION, MAX_DURATION)))
-                        elif self._update_count >= self._duration:
-                            # We've reached the maximum duration in the given
-                            # direction, so reset in order for the direction
-                            # to be modified next cycle.
-                            self._duration = 0
+                            self._last_contact = self._update_count
+                            self._direction = self._calc_direction_collision(
+                                sprites_collided)
+                        elif self._update_count > self._last_contact + 30:
+                            # Last contact not made for past 30 updates, so
+                            # recalculate direction using free movement
+                            # algorithm.
+                            if not self._duration:
+                                # The duration of the previous direction of
+                                # free movement has elapsed, so calculate a new
+                                # direction with a new duration.
+                                self._direction = self._calc_direction()
+                                self._duration = (
+                                    self._update_count + random.choice(
+                                        range(MIN_DURATION, MAX_DURATION)))
+                            elif self._update_count >= self._duration:
+                                # We've reached the maximum duration in the
+                                # given direction, so reset in order for the
+                                # direction to be modified next cycle.
+                                self._duration = 0
                 else:
                     # We've dropped off the bottom of the screen.
                     if not self._on_destroyed_called:
@@ -207,81 +219,84 @@ class Enemy(pygame.sprite.Sprite):
 
         return self.rect.move(offset_x, offset_y)
 
-    def _handle_collision(self, sprites_collided):
-        """Handle a collision with one or more sprites and determine our
-        new direction.
+    def _calc_direction_collision(self, sprites_collided):
+        """Calculate a new direction based upon the sprites we collided with.
 
         Args:
             sprites_collided:
                 A list of sprites that we have collided with.
+        Returns:
+            The direction in radians.
         """
+        # Map out the sides of the object, excluding the corners. Here we use
+        # 5 pixel wide rectangles to represent each side.
+        top = pygame.Rect(self.rect.left + 5, self.rect.top,
+                          self.rect.width - 10, 5)
+        left = pygame.Rect(self.rect.left, self.rect.top + 5, 5,
+                           self.rect.height - 10)
+        bottom = pygame.Rect(self.rect.left + 5, self.rect.top +
+                             self.rect.height - 5, self.rect.width - 10, 5)
+        right = pygame.Rect(self.rect.left + self.rect.width - 5,
+                            self.rect.top + 5, 5, self.rect.height - 10)
+
         rects = [sprite.rect for sprite in sprites_collided]
-        left, right, top, bottom = False, False, False, False
+        cleft, cright, ctop, cbottom = False, False, False, False
 
         for rect in rects:
             # Work out which of our sides are in contact.
-            left = (left or rect.collidepoint(
-                self.rect.topleft) or rect.collidepoint(
-                self.rect.midleft) or rect.collidepoint(
-                self.rect.bottomleft))
+            cleft = cleft or left.colliderect(rect)
+            cright = cright or right.colliderect(rect)
+            ctop = ctop or top.colliderect(rect)
+            cbottom = cbottom or bottom.colliderect(rect)
 
-            right = (right or rect.collidepoint(
-                self.rect.topright) or rect.collidepoint(
-                self.rect.midright) or rect.collidepoint(
-                self.rect.bottomright))
-
-            top = (top or rect.collidepoint(
-                self.rect.topleft) or rect.collidepoint(
-                self.rect.midtop) or rect.collidepoint(
-                self.rect.topright))
-
-            bottom = (bottom or rect.collidepoint(
-                self.rect.bottomleft) or rect.collidepoint(
-                self.rect.midbottom) or rect.collidepoint(
-                self.rect.bottomright))
+        direction = self._direction
 
         # Work out the new direction based on what we've collided with.
-        self._direction = self._calc_direction(left, right, top, bottom)
+        if cleft and cright and ctop and cbottom:
+            # When all 4 sides collide, try to send back in direction
+            # from which originated. Should probably freeze instead.
+            direction = -direction
+        elif cleft and cright and cbottom:
+            direction = math.pi + HALF_PI
+        elif cleft and cright and ctop:
+            direction = HALF_PI
+        elif cleft and cbottom:
+            direction = 0
+        elif cright and cbottom:
+            direction = math.pi
+        elif cbottom:
+            if direction not in (0, math.pi):
+                direction = 0
+        else:
+            # Any other combination causes a downward direction. This may
+            # include a corner collision - as we don't detect those.
+            direction = math.pi - HALF_PI
+            if cleft or cright:
+                # Prevent the sprite from getting 'stuck' to walls.
+                if self._update_count % 60 == 0:
+                    if cright:
+                        direction = math.pi
+                    else:
+                        direction = 0
 
-    def _calc_direction(self, *args):
-        """Calculate the direction of travel.
+        return direction
 
-        Unless the sprite has collided (indicated by passing 4 booleans
-        to this method), the direction of travel will tend towards the
-        paddle.
-
-        Args:
-            args:
-                Pass 4 booleans here to indicate which (if any) sides of the
-                sprite are in collision (True for collision). This will
-                affect the calculated direction.
+    def _calc_direction(self):
+        """Calculate the direction of travel when the sprite is moving
+        freely (has not collided).
 
         Returns:
             The direction in radians.
         """
         direction = self._direction
 
-        if args:
-            left, right, top, bottom = args
-            # Calculate the direction based on any collision.
-            if left and right and top:
-                direction = HALF_PI
-            elif left and right and bottom:
-                direction = math.pi + HALF_PI
-            elif left:
-                direction = 0
-            elif right:
-                direction = math.pi
+        # No collision, so calculate the direction towards the paddle
+        # but with some randomness applied.
+        paddle_x, paddle_y = self._paddle.rect.center
+        direction = math.atan2(paddle_y - self.rect.y,
+                               paddle_x - self.rect.x)
 
-            direction += random.uniform(-0.05, 0.05)
-        else:
-            # No collision, so calculate the direction towards the paddle
-            # but with some randomness applied.
-            paddle_x, paddle_y = self._paddle.rect.center
-            direction = math.atan2(paddle_y - self.rect.y,
-                                   paddle_x - self.rect.x)
-
-            direction += random.uniform(-RANDOM_RANGE, RANDOM_RANGE)
+        direction += random.uniform(-RANDOM_RANGE, RANDOM_RANGE)
 
         return direction
 
