@@ -5,9 +5,7 @@ import pygame
 
 from arkanoid.event import receiver
 from arkanoid.rounds.round1 import Round1
-from arkanoid.sprites.edge import (DOOR_TOP_LEFT,
-                                   DOOR_TOP_RIGHT)
-from arkanoid.sprites.enemy import (Enemy)
+from arkanoid.sprites.enemy import Enemy
 from arkanoid.sprites.ball import Ball
 from arkanoid.sprites.paddle import (ExplodingState,
                                      Paddle,
@@ -322,6 +320,9 @@ class Game:
         """
         enemy.explode()
         self.score += 500
+        # Temporarily remove the enemy sprites from the balls to prevent
+        # the balls from colliding with the explosion. The enemy sprites
+        # are re-added to the balls when they are re-released.
         for ball in self.balls:
             ball.remove_collidable_sprite(enemy)
 
@@ -351,11 +352,9 @@ class Game:
     def release_enemy(self, enemy):
         """Release an enemy through one of the top doors.
 
-        This method will select a top door at random, open it and then
-        release the enemy sprite through it before closing it.
-
-        Note that the door does not open immediately. A random delay occurs
-        before the door opens.
+        Note that this method runs asynchronously and the enemy is not
+        necessarily released immediately, but after a short random delay.
+        The door from which the enemy is released is selected at random.
 
         Args:
             enemy:
@@ -364,9 +363,8 @@ class Game:
         # Conceal the enemy until the door opens.
         enemy.freeze = True
         enemy.visible = False
-        # Randomly select the door we use.
-        door = random.choice((DOOR_TOP_LEFT, DOOR_TOP_RIGHT))
 
+        # Callback called when the door is opened.
         def door_open(coords):
             enemy.reset()  # Show the enemy and re-init its movement.
             enemy.rect.topleft = coords
@@ -376,7 +374,7 @@ class Game:
                                            on_collide=self.on_enemy_collide)
 
         # Trigger opening the door.
-        self.round.edges.top.open_door(door, on_open=door_open)
+        self.round.edges.top.open_door(door_open)
 
     def _off_screen(self, ball):
         """Callback called by a ball when it goes offscreen.

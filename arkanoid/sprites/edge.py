@@ -92,24 +92,25 @@ class TopEdge(pygame.sprite.Sprite):
             except StopIteration:
                 self._door_close_animation = None
 
-    def open_door(self, door, on_open):
-        """Request to open the specified door.
+    def open_door(self, on_open):
+        """Request to open one of the two doors in the top edge.
 
-        The door will not necessarily be opened immediately, but will open
-        after a short random delay. Once opened, the door will remain open
-        for a short delay and the on_open callback invoked, before the door
-        is automatically closed.
+        The door to be opened will be selected at random. The door will not
+        necessarily be opened immediately, but will open after a short delay
+        randomly selected. Once opened, the door will remain open for a short
+        fixed delay and the on_open callback invoked, before the door is
+        automatically closed.
 
         See module level constants for controlling the initial random delay.
 
         Args:
-            door:
-                The door to open.
             on_open:
                 A callback that will be invoked after the door has opened
                 and before it is closed. The callback accepts a single
                 argument: a 2-tuple of the x,y coordinates of the door.
         """
+        # Randomly select the door we use.
+        door = random.choice((DOOR_TOP_LEFT, DOOR_TOP_RIGHT))
         # Add a random delay before opening the door.
         delay = random.choice(range(DOOR_OPEN_DELAY_MIN, DOOR_OPEN_DELAY_MAX))
         delay += self._update_count
