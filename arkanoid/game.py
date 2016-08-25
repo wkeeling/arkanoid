@@ -529,10 +529,6 @@ class RoundStartState(BaseState):
         self._ready_pos = (h_centre_pos(self._ready),
                            self._caption_pos[1] + 50)
 
-        # Deactivate any active powerup.
-        if self.game.active_powerup:
-            self.game.active_powerup.deactivate()
-
         # Whether we've reset the paddle
         self._paddle_reset = False
 
@@ -710,6 +706,11 @@ class RoundEndState(BaseState):
     """
     def __init__(self, game):
         super().__init__(game)
+
+        # Deactivate any active powerup.
+        if self.game.active_powerup:
+            self.game.active_powerup.deactivate()
+            self.game.active_powerup = None
 
         self._update_count = 0
 
