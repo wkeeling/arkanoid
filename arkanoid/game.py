@@ -722,6 +722,7 @@ class RoundEndState(BaseState):
         for enemy in self.game.enemies:
             enemy.visible = False
         self.game.enemies.clear()
+        self.game.round.edges.top.cancel_open_door()
 
         # Pause for a short period after stopping the ball(s).
         if self._update_count > 120:
