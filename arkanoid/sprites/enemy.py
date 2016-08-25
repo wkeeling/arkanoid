@@ -34,8 +34,7 @@ HALF_PI = math.pi / 2
 
 class EnemyType(enum.Enum):
 
-    """Enumeration of enemy types to their image sequence prefix and
-    score value.
+    """Enumeration of enemy types to their image sequence prefix.
     """
 
     cone = 'enemy_cone'
@@ -45,16 +44,38 @@ class EnemyType(enum.Enum):
 
 
 class Enemy(pygame.sprite.Sprite):
-    """An enemy is released from the doors in the top edge and travels
+    """An enemy is released from the doors in the top edge and slowly travels
     downwards towards the paddle.
 
-    It can be told about other sprites it can collide with via
-    add_collidable_sprite(). Colliding with another sprite will cause the
-    enemy to change direction.
+    Its objective is to act as an obstruction and distraction. Enemies will
+    increase the game score when destroyed.
+
+    It is destroyed when hit by the ball, by a laser bullet or by the paddle.
     """
 
     def __init__(self, enemy_type, paddle, on_paddle_collide,
                  collidable_sprites, on_destroyed):
+        """
+        Initialise a new enemy sprite.
+
+        Args:
+            enemy_type:
+                The type of enemy which determines its appearance.
+            paddle:
+                The paddle instance.
+            on_paddle_collide:
+                Callback invoked when the enemy collides with the paddle. It
+                takes 2 arguments: the enemy and the paddle.
+            collidable_sprites:
+                A list of sprites that can collide with the enemy. These
+                sprites do not destroy the enemy, but cause the enemy to
+                change direction.
+            on_destroyed:
+                Callback invoked when the enemy is destroyed, either by
+                another sprite or when it falls off the bottom of the screen.
+                It takes a single argument: the enemy sprite that's been
+                destroyed.
+        """
         super().__init__()
         self._paddle = paddle
         self._on_paddle_collide = on_paddle_collide
