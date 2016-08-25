@@ -59,7 +59,7 @@ class Round1(BaseRound):
         powerup_classes = []
         powerup_classes.extend([CatchPowerUp] * 3)
         powerup_classes.extend([ExpandPowerUp] * 4)
-        powerup_classes.extend([ExtraLifePowerUp] * 2)
+        powerup_classes.extend([ExtraLifePowerUp] * 3)
         powerup_classes.extend([SlowBallPowerUp] * 2)
         powerup_classes.extend([LaserPowerUp] * 4)
         random.shuffle(powerup_classes)
