@@ -322,6 +322,8 @@ class Game:
         """
         enemy.explode()
         self.score += 500
+        for ball in self.balls:
+            ball.remove_collidable_sprite(enemy)
 
     def _setup_enemies(self):
         """Set up the enemy sprites ready for release into the game."""
@@ -365,16 +367,13 @@ class Game:
         # Randomly select the door we use.
         door = random.choice((DOOR_TOP_LEFT, DOOR_TOP_RIGHT))
 
-        def on_enemy_collide_ball(enemy, ball):
-            self.on_enemy_collide(enemy, ball)
-            ball.remove_collidable_sprite(enemy)
-
         def door_open(coords):
             enemy.reset()  # Show the enemy and re-init its movement.
             enemy.rect.topleft = coords
-            # Tell the ball about it.
-            self.ball.add_collidable_sprite(enemy,
-                                            on_collide=on_enemy_collide_ball)
+            # Tell the ball(s) about it.
+            for ball in self.balls:
+                ball.add_collidable_sprite(enemy,
+                                           on_collide=self.on_enemy_collide)
 
         # Trigger opening the door.
         self.round.edges.top.open_door(door, on_open=door_open)
