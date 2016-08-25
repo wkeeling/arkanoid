@@ -38,7 +38,7 @@ class Round1(BaseRound):
 
     def can_release_enemies(self):
         """Release the enemies when half of the bricks have been destroyed."""
-        return self._bricks_destroyed >= len(self.bricks) // 2
+        return self._bricks_destroyed >= len(self.bricks) // 4
 
     def _create_background(self):
         background = pygame.Surface(self.screen.get_size())
