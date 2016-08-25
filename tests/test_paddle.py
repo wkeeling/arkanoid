@@ -239,7 +239,7 @@ class TestLaserState(TestCase):
         state.update()
 
         self.assertEqual(state._from_laser, False)
-        mock_receiver.unregister_handler.assert_caleld_once_with(state._fire)
+        mock_receiver.unregister_handler.assert_called_once_with(state._fire)
         mock_on_exit.assert_called_once_with()
 
     @patch('arkanoid.sprites.paddle._PaddlePulsator')
