@@ -125,6 +125,24 @@ class TestBall(TestCase):
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
+    def test_remove_collidable_sprite_no_exist(self, mock_pygame,
+                                               mock_load_png):
+        mock_load_png.return_value = Mock(), Mock()
+        mock_sprite1, mock_sprite2, mock_bounce, mock_on_collide = (
+            Mock(), Mock(), Mock(), Mock())
+
+        ball = Ball((100, 100), 2.36, 8)
+
+        ball.add_collidable_sprite(mock_sprite2, bounce_strategy=mock_bounce,
+                                   speed_adjust=0.05,
+                                   on_collide=mock_on_collide)
+        ball.remove_collidable_sprite(mock_sprite1)  # Does not exist.
+
+        ball._collidable_sprites.remove.assert_called_once_with(mock_sprite1)
+        self.assertEqual(len(ball._collision_data), 1)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
     def test_remove_all_collidable_sprite(self, mock_pygame, mock_load_png):
         mock_load_png.return_value = Mock(), Mock()
         mock_sprite1, mock_sprite2, mock_bounce, mock_on_collide = (

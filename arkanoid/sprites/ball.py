@@ -137,12 +137,18 @@ class Ball(pygame.sprite.Sprite):
     def remove_collidable_sprite(self, sprite):
         """Remove a sprite so that the ball can no longer collide with it.
 
+        If the ball does not already know about the sprite, this method will
+        just return without doing anything.
+
         Args:
             sprite:
                 The collidable sprite to remove.
         """
         self._collidable_sprites.remove(sprite)
-        del self._collision_data[sprite]
+        try:
+            del self._collision_data[sprite]
+        except KeyError:
+            pass
 
     def remove_all_collidable_sprites(self):
         """Remove all collidable sprites from the ball."""
