@@ -70,7 +70,7 @@ class BaseRound:
         return self._bricks_destroyed >= len(self.bricks)
 
     def brick_destroyed(self):
-        """Conveys to the Round that a brick has been destroyed in the game."""
+        """Conveys to the round that a brick has been destroyed in the game."""
         self._bricks_destroyed += 1
 
     def can_release_enemies(self):
@@ -81,6 +81,41 @@ class BaseRound:
         """
         raise NotImplementedError('Subclasses must implement '
                                   'can_release_enemies()')
+
+    def _blit_brick(self, brick, x, y):
+        """Blits the specified brick onto the game area by using a
+        relative coordinate for the position of the brick.
+
+        This is a convenience method that concrete round subclasses can use
+        when setting up bricks. It assumes that the game area (area within
+        the edges) is split into a grid where each grid square corresponds to
+        one brick. The top left most brick is considered position (0, 0).
+
+        This allows clients to avoid having to work with actual screen
+        positions.
+
+        Note that this method will modify the brick's rect attribute once
+        the brick has been set.
+
+        Args:
+            brick:
+                The brick instance to position on the grid.
+            x:
+                The x position on the grid.
+            y:
+                The y position on the grid.
+        Returns:
+            The blitted brick.
+        """
+        offset_x = (brick.rect.width + 1) * x
+        offset_y = (brick.rect.height + 1) * y
+
+        rect = self.screen.blit(brick.image, (self.edges.left.rect.x +
+                                self.edges.left.rect.width + offset_x,
+                                self.edges.top.rect.y +
+                                self.edges.top.rect.height + offset_y))
+        brick.rect = rect
+        return brick
 
     def _create_background(self):
         """Create the background surface for the round.

@@ -19,8 +19,7 @@ from arkanoid.sprites.powerup import (CatchPowerUp,
 class Round2(BaseRound):
     """Initialises the background, brick layout and powerups for round two."""
 
-    # The offset from the top edge to where the bottom row of bricks starts.
-    _BOTTOM_ROW_VERTICAL_OFFSET = 475
+    _BRICK_START_ROW = 16
 
     def __init__(self, top_offset):
         """Initialise round 2.
@@ -57,7 +56,6 @@ class Round2(BaseRound):
                                    BrickColour.red,
                                    BrickColour.blue, BrickColour.pink,
                                    BrickColour.yellow))
-        left = self.edges.left.rect.width
         bricks = []
         first_row_powerups = self._create_first_row_powerups()
         remaining_powerups = self._create_remaining_powerups()
@@ -71,30 +69,30 @@ class Round2(BaseRound):
                                              len(remaining_powerups)),
                                              remaining_powerups))
 
-        count = 0
+        x, count = 0, 0
         for i in reversed(range(13)):
             # Create the first row brick.
             powerup = first_row_powerup_indexes.get(i)
-            top = self._BOTTOM_ROW_VERTICAL_OFFSET
+            y = self._BRICK_START_ROW
             if i > 0:
                 brick = Brick(BrickColour.silver, 2, powerup_cls=powerup)
             else:
-                brick = Brick(BrickColour.red, 2, powerup_cls=powerup)
+                brick = Brick(BrickColour.red, 2, powerup_cls=SlowBallPowerUp)
 
-            bricks.append(self._blit_brick(brick, left, top))
+            bricks.append(self._blit_brick(brick, x, y))
 
             colour = next(colours)
             for _ in range(i):
                 # Create a vertical column of bricks above the first.
                 powerup = remaining_powerup_indexes.get(count)
-                top = top - brick.rect.height
+                y -= 1
                 brick = Brick(colour, 2, powerup_cls=powerup)
-                bricks.append(self._blit_brick(brick, left, top))
+                bricks.append(self._blit_brick(brick, x, y))
                 count += 1
 
-            left += brick.rect.width+1
+            x += 1
 
-        return bricks
+        return pygame.sprite.Group(*bricks)
 
     def _create_first_row_powerups(self):
         # Create slow ball and catch for the first row, given the
@@ -116,8 +114,3 @@ class Round2(BaseRound):
         remaining_powerups.extend([DuplicatePowerUp] * 2)
         random.shuffle(remaining_powerups)
         return remaining_powerups
-
-    def _blit_brick(self, brick, left, top):
-        rect = self.screen.blit(brick.image, (left, top))
-        brick.rect = rect
-        return brick

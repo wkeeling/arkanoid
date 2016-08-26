@@ -18,9 +18,6 @@ from arkanoid.sprites.powerup import (CatchPowerUp,
 class Round1(BaseRound):
     """Initialises the background, brick layout and powerups for round one."""
 
-    # The top value where the bottom row of bricks starts.
-    _BOTTOM_ROW_START_TOP = 350
-
     def __init__(self, top_offset):
         """Initialise round 1.
 
@@ -52,8 +49,8 @@ class Round1(BaseRound):
         Returns:
             A pygame.sprite.Group of bricks.
         """
-        colours = (BrickColour.green, BrickColour.blue, BrickColour.yellow,
-                   BrickColour.red, BrickColour.silver)
+        colours = (BrickColour.silver, BrickColour.red, BrickColour.yellow,
+                   BrickColour.blue, BrickColour.green)
 
         # Create the distribution of powerup classes.
         powerup_classes = []
@@ -88,20 +85,13 @@ class Round1(BaseRound):
         return pygame.sprite.Group(*bricks)
 
     def _position_bricks(self, bricks):
-        top = self._BOTTOM_ROW_START_TOP
-        colour, rect = None, None
+        x, y, last_colour = 0, 3, None
 
         for brick in bricks:
-            if colour != brick.colour:
-                colour = brick.colour
-                left = self.edges.left.rect.width
-                if rect:
-                    top -= rect.height
-
-            if brick.visible:
-                # Each layer consists of 13 bricks added horizontally.
-                rect = self.screen.blit(brick.image, (left, top))
-                # Update the brick's rect with the new position
-                brick.rect = rect
-
-            left += rect.width+1
+            if brick.colour != last_colour:
+                last_colour = brick.colour
+                x = 0
+                y += 1
+            else:
+                x += 1
+            self._blit_brick(brick, x, y)
