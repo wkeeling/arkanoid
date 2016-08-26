@@ -25,11 +25,13 @@ def load_png(filename):
                             filename)
     if not os.path.exists(fullpath):
         raise FileNotFoundError('File not found: {}'.format(fullpath))
+
     image = pygame.image.load(fullpath)
     if image.get_alpha is None:
         image = image.convert()
     else:
         image = image.convert_alpha()
+
     return image, image.get_rect()
 
 
@@ -53,8 +55,8 @@ def load_png_sequence(filename_prefix):
     Returns:
         A list of 2-tuples of image/rect.
     """
-    count = 1
-    sequence = []
+    count, sequence = 1, []
+
     while True:
         filename = '%s_%s.png' % (filename_prefix, count)
         try:
@@ -64,6 +66,7 @@ def load_png_sequence(filename_prefix):
             break
         else:
             count += 1
+
     return sequence
 
 

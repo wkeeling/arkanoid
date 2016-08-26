@@ -12,49 +12,48 @@ LOG = logging.getLogger(__name__)
 class Brick(pygame.sprite.Sprite):
     """A Brick is hit and destroyed by the ball."""
 
-    def __init__(self, colour, value, destroy_after=1, powerup_cls=None):
-        """Initialise a new Brick in the specified colour.
+    def __init__(self, brick_colour, round_no, powerup_cls=None):
+        """Initialise a new Brick using the specified BrickColour enum.
 
-        When a Brick is initialised with the specified colour, a file named
-        'brick_<colour>.png' will be loaded from the graphics folder and must
-        exist. In addition, a Brick will also attempt to load an image
-        sequence named  'brick_<colour>_N.png' from the graphics folder
-        which will be used to animate the brick when Brick.animate() is called.
-        This image sequence is optional, and if it does not exist, then
-        triggering Brick.animate() will have no effect.
+        When a brick is initialised with the specified BrickColour, a file
+        named 'brick_<colour>.png' will be loaded from the graphics folder -
+        where <colour> corresponds to the name attribute of the BrickColour
+        enum. That file must exist.
 
-        Optionally specify the number of strikes by the ball that it takes to
-        destroy the brick (default 1) via the destroy_after attribute. Also
-        optionally specify the class of a powerup which will fall from the
-        brick when the brick is struck by the ball - via the powerup_cls
-        attribute.
+        In addition, the initialiser will also attempt  to load an image
+        sequence named  'brick_<colour>_N.png' from the  graphics folder
+        which will be used to animate the brick when  Brick.animate() is
+        called. This image sequence is optional, and if  the files do not
+        exist, then triggering Brick.animate() will have no effect.
+
+        The round number must also be supplied which is used to generate the
+        score value for certain brcks.
+
+        Lastly, optionally specify the class of a powerup which will fall
+        from the brick when the brick is struck by the ball - via the
+        powerup_cls attribute.
 
         Args:
-            colour:
-                The colour of the brick. Note that a png file named
-                'brick_<colour>.png' must exist in the graphics folder.
-            value:
-                The amount to add to the score when this brick is destroyed.
-            destroy_after:
-                The number of strikes by the ball necessary to destroy the
-                brick (default 1).
+            brick_colour:
+                A BrickColour enum instance. A png file named
+                'brick_<colour>.png' must exist in the graphics folder where
+                <colour> corresponds to the enum name attribute.
+            round_no:
+                The current round number used to generate the brick score
+                value.
             powerup_cls:
                 Optional class of a PowerUp that will be used when the ball
                 strikes this brick (default None).
         """
         super().__init__()
-        self.colour = colour
-        self.value = value
+        self._brick_colour = brick_colour
         # Load the brick graphic.
-        self.image, self.rect = load_png('brick_{}'.format(colour))
+        self.image, self.rect = load_png('brick_{}'.format(brick_colour.name))
 
         # Load the images/rects required for the shimmering animation.
-        self._image_sequence = [image for image, _ in
-                                load_png_sequence('brick_{}'.format(colour))]
+        self._image_sequence = [image for image, _ in load_png_sequence(
+            'brick_{}'.format(brick_colour.name))]
         self._animation = None
-
-        # The number of ball collisions after which the brick is destroyed.
-        self._destroy_after = destroy_after
 
         # The number of ball collisions with this brick.
         self.collision_count = 0
@@ -62,17 +61,29 @@ class Brick(pygame.sprite.Sprite):
         # The class of the powerup.
         self.powerup_cls = powerup_cls
 
-        # Whether to animate the brick.
-        self._animate = False
+        # The score value for this brick.
+        if brick_colour == BrickColour.silver:
+            # The score for silver bricks is a product of the brick value
+            # and round number.
+            self.value = brick_colour.value * round_no
+        else:
+            self.value = brick_colour.value
+
+        # The number of collisions before the brick gets destroyed.
+        if brick_colour == BrickColour.silver:
+            self._destroy_after = 2
+        elif brick_colour == BrickColour.gold:
+            # Gold bricks are never destroyed, indicated by -1.
+            self._destroy_after = -1
+        else:
+            self._destroy_after = 1
 
     def update(self):
-        if self._animate:
-            if not self._animation:
-                self._animation = iter(self._image_sequence)
+        if self._animation:
             try:
                 self.image = next(self._animation)
             except StopIteration:
-                self._animate = None
+                self._animation = None
 
     @property
     def visible(self):
@@ -82,11 +93,14 @@ class Brick(pygame.sprite.Sprite):
         Returns:
             True if the brick is visible. False otherwise.
         """
+        if self._brick_colour == BrickColour.gold:
+            # Gold bricks cannot be destroyed.
+            return True
         return self.collision_count < self._destroy_after
 
     def animate(self):
         """Trigger animation of this brick."""
-        self._animate = True
+        self._animation = iter(self._image_sequence)
 
 
 class BrickColour(enum.Enum):
