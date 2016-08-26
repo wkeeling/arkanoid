@@ -201,19 +201,19 @@ class Ball(pygame.sprite.Sprite):
         self.rect = self._calc_new_pos()
 
         if self._area.contains(self.rect):
-            # The ball is still on the screen, so see if it has collided
-            # with anything.
-            sprites_collided = pygame.sprite.spritecollide(
-                self,
-                [s for s in self._collidable_sprites if s.visible],
-                False)
+            if not self._anchor:
+                # The ball is still on the screen and is not anchored, so see
+                # if it has collided with anything.
+                sprites_collided = pygame.sprite.spritecollide(
+                    self,
+                    [s for s in self._collidable_sprites if s.visible], False)
 
-            if sprites_collided:
-                # Handle the collision.
-                self._handle_collision(sprites_collided)
-            else:
-                # No collision. Bring speed back to base.
-                self._normalise_speed()
+                if sprites_collided:
+                    # Handle the collision.
+                    self._handle_collision(sprites_collided)
+                else:
+                    # No collision. Bring speed back to base.
+                    self._normalise_speed()
         else:
             # Ball has gone off the screen.
             # Invoke the callback if we have one.

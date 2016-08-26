@@ -561,7 +561,7 @@ class TestBall(TestCase):
         self.assertEqual(clone._top_speed, 14)
         self.assertEqual(clone._normalisation_rate, 0.3)
         self.assertEqual(clone._off_screen_callback, offscreen)
-        clone._collidable_sprites.add.assert__calls([call(sprite)])
+        clone._collidable_sprites.add.assert_has_calls([call(sprite)])
         self.assertEqual(clone._collision_data, ball._collision_data)
 
     @patch('arkanoid.sprites.ball.load_png')
@@ -601,6 +601,24 @@ class TestBall(TestCase):
         # Assert that a new Rectangle mock was called with the position
         # of the sprite taking into account the relative position.
         mock_pygame.Rect.assert_called_once_with(305 + 5, 429 + 5, 10, 10)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_no_collision_when_ball_anchored(self, mock_pygame, mock_load_png):
+        """Test that the ball's collision detection behaviour does not
+        execute when the ball is anchored (not free moving itself).
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+        mock_sprite.rect.left = 305
+        mock_sprite.rect.top = 429
+
+        mock_pygame.sprite.spritecollide.return_value = []
+
+        ball = Ball((100, 100), 2.32, 8)
+        ball.anchor(mock_sprite, rel_pos=(5, 5))
+        ball.update()
+
+        self.assertEqual(mock_pygame.sprite.spritecollide.call_count, 0)
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
