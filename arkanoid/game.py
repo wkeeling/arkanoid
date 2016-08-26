@@ -333,9 +333,6 @@ class Game:
         collidable_sprites += self.round.bricks
 
         for _ in range(self.round.num_enemies):
-            # Enemies can collide with one another.
-            collidable_sprites += self.enemies
-
             # Create the sprite.
             enemy_sprite = Enemy(self.round.enemy_type,
                                  self.paddle,

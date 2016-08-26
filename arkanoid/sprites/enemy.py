@@ -3,6 +3,7 @@ import itertools
 import logging
 import math
 import random
+import weakref
 
 import pygame
 
@@ -53,6 +54,9 @@ class Enemy(pygame.sprite.Sprite):
     It is destroyed when hit by the ball, by a laser bullet or by the paddle.
     """
 
+    # Enemies know about each other so they don't collide with each other.
+    _enemies = weakref.WeakSet()
+
     def __init__(self, enemy_type, paddle, on_paddle_collide,
                  collidable_sprites, on_destroyed):
         """
@@ -77,6 +81,7 @@ class Enemy(pygame.sprite.Sprite):
                 destroyed.
         """
         super().__init__()
+        self._enemies.add(self)
         self._paddle = paddle
         self._on_paddle_collide = on_paddle_collide
         self._on_destroyed = on_destroyed
@@ -168,10 +173,15 @@ class Enemy(pygame.sprite.Sprite):
                                                    False):
                         self._on_paddle_collide(self, self._paddle)
                     else:
+                        visible_sprites = [sprite for sprite in
+                                           self._collidable_sprites if
+                                           sprite.visible]
+                        visible_sprites += [sprite for sprite in self._enemies
+                                            if sprite.visible and sprite is not
+                                            self]
                         sprites_collided = pygame.sprite.spritecollide(
                             self,
-                            [sprite for sprite in self._collidable_sprites if
-                             sprite.visible], None)
+                            visible_sprites, None)
 
                         if sprites_collided:
                             self._last_contact = self._update_count
