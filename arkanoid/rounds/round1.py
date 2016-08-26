@@ -72,18 +72,13 @@ class Round1(BaseRound):
 
         # Each coloured brick forms a new layer.
         for colour in colours:
-            # Silver bricks take 2 hits to destroy.
-            destroy_after = 2 if colour == BrickColour.silver else 1
-
             for _ in range(13):
                 powerup_class = None
 
                 if count in powerup_indexes:
                     powerup_class = powerup_classes.pop(0)
 
-                brick = Brick(colour.name, colour.value,
-                              destroy_after=destroy_after,
-                              powerup_cls=powerup_class)
+                brick = Brick(colour, 1, powerup_cls=powerup_class)
 
                 bricks.append(brick)
                 count += 1

@@ -46,7 +46,7 @@ class Brick(pygame.sprite.Sprite):
                 strikes this brick (default None).
         """
         super().__init__()
-        self._brick_colour = brick_colour
+        self.colour = brick_colour
         # Load the brick graphic.
         self.image, self.rect = load_png('brick_{}'.format(brick_colour.name))
 
@@ -93,7 +93,7 @@ class Brick(pygame.sprite.Sprite):
         Returns:
             True if the brick is visible. False otherwise.
         """
-        if self._brick_colour == BrickColour.gold:
+        if self.colour == BrickColour.gold:
             # Gold bricks cannot be destroyed.
             return True
         return self.collision_count < self._destroy_after

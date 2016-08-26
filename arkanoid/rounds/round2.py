@@ -77,13 +77,9 @@ class Round2(BaseRound):
             powerup = first_row_powerup_indexes.get(i)
             top = self._BOTTOM_ROW_VERTICAL_OFFSET
             if i > 0:
-                brick = Brick(BrickColour.silver.name,
-                              BrickColour.silver.value * 2, destroy_after=2,
-                              powerup_cls=powerup)
+                brick = Brick(BrickColour.silver, 2, powerup_cls=powerup)
             else:
-                brick = Brick(BrickColour.red.name, BrickColour.red.value,
-                              destroy_after=1,
-                              powerup_cls=powerup)
+                brick = Brick(BrickColour.red, 2, powerup_cls=powerup)
 
             bricks.append(self._blit_brick(brick, left, top))
 
@@ -92,8 +88,7 @@ class Round2(BaseRound):
                 # Create a vertical column of bricks above the first.
                 powerup = remaining_powerup_indexes.get(count)
                 top = top - brick.rect.height
-                brick = Brick(colour.name, colour.value,
-                              destroy_after=1, powerup_cls=powerup)
+                brick = Brick(colour, 2, powerup_cls=powerup)
                 bricks.append(self._blit_brick(brick, left, top))
                 count += 1
 
