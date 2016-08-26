@@ -4,7 +4,7 @@ import os
 import pygame
 
 
-HIGH_SCORE_FILE = os.path.join(os.path.expanduser('~'), '.highscore')
+HIGH_SCORE_FILE = os.path.join(os.path.expanduser('~'), '.arkanoid')
 
 
 def load_png(filename):
