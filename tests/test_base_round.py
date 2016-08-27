@@ -4,6 +4,7 @@ from unittest.mock import (call,
                            patch)
 
 from arkanoid.rounds.base import BaseRound
+from arkanoid.sprites.brick import BrickColour
 
 
 class TestBaseRound(TestCase):
@@ -66,3 +67,41 @@ class TestBaseRound(TestCase):
         mock_brick.rect.height = 21
 
         return mock_screen, mock_background, mock_brick
+
+    @patch('arkanoid.rounds.base.pygame')
+    def test_round_complete(self, mock_pygame):
+        mock_create_edges = Mock()
+        mock_create_background = Mock()
+        mock_create_bricks = Mock()
+        mock_create_bricks.return_value = [
+            Mock(colour=BrickColour.blue) if i % 2 == 0 else
+            Mock(colour=BrickColour.gold) for i in range(20)]
+        BaseRound._create_edges = mock_create_edges
+        BaseRound._create_background = mock_create_background
+        BaseRound._create_bricks = mock_create_bricks
+
+        base_round = BaseRound(None)
+
+        for _ in range(11):
+            base_round.brick_destroyed()
+
+        self.assertTrue(base_round.complete)
+
+    @patch('arkanoid.rounds.base.pygame')
+    def test_round_incomplete(self, mock_pygame):
+        mock_create_edges = Mock()
+        mock_create_background = Mock()
+        mock_create_bricks = Mock()
+        mock_create_bricks.return_value = [
+            Mock(colour=BrickColour.blue) if i % 2 == 0 else
+            Mock(colour=BrickColour.gold) for i in range(20)]
+        BaseRound._create_edges = mock_create_edges
+        BaseRound._create_background = mock_create_background
+        BaseRound._create_bricks = mock_create_bricks
+
+        base_round = BaseRound(None)
+
+        for _ in range(5):
+            base_round.brick_destroyed()
+
+        self.assertFalse(base_round.complete)
