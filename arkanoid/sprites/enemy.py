@@ -38,10 +38,11 @@ class EnemyType(enum.Enum):
     """Enumeration of enemy types to their image sequence prefix.
     """
 
+    cube = 'enemy_cube'
     cone = 'enemy_cone'
+    molecule = 'enemy_molecule'
     pyramid = 'enemy_pyramid'
     sphere = 'enemy_sphere'
-    cube = 'enemy_cube'
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -295,11 +296,12 @@ class Enemy(pygame.sprite.Sprite):
         """Calculate the direction of travel when the sprite is moving
         freely (has not collided).
 
+        When moving freely (not colliding) the enemy sprites will gradually
+        move towards the paddle.
+
         Returns:
             The direction in radians.
         """
-        direction = self._direction
-
         # No collision, so calculate the direction towards the paddle
         # but with some randomness applied.
         paddle_x, paddle_y = self._paddle.rect.center
