@@ -4,7 +4,8 @@ import random
 import pygame
 
 from arkanoid.rounds.base import (BaseRound,
-                                  LIGHT_GREEN)
+                                  GREEN)
+from arkanoid.rounds.round3 import Round3
 from arkanoid.sprites.brick import (Brick,
                                     BrickColour)
 from arkanoid.sprites.enemy import EnemyType
@@ -17,7 +18,7 @@ from arkanoid.sprites.powerup import (CatchPowerUp,
 
 
 class Round2(BaseRound):
-    """Initialises the background, brick layout and powerups for round two."""
+    """Initialises the background, brick layout and powerups for round 2."""
 
     _BRICK_START_ROW = 16
 
@@ -42,7 +43,7 @@ class Round2(BaseRound):
     def _create_background(self):
         background = pygame.Surface(self.screen.get_size())
         background = background.convert()
-        background.fill(LIGHT_GREEN)
+        background.fill(GREEN)
         return background
 
     def _create_bricks(self):
@@ -98,7 +99,7 @@ class Round2(BaseRound):
         # Create slow ball and catch for the first row, given the
         # lack of space beneath.
         first_row_powerups = []
-        first_row_powerups.extend([SlowBallPowerUp] * 3)
+        first_row_powerups.extend([SlowBallPowerUp] * 2)
         first_row_powerups.extend([CatchPowerUp] * 2)
         random.shuffle(first_row_powerups)
         return first_row_powerups
