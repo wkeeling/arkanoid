@@ -4,11 +4,13 @@ import pygame
 
 from arkanoid.sprites.edge import (TopEdge,
                                    SideEdge)
+from arkanoid.sprites.brick import BrickColour
 
 
 # RGB sequences for background colours.
-DARK_BLUE = (0, 0, 100)
-LIGHT_GREEN = (0, 128, 0)
+BLUE = (0, 0, 128)
+GREEN = (0, 128, 0)
+RED = (128, 0, 0)
 
 
 class BaseRound:
