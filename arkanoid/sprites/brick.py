@@ -73,7 +73,7 @@ class Brick(pygame.sprite.Sprite):
         if brick_colour == BrickColour.silver:
             self._destroy_after = 2
         elif brick_colour == BrickColour.gold:
-            # Gold bricks are never destroyed, indicated by -1.
+            # Gold bricks are never destroyed.
             self._destroy_after = -1
         else:
             self._destroy_after = 1
@@ -93,10 +93,9 @@ class Brick(pygame.sprite.Sprite):
         Returns:
             True if the brick is visible. False otherwise.
         """
-        if self.colour == BrickColour.gold:
-            # Gold bricks cannot be destroyed.
-            return True
-        return self.collision_count < self._destroy_after
+        if self._destroy_after > 0:
+            return self.collision_count < self._destroy_after
+        return True
 
     def animate(self):
         """Trigger animation of this brick."""
