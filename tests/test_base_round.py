@@ -10,6 +10,38 @@ class TestBaseRound(TestCase):
 
     @patch('arkanoid.rounds.base.pygame')
     def test_sets_brick_in_position_0_0(self, mock_pygame):
+        mock_screen, mock_background, mock_brick = self._setup_mocks(
+            mock_pygame)
+
+        base_round = BaseRound(top_offset=150)
+        base_round._blit_brick(mock_brick, x=0, y=0)
+
+        mock_screen.blit.assert_has_calls([call(mock_background, (0, 150)),
+                                           call(mock_brick.image, (15, 165))])
+
+    @patch('arkanoid.rounds.base.pygame')
+    def test_sets_brick_in_position_1_1(self, mock_pygame):
+        mock_screen, mock_background, mock_brick = self._setup_mocks(
+            mock_pygame)
+
+        base_round = BaseRound(top_offset=150)
+        base_round._blit_brick(mock_brick, x=1, y=1)
+
+        mock_screen.blit.assert_has_calls([call(mock_background, (0, 150)),
+                                           call(mock_brick.image, (58, 187))])
+
+    @patch('arkanoid.rounds.base.pygame')
+    def test_sets_brick_in_position_9_13(self, mock_pygame):
+        mock_screen, mock_background, mock_brick = self._setup_mocks(
+            mock_pygame)
+
+        base_round = BaseRound(top_offset=150)
+        base_round._blit_brick(mock_brick, x=9, y=13)
+
+        mock_screen.blit.assert_has_calls([call(mock_background, (0, 150)),
+                                           call(mock_brick.image, (402, 451))])
+
+    def _setup_mocks(self, mock_pygame):
         mock_screen = Mock()
         mock_pygame.display.get_surface.return_value = mock_screen
         mock_edges = Mock()
@@ -33,8 +65,4 @@ class TestBaseRound(TestCase):
         mock_brick.rect.width = 42
         mock_brick.rect.height = 21
 
-        base_round = BaseRound(top_offset=150)
-        base_round._blit_brick(mock_brick, 0, 0)
-
-        mock_screen.blit.assert_has_calls([call(mock_background, (0, 150)),
-                                           call(mock_image, (15, 165))])
+        return mock_screen, mock_background, mock_brick
