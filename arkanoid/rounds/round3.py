@@ -78,8 +78,14 @@ class Round3(BaseRound):
                                 self._blit_brick(brick, start + j, y))
                         start = 10
                     else:
+                        powerup, added_catch = None, False
                         for j in range(3):
-                            brick = Brick(colour, 3)
+                            if colour == BrickColour.cyan and not added_catch:
+                                powerup = CatchPowerUp
+                                added_catch = True
+                            else:
+                                powerup = None
+                            brick = Brick(colour, 3, powerup)
                             bricks.append(
                                 self._blit_brick(brick, start + j, y))
                         start = 3
