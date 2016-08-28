@@ -31,8 +31,6 @@ BALL_START_ANGLE_RAD = 5.0  # Value must be no smaller than -3.14
 # The max speed of the ball, prevents a runaway speed when lots of rapid
 # collisions.
 BALL_TOP_SPEED = 15  # pixels per frame
-# Per-frame rate at which ball is brought back to base speed.
-BALL_SPEED_NORMALISATION_RATE = 0.02
 # Increase in speed caused by colliding with a wall.
 WALL_SPEED_ADJUST = 0.2
 # The speed the paddle moves.
@@ -182,7 +180,7 @@ class Game:
                     start_angle=BALL_START_ANGLE_RAD,
                     base_speed=self.round.ball_base_speed,
                     top_speed=BALL_TOP_SPEED,
-                    normalisation_rate=BALL_SPEED_NORMALISATION_RATE,
+                    normalisation_rate=self.round.ball_speed_normalisation_rate,
                     off_screen_callback=self._off_screen)
 
         # The game starts with a single ball in play initially.
