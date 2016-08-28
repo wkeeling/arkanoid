@@ -33,6 +33,7 @@ class Round2(BaseRound):
         super().__init__(top_offset)
 
         self.name = 'Round 2'
+        self.next_round = Round3
         self.enemy_type = EnemyType.pyramid
         self.num_enemies = 3
 
