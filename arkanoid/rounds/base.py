@@ -6,6 +6,14 @@ from arkanoid.sprites.edge import (TopEdge,
                                    SideEdge)
 from arkanoid.sprites.brick import BrickColour
 
+# The default base speed. This is the starting speed of the ball, and the
+# speed that the ball will slowly try to arrive at if it has been sped up or
+# slowed down down by something.
+BALL_BASE_SPEED = 9  # pixels per frame
+
+# The default speed adjustment that is applied to the ball when it collides
+# with a brick.
+BRICK_SPEED_ADJUST = 0.5
 
 # RGB sequences for background colours.
 BLUE = (0, 0, 128)
@@ -30,6 +38,9 @@ class BaseRound:
         self.top_offset = top_offset
         self.screen = pygame.display.get_surface()
 
+        # The name of the round displayed on the screen when the round starts.
+        self.name = 'Round name not set!'
+
         # The edges used as the sides of the game area.
         # A named tuple referencing the 3 game edge sprites with the
         # attributes: 'left', 'right', 'top'.
@@ -45,11 +56,13 @@ class BaseRound:
         # them on the screen.
         self.bricks = self._create_bricks()
 
-        # The name of the round displayed on the screen when the round starts.
-        self.name = 'Round name not set!'
+        # The base speed of the ball for the round.
+        self.ball_base_speed = BALL_BASE_SPEED
 
-        # Reference to the next round, to be overriden by subclasses.
-        self.next_round = None
+        # The adjustment in ball speed caused by colliding with a brick.
+        # Some rounds may need to modify this if their bricks are spaced
+        # close together, to prevent the ball from getting too fast.
+        self.brick_speed_adjust = BRICK_SPEED_ADJUST
 
         # The class of the enemy to release in this round. Subclasses to
         # override with the specific class.
@@ -58,6 +71,9 @@ class BaseRound:
         # The number of enemies to release. Subclasses to override with a
         # specific number.
         self.num_enemies = 0
+
+        # Reference to the next round, to be overriden by subclasses.
+        self.next_round = None
 
         # Keep track of the number of destroyed bricks.
         self._bricks_destroyed = 0
