@@ -308,6 +308,10 @@ class Ball(pygame.sprite.Sprite):
                 angle = self.angle - math.pi
             else:
                 angle = self.angle + math.pi
+            if [tl, tr, bl, br].count(True) == 1:
+                # Add some randomness to corner collisions to prevent bounce
+                # loops.
+                angle += random.uniform(-RANDOM_RANGE, RANDOM_RANGE)
         else:
             top_collision = tl and tr and self.angle > math.pi
             bottom_collision = bl and br and self.angle < math.pi
@@ -332,10 +336,10 @@ class Ball(pygame.sprite.Sprite):
             # little more unpredictable, and to prevent the ball from getting
             # stuck in a repeating bounce loop.
             angle += random.uniform(-RANDOM_RANGE, RANDOM_RANGE)
-            angle = round(angle, 2)
+
+        angle = round(angle, 2)
 
         LOG.debug('New angle: %s', angle)
-
         return angle
 
     def anchor(self, pos, rel_pos=None):

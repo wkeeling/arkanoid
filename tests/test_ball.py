@@ -270,7 +270,8 @@ class TestBall(TestCase):
         ball.add_collidable_sprite(mock_sprite)
         ball.update()
 
-        self.assertAlmostEqual(ball.angle, 5.5, places=1)
+        self.assertGreaterEqual(ball.angle, 5.5 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 5.5 + RANDOM_RANGE + 0.03)
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
@@ -559,7 +560,7 @@ class TestBall(TestCase):
         self.assertEqual(clone._start_angle, 3.01)
         self.assertEqual(clone.base_speed, 9)
         self.assertEqual(clone._top_speed, 14)
-        self.assertEqual(clone._normalisation_rate, 0.3)
+        self.assertEqual(clone.normalisation_rate, 0.3)
         self.assertEqual(clone._off_screen_callback, offscreen)
         clone._collidable_sprites.add.assert_has_calls([call(sprite)])
         self.assertEqual(clone._collision_data, ball._collision_data)
