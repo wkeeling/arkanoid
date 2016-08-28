@@ -111,8 +111,8 @@ class BaseRound:
         Returns:
             The blitted brick.
         """
-        offset_x = (brick.rect.width + 1) * x
-        offset_y = (brick.rect.height + 1) * y
+        offset_x = brick.rect.width * x
+        offset_y = brick.rect.height * y
 
         rect = self.screen.blit(brick.image, (self.edges.left.rect.x +
                                 self.edges.left.rect.width + offset_x,
