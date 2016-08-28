@@ -13,7 +13,7 @@ HALF_PI = math.pi / 2
 
 # A value will be chosen at random between this and it's negative
 # to apply to the angle of bounce for top/bottom/side collisions of the ball.
-RANDOM_RANGE = 0.05  # Radians
+RANDOM_RANGE = 0.1  # Radians
 
 
 class Ball(pygame.sprite.Sprite):
