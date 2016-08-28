@@ -80,3 +80,11 @@ the start sequence of the game, or when the game restarts after losing a life. H
 of steps happen - which are still technically inside the game - but are outside of normal
 gameplay.
 
+Making the gameplay level-specific
+
+- Tuning the gameplay so that everything works well for one level, won't necessarily satisfy all levels.
+- For example, the default speed for the ball and ball bounce for levels 1 and 2 didn't work so well
+ in level 3 due to the proximity of the bricks to the paddle, and to themselves. It meant that the ball
+ got out of control very quickly. Also, patterns emerge in new levels which weren't present in previous
+ ones. For example, the use of gold bricks in level 3 which are indestructable highlighted ball bounce
+ irregularities for corner boucing.
