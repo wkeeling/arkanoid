@@ -66,7 +66,11 @@ class Round3(BaseRound):
         for i, row in enumerate(rows):
             if i % 2 == 0:
                 for x in range(13):
-                    brick = Brick(row, 3)
+                    if row == BrickColour.cyan and x == 4:
+                        powerup = ExtraLifePowerUp
+                    else:
+                        powerup = None
+                    brick = Brick(row, 3, powerup_cls=powerup)
                     bricks.append(self._blit_brick(brick, x, y))
             else:
                 start = 0
@@ -78,14 +82,14 @@ class Round3(BaseRound):
                                 self._blit_brick(brick, start + j, y))
                         start = 10
                     else:
-                        powerup, added_catch = None, False
                         for j in range(3):
-                            if colour == BrickColour.cyan and not added_catch:
+                            if colour == BrickColour.cyan and j == 0:
                                 powerup = CatchPowerUp
-                                added_catch = True
+                            elif colour == BrickColour.blue and j == 1:
+                                powerup = DuplicatePowerUp
                             else:
                                 powerup = None
-                            brick = Brick(colour, 3, powerup)
+                            brick = Brick(colour, 3, powerup_cls=powerup)
                             bricks.append(
                                 self._blit_brick(brick, start + j, y))
                         start = 3
