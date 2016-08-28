@@ -55,7 +55,7 @@ class Enemy(pygame.sprite.Sprite):
     It is destroyed when hit by the ball, by a laser bullet or by the paddle.
     """
 
-    # Enemies know about each other so they don't collide with each other.
+    # Enemies know about each other so they can collide with each other.
     _enemies = weakref.WeakSet()
 
     def __init__(self, enemy_type, paddle, on_paddle_collide,
