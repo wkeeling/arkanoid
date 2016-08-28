@@ -40,7 +40,7 @@ class Paddle(pygame.sprite.Sprite):
         super().__init__()
 
         # The speed of the paddle movement in pixels per frame.
-        self._speed = speed
+        self.speed = speed
 
         # The current movement in pixels. A negative value will trigger the
         # paddle to move left, a positive value to move right.
@@ -124,13 +124,13 @@ class Paddle(pygame.sprite.Sprite):
         """Tell the paddle to move to the left by the speed set when the
         paddle was initialised."""
         # Set the offset to negative to move left.
-        self._move = -self._speed
+        self._move = -self.speed
 
     def move_right(self):
         """Tell the paddle to move to the right by the speed set when the
         paddle was initialised."""
         # A positive offset to move right.
-        self._move = self._speed
+        self._move = self.speed
 
     def stop(self):
         """Tell the paddle to stop moving."""

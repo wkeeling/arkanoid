@@ -504,8 +504,9 @@ class RoundStartState(BaseState):
         # Set up the sprites for the round.
         self._setup_sprites()
 
-        # Set the ball up with the round's collidable objects.
+        # Set up the ball and paddle.
         self._configure_ball()
+        self._configure_paddle()
 
         # Initialise the sprites' display state.
         self._screen = pygame.display.get_surface()
@@ -541,9 +542,6 @@ class RoundStartState(BaseState):
         self.game.sprites += self.game.round.bricks
 
     def _configure_ball(self):
-        """Configure the ball with all the objects from the current round
-        that it could potentially collide with.
-        """
         self.game.ball.remove_all_collidable_sprites()
 
         for edge in self.game.round.edges:
@@ -567,10 +565,14 @@ class RoundStartState(BaseState):
                 speed_adjust=BRICK_SPEED_ADJUST,
                 on_collide=self.game.on_brick_collide)
 
-        # Make any round specific adjustments to the ball.
+        # Make any round-specific adjustments to the ball.
         self.game.ball.base_speed += self.game.round.ball_base_speed_adjust
         self.game.ball.normalisation_rate += \
             self.game.round.ball_speed_normalisation_rate_adjust
+
+    def _configure_paddle(self):
+        # Make any round-specific adjustments to the paddle.
+        self.game.paddle.speed += self.game.round.paddle_speed_adjust
 
     def update(self):
         """Handle the sequence of events that happen at the beginning of a
@@ -685,6 +687,10 @@ class RoundRestartState(RoundStartState):
 
     def _configure_ball(self):
         """No need to configure the ball again on round restart."""
+        pass
+
+    def _configure_paddle(self):
+        """No need to configure the paddle again on round restart."""
         pass
 
     def update(self):

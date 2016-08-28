@@ -36,9 +36,13 @@ class Round3(BaseRound):
         # the proximity of the bricks to the paddle.
         self.ball_base_speed_adjust = -2
 
+        # Reduce the speed of the paddle slightly to help with precision
+        # when controlling the ball in the confined starting space.
+        self.paddle_speed_adjust = -1
+
         # Bring the ball back to base speed more quickly, otherwise it just
         # gets too hard to control in this level.
-        self.ball_speed_normalisation_rate_adjust = 0.03
+        self.ball_speed_normalisation_rate_adjust = 0.04
 
     def can_release_enemies(self):
         """Release the enemies right at the start."""

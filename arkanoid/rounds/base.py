@@ -52,6 +52,11 @@ class BaseRound:
         # more quickly/slowly for that particular round.
         self.ball_base_speed_adjust = 0
 
+        # Concreate subclasses can override this setting to modify the speed
+        # of the paddle for the round, if they want the paddle to move
+        # more quickly/slowly for that partucular round.
+        self.paddle_speed_adjust = 0
+
         # Concrete subclasses can override this setting to modify the
         # ball speed normalisation rate, if the rate should be slower/quicker
         # for that particular round.
