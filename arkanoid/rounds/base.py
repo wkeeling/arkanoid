@@ -64,6 +64,9 @@ class BaseRound:
         # close together, to prevent the ball from getting too fast.
         self.brick_speed_adjust = BRICK_SPEED_ADJUST
 
+        # Per-frame rate at which ball is brought back to base speed.
+        self.ball_speed_normalisation_rate = 0.02
+
         # The class of the enemy to release in this round. Subclasses to
         # override with the specific class.
         self.enemy_type = None

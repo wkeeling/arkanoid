@@ -9,10 +9,7 @@ from arkanoid.sprites.brick import (Brick,
 from arkanoid.sprites.enemy import EnemyType
 from arkanoid.sprites.powerup import (CatchPowerUp,
                                       DuplicatePowerUp,
-                                      ExpandPowerUp,
-                                      ExtraLifePowerUp,
-                                      LaserPowerUp,
-                                      SlowBallPowerUp)
+                                      ExtraLifePowerUp)
 
 
 class Round3(BaseRound):
@@ -39,9 +36,9 @@ class Round3(BaseRound):
         # the proximity of the bricks to the paddle.
         self.ball_base_speed -= 1
 
-        # The bricks in this round do not increase the speed of the ball when
-        # it collides with them, otherwise the ball gets too fast.
-        self.brick_speed_adjust = 0
+        # Bring the ball back to base speed more quickly, otherwise it just
+        # gets too hard to control in this level.
+        self.ball_speed_normalisation_rate = 0.05
 
     def can_release_enemies(self):
         """Release the enemies right at the start."""
@@ -59,52 +56,55 @@ class Round3(BaseRound):
         Returns:
             A pygame.sprite.Group of bricks.
         """
-        rows = (BrickColour.green,
-                (BrickColour.white, BrickColour.gold),
-                BrickColour.red,
-                (BrickColour.gold, BrickColour.white),
-                BrickColour.pink,
-                (BrickColour.blue, BrickColour.gold),
-                BrickColour.cyan,
-                (BrickColour.gold, BrickColour.cyan))
 
-        powerup_indexes = {32: DuplicatePowerUp,
-                           57: DuplicatePowerUp,
-                           61: ExtraLifePowerUp,
-                           82: CatchPowerUp,
-                           87: ExtraLifePowerUp,
-                           101: CatchPowerUp}
+        rows = []
+        # Row 1
+        rows += [BrickColour.green] * 13
+        # Row 2
+        rows += [BrickColour.white] * 3
+        rows += [BrickColour.gold] * 10
+        # Row 3
+        rows += [BrickColour.red] * 5
+        rows += [(BrickColour.red, DuplicatePowerUp)]
+        rows += [BrickColour.red] * 7
+        # Row 4
+        rows += [BrickColour.gold] * 10
+        rows += [BrickColour.white] * 3
+        # Row 5
+        rows += [BrickColour.pink] * 4
+        rows += [(BrickColour.pink, DuplicatePowerUp)]
+        rows += [BrickColour.pink] * 3
+        rows += [(BrickColour.pink, ExtraLifePowerUp)]
+        rows += [BrickColour.pink] * 4
+        # Row 6
+        rows += [BrickColour.blue] * 3
+        rows += [BrickColour.gold] * 10
+        # Row 7
+        rows += [BrickColour.cyan] * 2
+        rows += [(BrickColour.cyan,  CatchPowerUp)]
+        rows += [BrickColour.cyan] * 3
+        rows += [(BrickColour.cyan,  ExtraLifePowerUp)]
+        rows += [BrickColour.cyan] * 6
+        # Row 8
+        rows += [BrickColour.gold] * 10
+        rows += [(BrickColour.cyan,  CatchPowerUp)]
+        rows += [BrickColour.cyan] * 2
 
-        bricks, count = [], 0
-        y = self._TOP_ROW_START
+        bricks = []
+        x, y = 0, self._TOP_ROW_START
 
         for i, row in enumerate(rows):
-            if i % 2 == 0:
-                for x in range(13):
-                    brick = Brick(row, 3,
-                                  powerup_cls=powerup_indexes.get(count))
-                    bricks.append(self._blit_brick(brick, x, y))
-                    count += 1
-            else:
-                start = 0
-                for colour in row:
-                    if colour == BrickColour.gold:
-                        for j in range(10):
-                            brick = Brick(colour, 3)
-                            bricks.append(
-                                self._blit_brick(brick, start + j, y))
-                            count += 1
-                        start = 10
-                    else:
-                        for j in range(3):
-                            brick = Brick(colour, 3,
-                                          powerup_cls=powerup_indexes.get(
-                                              count))
-                            bricks.append(
-                                self._blit_brick(brick, start + j, y))
-                            count += 1
-                        start = 3
-            y += 2
+            if i and i % 13 == 0:
+                # New row
+                y += 2
+                x = 0
+            try:
+                colour, powerup = row
+            except TypeError:
+                colour, powerup = row, None
+            brick = Brick(colour, 3, powerup_cls=powerup)
+            bricks.append(self._blit_brick(brick, x, y))
+            x += 1
 
         return pygame.sprite.Group(*bricks)
 
