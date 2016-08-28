@@ -6,15 +6,6 @@ from arkanoid.sprites.edge import (TopEdge,
                                    SideEdge)
 from arkanoid.sprites.brick import BrickColour
 
-# The default base speed. This is the starting speed of the ball, and the
-# speed that the ball will slowly try to arrive at if it has been sped up or
-# slowed down down by something.
-BALL_BASE_SPEED = 9  # pixels per frame
-
-# The default speed adjustment that is applied to the ball when it collides
-# with a brick.
-BRICK_SPEED_ADJUST = 0.5
-
 # RGB sequences for background colours.
 BLUE = (0, 0, 128)
 GREEN = (0, 128, 0)
@@ -56,16 +47,15 @@ class BaseRound:
         # them on the screen.
         self.bricks = self._create_bricks()
 
-        # The base speed of the ball for the round.
-        self.ball_base_speed = BALL_BASE_SPEED
+        # Concrete subclasses can override this setting to modify the
+        # base speed of the ball for the round, if they want the ball to move
+        # more quickly/slowly for that particular round.
+        self.ball_base_speed_adjust = 0
 
-        # The adjustment in ball speed caused by colliding with a brick.
-        # Some rounds may need to modify this if their bricks are spaced
-        # close together, to prevent the ball from getting too fast.
-        self.brick_speed_adjust = BRICK_SPEED_ADJUST
-
-        # Per-frame rate at which ball is brought back to base speed.
-        self.ball_speed_normalisation_rate = 0.02
+        # Concrete subclasses can override this setting to modify the
+        # ball speed normalisation rate, if the rate should be slower/quicker
+        # for that particular round.
+        self.ball_speed_normalisation_rate_adjust = 0
 
         # The class of the enemy to release in this round. Subclasses to
         # override with the specific class.

@@ -34,11 +34,11 @@ class Round3(BaseRound):
 
         # Reduce the speed of the ball slightly for this round, due to
         # the proximity of the bricks to the paddle.
-        self.ball_base_speed -= 1
+        self.ball_base_speed_adjust = -2
 
         # Bring the ball back to base speed more quickly, otherwise it just
         # gets too hard to control in this level.
-        self.ball_speed_normalisation_rate = 0.05
+        self.ball_speed_normalisation_rate_adjust = 0.03
 
     def can_release_enemies(self):
         """Release the enemies right at the start."""

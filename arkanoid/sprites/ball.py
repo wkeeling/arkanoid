@@ -75,12 +75,12 @@ class Ball(pygame.sprite.Sprite):
         self.visible = True
         self.speed = base_speed
         self.base_speed = base_speed
+        self.normalisation_rate = normalisation_rate
         self.angle = start_angle
 
         self._start_pos = start_pos
         self._start_angle = start_angle
         self._top_speed = top_speed
-        self._normalisation_rate = normalisation_rate
         self._off_screen_callback = off_screen_callback
         self._anchor = None
 
@@ -176,7 +176,7 @@ class Ball(pygame.sprite.Sprite):
         base_speed = kwargs.get('base_speed', self.base_speed)
         top_speed = kwargs.get('top_speed', self._top_speed)
         normalisation_rate = kwargs.get('normalisation_rate',
-                                        self._normalisation_rate)
+                                        self.normalisation_rate)
         off_screen_callback = kwargs.get('off_screen_callback',
                                          self._off_screen_callback)
 
@@ -278,9 +278,9 @@ class Ball(pygame.sprite.Sprite):
     def _normalise_speed(self):
         """Gradually bring the ball's speed down to the base speed."""
         if self.speed > self.base_speed:
-            self.speed -= self._normalisation_rate
+            self.speed -= self.normalisation_rate
         else:
-            self.speed += self._normalisation_rate
+            self.speed += self.normalisation_rate
 
     def _calc_new_angle(self, rects):
         """Calculate the default angle of bounce of the ball, given a

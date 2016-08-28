@@ -28,9 +28,17 @@ TOP_OFFSET = 150
 DISPLAY_CAPTION = 'Arkanoid'
 # The angle the ball initially moves off the paddle, in radians.
 BALL_START_ANGLE_RAD = 5.0  # Value must be no smaller than -3.14
+# The speed that the ball will always try to arrive at.
+# This is based on a game running at 60fps. You might need to increment it by
+# a couple of notches if you find the ball moves too slowly.
+BALL_BASE_SPEED = 8  # pixels per frame
 # The max speed of the ball, prevents a runaway speed when lots of rapid
 # collisions.
 BALL_TOP_SPEED = 15  # pixels per frame
+# Per-frame rate at which ball is brought back to base speed.
+BALL_SPEED_NORMALISATION_RATE = 0.02
+# Increase in speed caused by colliding with a brick.
+BRICK_SPEED_ADJUST = 0.5
 # Increase in speed caused by colliding with a wall.
 WALL_SPEED_ADJUST = 0.2
 # The speed the paddle moves.
@@ -178,9 +186,9 @@ class Game:
 
         ball = Ball(start_pos=self.paddle.rect.midtop,
                     start_angle=BALL_START_ANGLE_RAD,
-                    base_speed=self.round.ball_base_speed,
+                    base_speed=BALL_BASE_SPEED,
                     top_speed=BALL_TOP_SPEED,
-                    normalisation_rate=self.round.ball_speed_normalisation_rate,
+                    normalisation_rate=BALL_SPEED_NORMALISATION_RATE,
                     off_screen_callback=self._off_screen)
 
         # The game starts with a single ball in play initially.
@@ -556,8 +564,13 @@ class RoundStartState(BaseState):
             # the ball.
             self.game.ball.add_collidable_sprite(
                 brick,
-                speed_adjust=self.game.round.brick_speed_adjust,
+                speed_adjust=BRICK_SPEED_ADJUST,
                 on_collide=self.game.on_brick_collide)
+
+        # Make any round specific adjustments to the ball.
+        self.game.ball.base_speed += self.game.round.ball_base_speed_adjust
+        self.game.ball.normalisation_rate += \
+            self.game.round.ball_speed_normalisation_rate_adjust
 
     def update(self):
         """Handle the sequence of events that happen at the beginning of a
