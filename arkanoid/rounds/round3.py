@@ -35,6 +35,14 @@ class Round3(BaseRound):
         self.enemy_type = EnemyType.molecule
         self.num_enemies = 3
 
+        # Reduce the speed of the ball slightly for this round, due to
+        # the proximity of the bricks to the paddle.
+        self.ball_base_speed -= 1
+
+        # The bricks in this round do not increase the speed of the ball when
+        # it collides with them, otherwise the ball gets too fast.
+        self.brick_speed_adjust = 0
+
     def can_release_enemies(self):
         """Release the enemies right at the start."""
         return True
@@ -60,18 +68,23 @@ class Round3(BaseRound):
                 BrickColour.cyan,
                 (BrickColour.gold, BrickColour.cyan))
 
-        bricks = []
+        powerup_indexes = {32: DuplicatePowerUp,
+                           57: DuplicatePowerUp,
+                           61: ExtraLifePowerUp,
+                           82: CatchPowerUp,
+                           87: ExtraLifePowerUp,
+                           101: CatchPowerUp}
+
+        bricks, count = [], 0
         y = self._TOP_ROW_START
 
         for i, row in enumerate(rows):
             if i % 2 == 0:
                 for x in range(13):
-                    if row == BrickColour.cyan and x == 4:
-                        powerup = ExtraLifePowerUp
-                    else:
-                        powerup = None
-                    brick = Brick(row, 3, powerup_cls=powerup)
+                    brick = Brick(row, 3,
+                                  powerup_cls=powerup_indexes.get(count))
                     bricks.append(self._blit_brick(brick, x, y))
+                    count += 1
             else:
                 start = 0
                 for colour in row:
@@ -80,18 +93,16 @@ class Round3(BaseRound):
                             brick = Brick(colour, 3)
                             bricks.append(
                                 self._blit_brick(brick, start + j, y))
+                            count += 1
                         start = 10
                     else:
                         for j in range(3):
-                            if colour == BrickColour.cyan and j == 0:
-                                powerup = CatchPowerUp
-                            elif colour == BrickColour.blue and j == 1:
-                                powerup = DuplicatePowerUp
-                            else:
-                                powerup = None
-                            brick = Brick(colour, 3, powerup_cls=powerup)
+                            brick = Brick(colour, 3,
+                                          powerup_cls=powerup_indexes.get(
+                                              count))
                             bricks.append(
                                 self._blit_brick(brick, start + j, y))
+                            count += 1
                         start = 3
             y += 2
 
