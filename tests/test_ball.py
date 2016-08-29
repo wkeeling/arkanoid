@@ -275,6 +275,206 @@ class TestBall(TestCase):
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_corner_oblique_top_left_h(self, mock_pygame,
+                                                      mock_load_png):
+        """Test that the default bounce calculation correctly calculates
+        the angle when the ball collides with a single corner of a sprite
+        but the angle of collision is horizontally oblique against the top
+        left corner of the ball, rather than head on.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            return point == (104.0, 94.0)  # Top left corner
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100),  5.3, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreaterEqual(ball.angle, 0.98 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 0.98 + RANDOM_RANGE + 0.03)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_corner_oblique_top_right_h(self, mock_pygame,
+                                                       mock_load_png):
+        """Test that the default bounce calculation correctly calculates
+        the angle when the ball collides with a single corner of a sprite
+        but the angle of collision is horizontally oblique against the top
+        right corner of the ball, rather than head on.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            return point == (115.0, 105.0)  # Top right corner.
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100),  0.78, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreaterEqual(ball.angle, 2.36 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 2.36 + RANDOM_RANGE + 0.03)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_corner_oblique_top_left_v(self, mock_pygame,
+                                                      mock_load_png):
+        """Test that the default bounce calculation correctly calculates
+        the angle when the ball collides with a single corner of a sprite
+        but the angle of collision is vertically oblique against the top
+        left corner of the ball, rather than head on.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            return point == (95.0, 105.0)  # Top left corner.
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100),  2.35, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreaterEqual(ball.angle, 0.78 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 0.78 + RANDOM_RANGE + 0.03)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_corner_oblique_top_right_v(self, mock_pygame,
+                                                       mock_load_png):
+        """Test that the default bounce calculation correctly calculates
+        the angle when the ball collides with a single corner of a sprite
+        but the angle of collision is vertically oblique against the top
+        right corner of the ball, rather than head on.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            return point == (115.0, 105.0)  # Top right corner.
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100),  0.78, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreaterEqual(ball.angle, 2.36 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 2.36 + RANDOM_RANGE + 0.03)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_corner_oblique_bottom_left_h(self, mock_pygame,
+                                                         mock_load_png):
+        """Test that the default bounce calculation correctly calculates
+        the angle when the ball collides with a single corner of a sprite
+        but the angle of collision is horizontally oblique against the bottom
+        left corner of the ball, rather than head on.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            return point == (104.0, 104.0)  # Bottom left corner
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100), 0.78, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreaterEqual(ball.angle, 5.5 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 5.5 + RANDOM_RANGE + 0.03)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_corner_oblique_bottom_right_h(self, mock_pygame,
+                                                          mock_load_png):
+        """Test that the default bounce calculation correctly calculates
+        the angle when the ball collides with a single corner of a sprite
+        but the angle of collision is horizontally oblique against the bottom
+        right corner of the ball, rather than head on.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            return point == (115.0, 115.0)  # Bottom right corner
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100), 2.36, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreaterEqual(ball.angle, 3.92 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 3.92 + RANDOM_RANGE + 0.03)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_corner_oblique_bottom_left_v(self, mock_pygame,
+                                                         mock_load_png):
+        """Test that the default bounce calculation correctly calculates
+        the angle when the ball collides with a single corner of a sprite
+        but the angle of collision is vertically oblique against the bottom
+        left corner of the ball, rather than head on.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            return point == (105.0, 115.0)  # Bottom left corner
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100), 3.92, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreaterEqual(ball.angle, 5.5 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 5.5 + RANDOM_RANGE + 0.03)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_corner_oblique_bottom_right_v(self, mock_pygame,
+                                                          mock_load_png):
+        """Test that the default bounce calculation correctly calculates
+        the angle when the ball collides with a single corner of a sprite
+        but the angle of collision is vertically oblique against the bottom
+        right corner of the ball, rather than head on.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            return point == (105.0, 105.0)  # Bottom left corner
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100), 5.5, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreaterEqual(ball.angle, 3.92 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 3.92 + RANDOM_RANGE + 0.03)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
     def test_calc_new_angle_three_corners(self, mock_pygame, mock_load_png):
         """Test that the default bounce calculation correctly calculates
         the angle when the ball collides with three corners of a sprite.

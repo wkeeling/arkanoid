@@ -276,7 +276,7 @@ class Ball(pygame.sprite.Sprite):
         LOG.debug('Ball speed: %s', self.speed)
 
     def _normalise_speed(self):
-        """Gradually bring the ball's speed down to the base speed."""
+        """Gradually bring the ball's speed back to the base speed."""
         if self.speed > self.base_speed:
             self.speed -= self.normalisation_rate
         else:
@@ -341,6 +341,36 @@ class Ball(pygame.sprite.Sprite):
 
         LOG.debug('New angle: %s', angle)
         return angle
+
+    def _determine_collide_points(self, rects):
+        """Determine which points on the ball have collided with the
+        given sequence of rectangles.
+
+        Args:
+            rects:
+                The sequence of rectagles the ball has collided with.
+        Returns:
+            A tuple of 4 booleans corresponding to the top left, rop right,
+            bottom left and bottom right corners of the ball. True for any
+            of these indicates collision.
+        """
+        tl, tr, bl, br = False, False, False, False
+
+        for rect in rects:
+            # Work out which corners of the ball rect are in contact.
+            tl = tl or rect.collidepoint(self.rect.topleft)
+            tr = tr or rect.collidepoint(self.rect.topright)
+            bl = bl or rect.collidepoint(self.rect.bottomleft)
+            br = br or rect.collidepoint(self.rect.bottomright)
+
+        if [tl, tr, bl, br].count(True) == 1:
+            # Corner collision, so work out whether this is a head on
+            # corner collision, or if the ball has hit the corner obliquely.
+            # Where oblique, we manually adjust the collide points so that
+            # the ball doesn't bounce straight back, but bounces more
+            # naturally.
+            if tl:
+                pass
 
     def anchor(self, pos, rel_pos=None):
         """Anchor the ball to the supplied position. This may either be
