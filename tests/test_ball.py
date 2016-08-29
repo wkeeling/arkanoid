@@ -736,6 +736,102 @@ class TestBall(TestCase):
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_top_collision_vertical(self, mock_pygame,
+                                                   mock_load_png):
+        """Test that the when the top of the ball bounces at a near
+        vertical angle, that the angle of bounce is adjusted to more that
+        what it would naturally be. This is to overcome bounce loops.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            points = [(100.0, 93.0), (110.0, 93.0)]
+            return point in points
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100), 4.71, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreaterEqual(ball.angle, 1.92 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 1.92 + RANDOM_RANGE + 0.03)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_bottom_collision_vertical(self, mock_pygame,
+                                                      mock_load_png):
+        """Test that the when the bottom of the ball bounces at a near
+        vertical angle, that the angle of bounce is adjusted to more that
+        what it would naturally be. This is to overcome bounce loops.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            points = [(100.0, 117.0), (110.0, 117.0)]
+            return point in points
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100), 1.57, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreaterEqual(ball.angle, 5.06 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 5.06 + RANDOM_RANGE + 0.03)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_left_collision_horizontal(self, mock_pygame,
+                                                      mock_load_png):
+        """Test that the when the left of the ball bounces at a near
+        horizontal angle, that the angle of bounce is adjusted to more that
+        what it would naturally be. This is to overcome bounce loops.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            points = [(93.0, 100.0), (93.0, 110.0)]
+            return point in points
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100), 3.18, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreaterEqual(ball.angle, 5.89 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 5.89 + RANDOM_RANGE + 0.03)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
+    def test_calc_new_angle_right_collision_horizontal(self, mock_pygame,
+                                                       mock_load_png):
+        """Test that the when the right of the ball bounces at a near
+        horizontal angle, that the angle of bounce is adjusted to more that
+        what it would naturally be. This is to overcome bounce loops.
+        """
+        mock_sprite = self._configure_mocks(mock_pygame, mock_load_png)
+        mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
+
+        def collidepoint(point):
+            points = [(117.0, 100.0), (117.0, 110.0)]
+            return point in points
+
+        mock_sprite.rect.collidepoint.side_effect = collidepoint
+
+        ball = Ball((100, 100), 6.25, 8)
+        ball.add_collidable_sprite(mock_sprite)
+        ball.update()
+
+        self.assertGreaterEqual(ball.angle, 3.52 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 3.52 + RANDOM_RANGE + 0.03)
+
+    @patch('arkanoid.sprites.ball.load_png')
+    @patch('arkanoid.sprites.ball.pygame')
     def test_clone_ball(self, mock_pygame, mock_load_png):
         self._configure_mocks(mock_pygame, mock_load_png)
 

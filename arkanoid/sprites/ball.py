@@ -312,6 +312,14 @@ class Ball(pygame.sprite.Sprite):
             if top_collision or bottom_collision:
                 LOG.debug('Top/bottom collision')
                 angle = TWO_PI - self.angle
+                # Prevent vertical bounce loops by detecting near vertical
+                # angles and adjusting the angle of bounce.
+                if (TWO_PI - HALF_PI - 0.06) < angle < (
+                        TWO_PI - HALF_PI + 0.06):
+                    angle += 0.35
+                elif (HALF_PI + 0.06) > angle > (HALF_PI - 0.06):
+                    angle += 0.35
+
             else:
                 left_collision = (tl and bl and
                                   HALF_PI < self.angle < TWO_PI - HALF_PI)
@@ -324,6 +332,15 @@ class Ball(pygame.sprite.Sprite):
                         angle = math.pi - self.angle
                     else:
                         angle = (TWO_PI - self.angle) + math.pi
+
+                    # Prevent horizontal bounce loops by detecting near
+                    # horizontal angles and adjusting the angle of bounce.
+                    if math.pi - 0.06 < angle < math.pi + 0.06:
+                        angle += 0.35
+                    elif angle > TWO_PI - 0.06:
+                        angle -= 0.35
+                    elif angle < 0.06:
+                        angle += 0.35
 
             # Add a small amount of randomness to the bounce to make it a
             # little more unpredictable, and to prevent the ball from getting
@@ -382,7 +399,7 @@ class Ball(pygame.sprite.Sprite):
                     bl = True
                 elif self.angle > TWO_PI - HALF_PI:
                     tr = True
-                    
+
             if [tl, tr, bl, br].count(True) > 1:
                 LOG.debug('Readjusting corner collision')
 
