@@ -286,14 +286,7 @@ class Ball(pygame.sprite.Sprite):
         """Calculate the default angle of bounce of the ball, given a
         sequence of rectangles that the ball collided with.
         """
-        tl, tr, bl, br = False, False, False, False
-
-        for rect in rects:
-            # Work out which corners of the ball rect are in contact.
-            tl = tl or rect.collidepoint(self.rect.topleft)
-            tr = tr or rect.collidepoint(self.rect.topright)
-            bl = bl or rect.collidepoint(self.rect.bottomleft)
-            br = br or rect.collidepoint(self.rect.bottomright)
+        tl, tr, bl, br = self._determine_collide_points(rects)
 
         angle = self.angle
 
@@ -367,10 +360,33 @@ class Ball(pygame.sprite.Sprite):
             # Corner collision, so work out whether this is a head on
             # corner collision, or if the ball has hit the corner obliquely.
             # Where oblique, we manually adjust the collide points so that
-            # the ball doesn't bounce straight back, but bounces more
-            # naturally.
+            # the ball doesn't bounce back in the direction from which it
+            # came (a normal corner bounce), but bounces more naturally.
             if tl:
-                pass
+                if self.angle > TWO_PI - HALF_PI:
+                    tr = True
+                elif self.angle < math.pi:
+                    bl = True
+            elif tr:
+                if math.pi < self.angle < TWO_PI - HALF_PI:
+                    tl = True
+                elif self.angle < HALF_PI:
+                    br = True
+            elif bl:
+                if self.angle < HALF_PI:
+                    br = True
+                elif self.angle > math.pi:
+                    tl = True
+            elif br:
+                if math.pi > self.angle > HALF_PI:
+                    bl = True
+                elif self.angle > TWO_PI - HALF_PI:
+                    tr = True
+                    
+            if [tl, tr, bl, br].count(True) > 1:
+                LOG.debug('Readjusting corner collision')
+
+        return tl, tr, bl, br
 
     def anchor(self, pos, rel_pos=None):
         """Anchor the ball to the supplied position. This may either be

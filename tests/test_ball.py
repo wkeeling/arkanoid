@@ -262,16 +262,16 @@ class TestBall(TestCase):
         mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
 
         def collidepoint(point):
-            return point == (95.0, 105.0)
+            return point == (95.0, 95.0)
 
         mock_sprite.rect.collidepoint.side_effect = collidepoint
 
-        ball = Ball((100, 100), 2.36, 8)
+        ball = Ball((100, 100), 3.92, 8)
         ball.add_collidable_sprite(mock_sprite)
         ball.update()
 
-        self.assertGreaterEqual(ball.angle, 5.5 - RANDOM_RANGE)
-        self.assertLess(ball.angle, 5.5 + RANDOM_RANGE + 0.03)
+        self.assertGreaterEqual(ball.angle, 0.79 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 0.79 + RANDOM_RANGE + 0.03)
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
@@ -387,7 +387,7 @@ class TestBall(TestCase):
         mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
 
         def collidepoint(point):
-            return point == (104.0, 104.0)  # Bottom left corner
+            return point == (105.0, 115.0)  # Bottom left corner
 
         mock_sprite.rect.collidepoint.side_effect = collidepoint
 
@@ -412,7 +412,7 @@ class TestBall(TestCase):
         mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
 
         def collidepoint(point):
-            return point == (115.0, 115.0)  # Bottom right corner
+            return point == (105.0, 115.0)  # Bottom right corner
 
         mock_sprite.rect.collidepoint.side_effect = collidepoint
 
@@ -437,7 +437,7 @@ class TestBall(TestCase):
         mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
 
         def collidepoint(point):
-            return point == (105.0, 115.0)  # Bottom left corner
+            return point == (95.0, 105.0)  # Bottom left corner
 
         mock_sprite.rect.collidepoint.side_effect = collidepoint
 
@@ -462,7 +462,7 @@ class TestBall(TestCase):
         mock_pygame.sprite.spritecollide.return_value = [mock_sprite]
 
         def collidepoint(point):
-            return point == (105.0, 105.0)  # Bottom left corner
+            return point == (115.0, 105.0)  # Bottom left corner
 
         mock_sprite.rect.collidepoint.side_effect = collidepoint
 
