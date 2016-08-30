@@ -17,7 +17,7 @@ from arkanoid.sprites.powerup import (CatchPowerUp,
 class Round4(BaseRound):
     """Initialises the background, brick layout and powerups for round 4."""
 
-    _TOP_ROW_OFFSET = 5
+    _TOP_ROW_START = 5
 
     def __init__(self, top_offset):
         """Initialise round 4.
@@ -57,7 +57,7 @@ class Round4(BaseRound):
              BrickColour.blue, BrickColour.pink, BrickColour.white,
              BrickColour.yellow])
 
-        powerups = {
+        powerups = {  # Keyed by the (x,y) coordinates of the bricks.
             (1, 1): DuplicatePowerUp,
             (2, 3): CatchPowerUp,
             (3, 10): LaserPowerUp,
@@ -71,14 +71,14 @@ class Round4(BaseRound):
         bricks = []
 
         for x in range(1, 12):
-            if x != 6:
+            if x != 6:  # Leave a blank column down the middle.
                 for y, colour in enumerate(column):
                     if y < 14:
                         brick = Brick(colour, 4,
                                       powerup_cls=powerups.get((x, y)))
                         bricks.append(
                             self._blit_brick(brick, x,
-                                             y + self._TOP_ROW_OFFSET))
+                                             y + self._TOP_ROW_START))
             column.rotate(-1)
 
         return pygame.sprite.Group(*bricks)
