@@ -697,10 +697,10 @@ class RoundRestartState(RoundStartState):
         # Run the logic in the RoundStartState first.
         super().update()
 
-        if self._update_count > 60:
+        if self._update_count > 100:
             # Update the number of lives when we display the caption.
             self.game.lives = self._lives
-        if self._update_count > 300:
+        if self._update_count > 340:
             # Re-release any enemies that were previously active.
             if not self._enemies_rereleased:
                 for enemy in self.game.enemies:
