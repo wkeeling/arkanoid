@@ -1,9 +1,8 @@
-import random
-
 import pygame
 
 from arkanoid.rounds.base import (BaseRound,
                                   BLUE)
+from arkanoid.rounds.round4 import Round4
 from arkanoid.sprites.brick import (Brick,
                                     BrickColour)
 from arkanoid.sprites.enemy import EnemyType
@@ -13,8 +12,7 @@ from arkanoid.sprites.powerup import (CatchPowerUp,
 
 
 class Round3(BaseRound):
-    """Initialises the background, brick layout and powerups for round 3.
-    """
+    """Initialises the background, brick layout and powerups for round 3."""
 
     _TOP_ROW_START = 4
 
@@ -29,6 +27,7 @@ class Round3(BaseRound):
         super().__init__(top_offset)
 
         self.name = 'Round 3'
+        self.next_round = Round4
         self.enemy_type = EnemyType.molecule
         self.num_enemies = 3
 
