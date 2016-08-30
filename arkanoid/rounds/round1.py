@@ -63,7 +63,9 @@ class Round1(BaseRound):
 
         # Randomly select the indexes for the bricks that will contain
         # powerups.
-        powerup_indexes = random.sample(range(65), len(powerup_classes))
+        powerup_indexes = random.sample(range(52), len(powerup_classes) - 4)
+        powerup_indexes += random.sample(range(52, 65), 4)
+        powerup_indexes.sort()
 
         bricks, count = [], 0
 
