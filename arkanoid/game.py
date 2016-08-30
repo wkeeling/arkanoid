@@ -44,7 +44,7 @@ WALL_SPEED_ADJUST = 0.2
 # The speed the paddle moves.
 PADDLE_SPEED = 10
 # The main font.
-MAIN_FONT = 'emulogic.ttf'
+MAIN_FONT = 'generation.ttf'
 
 # Initialise the pygame modules.
 pygame.init()
@@ -127,22 +127,22 @@ class Arkanoid:
         self._screen.blit(image, (5, 0))
 
     def _display_score_titles(self):
-        player = font(MAIN_FONT, 18).render('1UP', False, (230, 0, 0))
+        player = font(MAIN_FONT, 24).render('1UP', False, (230, 0, 0))
         self._screen.blit(player, (self._screen.get_width() -
                                    player.get_width() - 10, 10))
-        high_score = font(MAIN_FONT, 18).render('HIGH SCORE', False,
+        high_score = font(MAIN_FONT, 24).render('HIGH SCORE', False,
                                                 (230, 0, 0))
         self._screen.blit(high_score, (self._screen.get_width() -
                                        high_score.get_width() - 10, 75))
 
     def _display_score(self, value):
-        score = font(MAIN_FONT, 18).render(str(value), False, (255, 255, 255))
+        score = font(MAIN_FONT, 24).render(str(value), False, (255, 255, 255))
         position = self._screen.get_width() - score.get_width() - 10, 35
         self._screen.blit(self._background, position, score.get_rect())
         self._screen.blit(score, position)
 
     def _display_highscore(self, value):
-        high_score = font(MAIN_FONT, 18).render(str(value), False,
+        high_score = font(MAIN_FONT, 24).render(str(value), False,
                                                 (255, 255, 255))
         position = self._screen.get_width() - high_score.get_width() - 10, 100
         self._screen.blit(self._background, position, high_score.get_rect())
@@ -518,11 +518,11 @@ class RoundStartState(BaseState):
                                self._screen.get_height() - 100))
 
         # Initialise the text.
-        self._caption = font(MAIN_FONT, 18).render(self.game.round.name,
+        self._caption = font(MAIN_FONT, 24).render(self.game.round.name,
                                                    False, (255, 255, 255))
         self._caption_pos = (h_centre_pos(self._caption),
                              self.game.paddle.rect.center[1] - 150)
-        self._ready = font(MAIN_FONT, 18).render('Ready', False,
+        self._ready = font(MAIN_FONT, 24).render('Ready', False,
                                                  (255, 255, 255))
         self._ready_pos = (h_centre_pos(self._ready),
                            self._caption_pos[1] + 50)
