@@ -38,7 +38,7 @@ class Round3(BaseRound):
 
         # Reduce the speed of the paddle slightly to help with precision
         # when controlling the ball in the confined starting space.
-        self.paddle_speed_adjust = -1
+        self.paddle_speed_adjust = -2
 
         # Bring the ball back to base speed more quickly, otherwise it just
         # gets too hard to control in this level.
