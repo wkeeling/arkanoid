@@ -533,6 +533,14 @@ class RoundStartState(BaseState):
         # Keep track of the number of update cycles.
         self._update_count = 0
 
+        self._start = False
+        receiver.register_handler(pygame.KEYUP, self._temp_start)
+
+    def _temp_start(self, event):
+        if event.key == pygame.K_SPACE:
+            self._start = True
+            receiver.unregister_handler(self._temp_start)
+
     def _setup_sprites(self):
         """Make all the sprites available for rendering."""
         self.game.sprites.clear()
@@ -580,36 +588,37 @@ class RoundStartState(BaseState):
         """
         caption, ready = None, None
 
-        if self._update_count > 100:
-            # Display the caption after a short delay.
-            caption = self._screen.blit(self._caption, self._caption_pos)
-        if self._update_count > 200:
-            # Display the "Ready" message.
-            ready = self._screen.blit(self._ready, self._ready_pos)
-            # Anchor the ball to the paddle.
-            self.game.ball.anchor(self.game.paddle,
-                                  (self.game.paddle.rect.width // 2,
-                                   -self.game.ball.rect.height))
-            # Display the sprites.
-            if not self._paddle_reset:
-                self.game.paddle.reset()
-                self._paddle_reset = True
-            self.game.paddle.visible = True
-            self.game.ball.visible = True
-        if self._update_count == 201:
-            # Animate the paddle materializing onto the screen.
-            self.game.paddle.transition(MaterializeState(self.game.paddle))
-        if self._update_count > 310:
-            # Erase the text.
-            self._screen.blit(self.game.round.background, caption, caption)
-            self._screen.blit(self.game.round.background, ready, ready)
-        if self._update_count > 340:
-            # Release the anchor.
-            self.game.ball.release(BALL_START_ANGLE_RAD)
-            # Normal gameplay begins.
-            self.game.state = RoundPlayState(self.game)
+        if self._start:
+            if self._update_count > 100:
+                # Display the caption after a short delay.
+                caption = self._screen.blit(self._caption, self._caption_pos)
+            if self._update_count > 200:
+                # Display the "Ready" message.
+                ready = self._screen.blit(self._ready, self._ready_pos)
+                # Anchor the ball to the paddle.
+                self.game.ball.anchor(self.game.paddle,
+                                      (self.game.paddle.rect.width // 2,
+                                       -self.game.ball.rect.height))
+                # Display the sprites.
+                if not self._paddle_reset:
+                    self.game.paddle.reset()
+                    self._paddle_reset = True
+                self.game.paddle.visible = True
+                self.game.ball.visible = True
+            if self._update_count == 201:
+                # Animate the paddle materializing onto the screen.
+                self.game.paddle.transition(MaterializeState(self.game.paddle))
+            if self._update_count > 310:
+                # Erase the text.
+                self._screen.blit(self.game.round.background, caption, caption)
+                self._screen.blit(self.game.round.background, ready, ready)
+            if self._update_count > 340:
+                # Release the anchor.
+                self.game.ball.release(BALL_START_ANGLE_RAD)
+                # Normal gameplay begins.
+                self.game.state = RoundPlayState(self.game)
 
-        self._update_count += 1
+            self._update_count += 1
 
         # Don't let the paddle move when it's not displayed.
         if not self.game.paddle.visible:
