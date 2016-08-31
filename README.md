@@ -1,7 +1,7 @@
 My Arkanoid Clone
 =================
 
-This is my take of the '80s arcade classic Arkanoid, written in Python and [pygame](http://www.pygame.org/).
+This a clone of the '80s arcade classic Arkanoid, written in Python and [pygame](http://www.pygame.org/).
 
 I wanted to have a play with pygame, and since I've always enjoyed playing breakout-type games, I thought I'd try and have a go writing an Arkanoid clone.
 
