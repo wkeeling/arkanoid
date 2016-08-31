@@ -88,3 +88,14 @@ Making the gameplay level-specific
  got out of control very quickly. Also, patterns emerge in new levels which weren't present in previous
  ones. For example, the use of gold bricks in level 3 which are indestructable highlighted ball bounce
  irregularities for corner boucing.
+
+
+Credits
+-------
+
+- Taito corporation
+- The spriter's resource (url)
+- Main logo ?
+- Enemy explosion graphics
+- Font - generation.ttf
+- pygame tutorials and reference docs
