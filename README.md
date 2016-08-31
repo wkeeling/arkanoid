@@ -1,9 +1,9 @@
-My Arkanoid Clone
-=================
+Arkanoid Remade
+===============
 
-This a clone of the '80s arcade classic Arkanoid, written in Python and [pygame](http://www.pygame.org/).
+This is my remake of the 1980's arcade classic Arkanoid, written in Python and [pygame](http://www.pygame.org/).
 
-I wanted to have a play with pygame, and since I've always enjoyed playing breakout-type games, I thought I'd try and have a go writing an Arkanoid clone.
+I wanted to have a play with pygame, and since I've always enjoyed playing breakout-type games, I thought I'd try and have a go at writing my own version of Arkanoid.
 
 One of the pygame tutorials uses Pong [as an example](http://www.pygame.org/docs/tut/tom/MakeGames.html), which gave me a great head start.
 
@@ -42,3 +42,5 @@ Credits
 
 Author
 ======
+
+Will Keeling
