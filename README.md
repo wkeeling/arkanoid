@@ -12,7 +12,7 @@ This implementation of Arkanoid is still work in progress, but the first 4 level
 Round 1
 -------
 
-![Round 1](./docs/img/round1.gif "Round 1")
+![Round 1](./docs/img/round1.gif =250x "Round 1")
 
 Round 2
 -------
