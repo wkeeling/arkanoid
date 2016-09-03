@@ -74,7 +74,7 @@ sudo apt install libfreetype6-dev mercurial
 ```
 (mercurial is needed for building pygame from source)
 
-Clone the arkanoid source:
+Clone the arkanoid project:
 
 ```
 git clone https://github.com/wkeeling/arkanoid.git
