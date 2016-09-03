@@ -1,5 +1,6 @@
 Arkanoid
 ========
+|build-status| |python-support|
 
 I decided I would have a go at building a game using Python and [pygame](http://www.pygame.org/), and I chose the 1980's arcade classic, Arkanoid.
 
