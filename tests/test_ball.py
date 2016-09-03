@@ -270,8 +270,8 @@ class TestBall(TestCase):
         ball.add_collidable_sprite(mock_sprite)
         ball.update()
 
-        self.assertGreaterEqual(ball.angle, 0.79 - RANDOM_RANGE)
-        self.assertLess(ball.angle, 0.79 + RANDOM_RANGE + 0.03)
+        self.assertGreaterEqual(ball.angle, 0.78 - RANDOM_RANGE)
+        self.assertLess(ball.angle, 0.78 + RANDOM_RANGE + 0.03)
 
     @patch('arkanoid.sprites.ball.load_png')
     @patch('arkanoid.sprites.ball.pygame')
