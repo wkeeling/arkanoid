@@ -414,18 +414,16 @@ class TestLaserBullet(TestCase):
         bullet = LaserBullet(mock_game, Mock())
         bullet.release()
         mock_rect.move.return_value = mock_rect
-        mock_game.round.edges.top.rect.colliderect.return_value = False
         visible_bricks = [Mock()]
         mock_game.round.bricks = visible_bricks
-        mock_pygame.sprite.spritecollide.return_value = visible_bricks
+        mock_pygame.sprite.spritecollide.side_effect = [[], visible_bricks]
 
         bullet.update()
 
         mock_rect.move.assert_called_once_with(0, -15)
-        mock_game.round.edges.top.rect.colliderect.\
-            assert_called_once_with(mock_rect)
         mock_pygame.sprite.spritecollide. \
-            assert_called_once_with(bullet, visible_bricks, False)
+            assert_has_calls([call(bullet, [mock_game.round.edges.top], False),
+                              call(bullet, visible_bricks, False)])
         mock_brick = visible_bricks[0]
         self.assertEqual(mock_brick.value, 0)
         self.assertIsNone(mock_brick.powerup_cls)
@@ -434,21 +432,30 @@ class TestLaserBullet(TestCase):
 
     @patch('arkanoid.sprites.paddle.load_png')
     @patch('arkanoid.sprites.paddle.pygame')
-    def test_no_collide_brick(self, mock_pygame, mock_load_png):
+    def test_collide_enemy(self, mock_pygame, mock_load_png):
         mock_game, mock_rect = Mock(), Mock()
         mock_load_png.return_value = Mock(), mock_rect
         bullet = LaserBullet(mock_game, Mock())
         bullet.release()
         mock_rect.move.return_value = mock_rect
-        mock_game.round.edges.top.rect.colliderect.return_value = False
-        visible_bricks = [Mock()]
+        visible_bricks = []
         mock_game.round.bricks = visible_bricks
-        mock_pygame.sprite.spritecollide.return_value = []  # No brick collide
+        visible_enemies = [Mock()]
+        mock_game.enemies = visible_enemies
+        mock_pygame.sprite.spritecollide.side_effect = [[], visible_bricks,
+                                                        visible_enemies]
 
         bullet.update()
 
+        mock_rect.move.assert_called_once_with(0, -15)
+        mock_pygame.sprite.spritecollide. \
+            assert_has_calls([call(bullet, [mock_game.round.edges.top], False),
+                              call(bullet, visible_bricks, False),
+                              call(bullet, visible_enemies, False)])
         self.assertEqual(mock_game.on_brick_collide.call_count, 0)
-        self.assertTrue(bullet.visible)
+        mock_enemy = visible_enemies[0]
+        mock_game.on_enemy_collide.assert_called_once_with(mock_enemy, bullet)
+        self.assertFalse(bullet.visible)
 
     @patch('arkanoid.sprites.paddle.load_png')
     @patch('arkanoid.sprites.paddle.pygame')

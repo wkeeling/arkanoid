@@ -29,7 +29,7 @@ class TestBaseRound(TestCase):
         base_round._blit_brick(mock_brick, x=1, y=1)
 
         mock_screen.blit.assert_has_calls([call(mock_background, (0, 150)),
-                                           call(mock_brick.image, (58, 187))])
+                                           call(mock_brick.image, (57, 186))])
 
     @patch('arkanoid.rounds.base.pygame')
     def test_sets_brick_in_position_9_13(self, mock_pygame):
@@ -40,7 +40,7 @@ class TestBaseRound(TestCase):
         base_round._blit_brick(mock_brick, x=9, y=13)
 
         mock_screen.blit.assert_has_calls([call(mock_background, (0, 150)),
-                                           call(mock_brick.image, (402, 451))])
+                                           call(mock_brick.image, (393, 438))])
 
     def _setup_mocks(self, mock_pygame):
         mock_screen = Mock()
