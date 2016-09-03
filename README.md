@@ -1,6 +1,6 @@
 Arkanoid
 ========
-https://travis-ci.org/wkeeling/arkanoid.svg?branch=master
+[![Build Status](https://travis-ci.org/wkeeling/arkanoid.svg?branch=master)](https://travis-ci.org/wkeeling/arkanoid)
 
 I decided I would have a go at building a game using Python and [pygame](http://www.pygame.org/), and I chose the 1980's arcade classic, Arkanoid.
 
