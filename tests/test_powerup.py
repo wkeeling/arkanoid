@@ -2,7 +2,8 @@ from unittest import TestCase
 from unittest.mock import (Mock,
                            patch)
 
-from arkanoid.sprites.powerup import (ExtraLifePowerUp,
+from arkanoid.sprites.powerup import (ExpandPowerUp,
+                                      ExtraLifePowerUp,
                                       PowerUp,
                                       SlowBallPowerUp)
 
@@ -316,4 +317,78 @@ class TestSlowBallPowerUp(TestCase):
         self.assertEqual(len(mock_game.balls), 3)
         for ball in mock_game.balls:
             self.assertEqual(ball.speed, 10)
+            self.assertEqual(ball.base_speed, 10)
+
+
+class TestExpandPowerUp(TestCase):
+
+    @patch('arkanoid.sprites.powerup.WideState')
+    @patch('arkanoid.sprites.powerup.load_png_sequence')
+    @patch('arkanoid.sprites.powerup.pygame')
+    def test_activate_transitions_to_wide_state(self, mock_pygame,
+                                                mock_load_png_sequence,
+                                                mock_wide_state):
+        mock_image = Mock()
+        mock_load_png_sequence.return_value = [(mock_image, Mock())]
+        mock_rect = Mock()
+        mock_pygame.Rect.return_value = mock_rect
+        mock_rect.move.return_value = mock_rect
+        mock_rect.colliderect.return_value = True
+        mock_screen = Mock()
+        mock_pygame.display.get_surface.return_value = mock_screen
+        mock_area = Mock()
+        mock_screen.get_rect.return_value = mock_area
+        mock_area.contains.return_value = True
+        mock_game = Mock()
+        mock_game.paddle.exploding = False
+        mock_game.paddle.visible = True
+        mock_state = Mock()
+        mock_wide_state.return_value = mock_state
+        mock_game.balls = [Mock(), Mock(), Mock()]
+        for ball in mock_game.balls:
+            ball.base_speed = 10
+        powerup = ExpandPowerUp(mock_game, Mock())
+
+        powerup.update()
+
+        mock_load_png_sequence.assert_called_once_with('powerup_expand')
+        mock_game.paddle.transition.assert_called_once_with(mock_state)
+        self.assertEqual(len(mock_game.balls), 3)
+        for ball in mock_game.balls:
+            self.assertEqual(ball.base_speed, 11)
+
+    @patch('arkanoid.sprites.powerup.NormalState')
+    @patch('arkanoid.sprites.powerup.load_png_sequence')
+    @patch('arkanoid.sprites.powerup.pygame')
+    def test_deactivate_transitions_to_normal_state(self, mock_pygame,
+                                                    mock_load_png_sequence,
+                                                    mock_normal_state):
+        mock_image = Mock()
+        mock_load_png_sequence.return_value = [(mock_image, Mock())]
+        mock_rect = Mock()
+        mock_pygame.Rect.return_value = mock_rect
+        mock_rect.move.return_value = mock_rect
+        mock_rect.colliderect.return_value = True
+        mock_screen = Mock()
+        mock_pygame.display.get_surface.return_value = mock_screen
+        mock_area = Mock()
+        mock_screen.get_rect.return_value = mock_area
+        mock_area.contains.return_value = True
+        mock_game = Mock()
+        mock_game.paddle.exploding = False
+        mock_game.paddle.visible = True
+        mock_game.active_powerup = ExpandPowerUp(mock_game, Mock())
+        mock_state = Mock()
+        mock_normal_state.return_value = mock_state
+        mock_game.balls = [Mock(), Mock(), Mock()]
+        for ball in mock_game.balls:
+            ball.base_speed = 11
+        powerup = PowerUp(mock_game, Mock(), 'test_prefix')
+        powerup._activate = Mock()
+
+        powerup.update()
+
+        mock_game.paddle.transition.assert_called_once_with(mock_state)
+        self.assertEqual(len(mock_game.balls), 3)
+        for ball in mock_game.balls:
             self.assertEqual(ball.base_speed, 10)
