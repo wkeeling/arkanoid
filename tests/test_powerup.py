@@ -2,11 +2,12 @@ from unittest import TestCase
 from unittest.mock import (Mock,
                            patch)
 
-from arkanoid.sprites.powerup import PowerUp
+from arkanoid.sprites.powerup import (ExtraLifePowerUp,
+                                      PowerUp,
+                                      SlowBallPowerUp)
 
 
 class TestPowerUp(TestCase):
-
     @patch('arkanoid.sprites.powerup.load_png_sequence')
     @patch('arkanoid.sprites.powerup.pygame')
     def test_init_loads_png_sequence(self, mock_pygame,
@@ -195,3 +196,124 @@ class TestPowerUp(TestCase):
         self.assertIsNotNone(mock_game.active_powerup)
         mock_game.sprites.remove.assert_called_once_with(powerup)
         self.assertFalse(powerup.visible)
+
+
+class TestExtraLifePowerUp(TestCase):
+    @patch('arkanoid.sprites.powerup.load_png_sequence')
+    @patch('arkanoid.sprites.powerup.pygame')
+    def test_activate_adds_life_to_game(self, mock_pygame,
+                                        mock_load_png_sequence):
+        mock_image = Mock()
+        mock_load_png_sequence.return_value = [(mock_image, Mock())]
+        mock_rect = Mock()
+        mock_pygame.Rect.return_value = mock_rect
+        mock_rect.move.return_value = mock_rect
+        mock_rect.colliderect.return_value = True
+        mock_screen = Mock()
+        mock_pygame.display.get_surface.return_value = mock_screen
+        mock_area = Mock()
+        mock_screen.get_rect.return_value = mock_area
+        mock_area.contains.return_value = True
+        mock_game = Mock()
+        mock_game.paddle.exploding = False
+        mock_game.paddle.visible = True
+        mock_game.lives = 2
+        powerup = ExtraLifePowerUp(mock_game, Mock())
+
+        powerup.update()
+
+        mock_load_png_sequence.assert_called_once_with('powerup_life')
+        self.assertEqual(mock_game.lives, 3)
+
+    @patch('arkanoid.sprites.powerup.load_png_sequence')
+    @patch('arkanoid.sprites.powerup.pygame')
+    def test_deactivate_is_noop(self, mock_pygame,
+                                mock_load_png_sequence):
+        mock_image = Mock()
+        mock_load_png_sequence.return_value = [(mock_image, Mock())]
+        mock_rect = Mock()
+        mock_pygame.Rect.return_value = mock_rect
+        mock_rect.move.return_value = mock_rect
+        mock_rect.colliderect.return_value = True
+        mock_screen = Mock()
+        mock_pygame.display.get_surface.return_value = mock_screen
+        mock_area = Mock()
+        mock_screen.get_rect.return_value = mock_area
+        mock_area.contains.return_value = True
+        mock_game = Mock()
+        mock_game.paddle.exploding = False
+        mock_game.paddle.visible = True
+        mock_game.lives = 2
+        mock_game.active_powerup = ExtraLifePowerUp(mock_game, Mock())
+        powerup = PowerUp(mock_game, Mock(), 'test_prefix')
+        powerup._activate = Mock()
+
+        powerup.update()
+
+        self.assertEqual(mock_game.lives, 2)
+
+
+class TestSlowBallPowerUp(TestCase):
+    @patch('arkanoid.sprites.powerup.load_png_sequence')
+    @patch('arkanoid.sprites.powerup.pygame')
+    def test_activate_slows_all_balls(self, mock_pygame,
+                                      mock_load_png_sequence):
+        mock_image = Mock()
+        mock_load_png_sequence.return_value = [(mock_image, Mock())]
+        mock_rect = Mock()
+        mock_pygame.Rect.return_value = mock_rect
+        mock_rect.move.return_value = mock_rect
+        mock_rect.colliderect.return_value = True
+        mock_screen = Mock()
+        mock_pygame.display.get_surface.return_value = mock_screen
+        mock_area = Mock()
+        mock_screen.get_rect.return_value = mock_area
+        mock_area.contains.return_value = True
+        mock_game = Mock()
+        mock_game.paddle.exploding = False
+        mock_game.paddle.visible = True
+        mock_game.ball.base_speed = 10
+        mock_game.balls = [Mock(), Mock(), Mock()]
+        powerup = SlowBallPowerUp(mock_game, Mock())
+
+        powerup.update()
+
+        mock_load_png_sequence.assert_called_once_with('powerup_slow')
+        self.assertEqual(len(mock_game.balls), 3)
+        for ball in mock_game.balls:
+            self.assertEqual(ball.speed, SlowBallPowerUp._SLOW_BALL_SPEED)
+            self.assertEqual(ball.base_speed, SlowBallPowerUp._SLOW_BALL_SPEED)
+
+    @patch('arkanoid.sprites.powerup.load_png_sequence')
+    @patch('arkanoid.sprites.powerup.pygame')
+    def test_deactivate_reinstates_ball_speed(self, mock_pygame,
+                                              mock_load_png_sequence):
+        mock_image = Mock()
+        mock_load_png_sequence.return_value = [(mock_image, Mock())]
+        mock_rect = Mock()
+        mock_pygame.Rect.return_value = mock_rect
+        mock_rect.move.return_value = mock_rect
+        mock_rect.colliderect.return_value = True
+        mock_screen = Mock()
+        mock_pygame.display.get_surface.return_value = mock_screen
+        mock_area = Mock()
+        mock_screen.get_rect.return_value = mock_area
+        mock_area.contains.return_value = True
+        mock_game = Mock()
+        mock_game.paddle.exploding = False
+        mock_game.paddle.visible = True
+        mock_game.active_powerup = SlowBallPowerUp(mock_game, Mock())
+        mock_game.active_powerup._orig_speed = 10
+        mock_game.balls = [Mock(), Mock(), Mock()]
+        for ball in mock_game.balls:
+            ball.speed = SlowBallPowerUp._SLOW_BALL_SPEED
+            ball.base_speed = SlowBallPowerUp._SLOW_BALL_SPEED
+        powerup = PowerUp(mock_game, Mock(), 'test_prefix')
+        powerup._activate = Mock()
+
+        powerup.update()
+
+        self.assertEqual(len(mock_game.balls), 3)
+        for ball in mock_game.balls:
+            self.assertEqual(ball.speed, 10)
+            self.assertEqual(ball.base_speed, 10)
