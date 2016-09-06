@@ -361,7 +361,7 @@ class TestExpandPowerUp(TestCase):
     @patch('arkanoid.sprites.powerup.load_png_sequence')
     @patch('arkanoid.sprites.powerup.pygame')
     def test_no_activate_when_already_expand(self, mock_pygame,
-                                            mock_load_png_sequence):
+                                             mock_load_png_sequence):
         mock_image = Mock()
         mock_load_png_sequence.return_value = [(mock_image, Mock())]
         mock_rect = Mock()
