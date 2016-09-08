@@ -21,8 +21,8 @@ def load_png(filename):
     """
     if not filename.lower().endswith('.png'):
         filename = '{}.png'.format(filename)
-    fullpath = os.path.join(os.path.dirname(__file__), 'data', 'graphics',
-                            filename)
+    fullpath = os.path.join(os.path.dirname(__file__), '..', 'data',
+                            'graphics', filename)
     if not os.path.exists(fullpath):
         raise FileNotFoundError('File not found: {}'.format(fullpath))
 
@@ -82,7 +82,8 @@ def font(name, size):
             The size of the font.
     """
     return pygame.font.Font(
-        os.path.join(os.path.dirname(__file__), 'data', 'fonts', name), size)
+        os.path.join(os.path.dirname(__file__), '..', 'data', 'fonts', name),
+        size)
 
 
 def h_centre_pos(surface):

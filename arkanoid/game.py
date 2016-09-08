@@ -1,20 +1,24 @@
+import itertools
+import functools
 import logging
+import os
 import random
 
 import pygame
 
 from arkanoid.event import receiver
 from arkanoid.rounds.round1 import Round1
-from arkanoid.sprites.enemy import Enemy
 from arkanoid.sprites.ball import Ball
+from arkanoid.sprites.enemy import Enemy
 from arkanoid.sprites.paddle import (ExplodingState,
                                      Paddle,
                                      MaterializeState)
-from arkanoid.util import (font,
-                           h_centre_pos,
-                           load_high_score,
-                           load_png,
-                           save_high_score)
+from arkanoid.utils.util import (h_centre_pos,
+                                 load_high_score,
+                                 load_png,
+                                 load_png_sequence,
+                                 save_high_score)
+from arkanoid.utils import ptext
 
 LOG = logging.getLogger(__name__)
 
@@ -31,7 +35,7 @@ BALL_START_ANGLE_RAD = 5.0  # Value must be no smaller than -3.14
 # The speed that the ball will always try to arrive at.
 # This is based on a game running at 60fps. You might need to increment it by
 # a couple of notches if you find the ball moves too slowly.
-BALL_BASE_SPEED = 8  # pixels per frame
+BALL_BASE_SPEED = 10  # pixels per frame
 # The max speed of the ball, prevents a runaway speed when lots of rapid
 # collisions.
 BALL_TOP_SPEED = 15  # pixels per frame
@@ -43,8 +47,11 @@ BRICK_SPEED_ADJUST = 0.5
 WALL_SPEED_ADJUST = 0.2
 # The speed the paddle moves.
 PADDLE_SPEED = 10
-# The main font.
-MAIN_FONT = 'generation.ttf'
+# The fonts.
+MAIN_FONT = os.path.join(os.path.dirname(__file__), 'data', 'fonts',
+                         'generation.ttf')
+ALT_FONT = os.path.join(os.path.dirname(__file__), 'data', 'fonts',
+                        'emulogic.ttf')
 
 # Initialise the pygame modules.
 pygame.init()
@@ -62,9 +69,12 @@ class Arkanoid:
         self._background = self._create_background()
         self._display_logo()
         self._display_score_titles()
-        self._display_score(0)
+        self._display_score(0, 35)
         self._high_score = load_high_score()
-        self._display_highscore(self._high_score)
+        self._display_score(self._high_score, 100)
+
+        # The start screen displayed before the game is started.
+        self._start_screen = StartScreen(self._start_game)
 
         # Reference to a running game, when one is in play.
         self._game = None
@@ -76,6 +86,12 @@ class Arkanoid:
         def quit_handler(event):
             self._running = False
         receiver.register_handler(pygame.QUIT, quit_handler)
+
+        # For convenience.
+        self._display_player_score = functools.partial(self._display_score,
+                                                       y=35)
+        self._display_high_score = functools.partial(self._display_score,
+                                                     y=100)
 
     def main_loop(self):
         """Starts the main loop of the program which manages the screen
@@ -90,24 +106,27 @@ class Arkanoid:
             # Receive and dispatch events.
             receiver.receive()
 
-            # TODO: add logic to begin game
             if not self._game:
-                self._game = Game()
+                self._start_screen.show()
+            else:
+                self._game.update()
+                self._display_player_score(self._game.score)
 
-            self._game.update()
-            self._display_score(self._game.score)
-
-            if self._game.over:
-                if self._game.score > self._high_score:
-                    self._high_score = self._game.score
-                    self._display_highscore(self._high_score)
-                    save_high_score(self._high_score)
-                self._running = False
+                if self._game.over:
+                    if self._game.score > self._high_score:
+                        self._high_score = self._game.score
+                        self._display_high_score(self._high_score)
+                        save_high_score(self._high_score)
+                    self._running = False
 
             # Display all updates.
             pygame.display.flip()
 
         LOG.debug('Exiting')
+
+    def _start_game(self, round_no):
+        # TODO: translate round_no to class of Round
+        self._game = Game()
 
     def _create_screen(self):
         pygame.display.set_mode(DISPLAY_SIZE)
@@ -127,26 +146,124 @@ class Arkanoid:
         self._screen.blit(image, (5, 0))
 
     def _display_score_titles(self):
-        player = font(MAIN_FONT, 24).render('1UP', False, (230, 0, 0))
-        self._screen.blit(player, (self._screen.get_width() -
-                                   player.get_width() - 10, 10))
-        high_score = font(MAIN_FONT, 24).render('HIGH SCORE', False,
-                                                (230, 0, 0))
-        self._screen.blit(high_score, (self._screen.get_width() -
-                                       high_score.get_width() - 10, 75))
+        ptext.draw('1UP', (self._screen.get_width() - 70, 10),
+                   fontname=MAIN_FONT,
+                   fontsize=24,
+                   color=(230, 0, 0))
+        ptext.draw('HIGH SCORE', (self._screen.get_width() - 205, 75),
+                   fontname=MAIN_FONT,
+                   fontsize=24,
+                   color=(230, 0, 0))
 
-    def _display_score(self, value):
-        score = font(MAIN_FONT, 24).render(str(value), False, (255, 255, 255))
-        position = self._screen.get_width() - score.get_width() - 10, 35
-        self._screen.blit(self._background, position, score.get_rect())
-        self._screen.blit(score, position)
+    def _display_score(self, value, y):
+        score_surf = pygame.Surface((150, 20)).convert_alpha()
+        ptext.draw(str(value),
+                   topright=(150, 0),
+                   fontname=MAIN_FONT,
+                   fontsize=24,
+                   color=(255, 255, 255),
+                   surf=score_surf)
+        position = self._screen.get_width() - 160, y
+        self._screen.blit(self._background, position, score_surf.get_rect())
+        self._screen.blit(score_surf, position)
 
-    def _display_highscore(self, value):
-        high_score = font(MAIN_FONT, 24).render(str(value), False,
-                                                (255, 255, 255))
-        position = self._screen.get_width() - high_score.get_width() - 10, 100
-        self._screen.blit(self._background, position, high_score.get_rect())
-        self._screen.blit(high_score, position)
+
+class StartScreen:
+    """Used to display the screen shown when the program is first run, and
+    before a game is started.
+
+    Apart from displaying some general information about the game, the start
+    screen is also responsible for capturing user input to decide when to
+    start a game, and which level to start on.
+    """
+
+    def __init__(self, on_start):
+        """Initialise the start screen.
+
+        Args:
+            on_start:
+                Callback invoked when a player starts a new game. The callback
+                should accept a single argument: the round number that the
+                game should start at.
+        """
+        self._on_start = on_start
+        self._screen = pygame.display.get_surface()
+
+        # The key for the powerups - their images, names and descriptions.
+        self._powerups = ((itertools.cycle(load_png_sequence('powerup_laser')),
+                           'laser',
+                           'enables the vaus to fire a laser'),
+                          (itertools.cycle(load_png_sequence('powerup_slow')),
+                           'slow',
+                           'slow down the energy ball'),
+                          (itertools.cycle(load_png_sequence('powerup_life')),
+                           'extra life',
+                           'gain an additional vaus'),
+                          (
+                          itertools.cycle(load_png_sequence('powerup_expand')),
+                          'expand',
+                          'expands the vaus'),
+                          (itertools.cycle(load_png_sequence('powerup_catch')),
+                           'catch',
+                           'catches the energy ball'))
+
+        # Whether the event listeners have been registered.
+        self._registered = False
+
+        self._text_color = 255, 255, 255
+
+        # Keep track of display count for animation purposes.
+        self._display_count = 0
+
+    def show(self):
+        """Display the start screen and register event listeners for
+        capturing keyboard input.
+
+        This method is designed to be called repeatedly by the main game loop.
+        """
+        if not self._registered:
+            receiver.register_handler(pygame.KEYUP, self._on_keyup)
+            self._registered = True
+
+        ptext.draw('powerups', (200, 200),
+                   fontname=MAIN_FONT,
+                   fontsize=28,
+                   color=(255, 255, 255))
+
+        left, top = 20, 250
+
+        for anim, name, desc in self._powerups:
+            if self._display_count % 4 == 0:
+                image, _ = next(anim)
+                self._screen.blit(image, (left, top))
+                ptext.draw(name.upper(), (left + image.get_width() + 20,
+                                          top + 5),
+                           fontname=MAIN_FONT,
+                           fontsize=20,
+                           color=(255, 255, 255))
+            left += 170
+
+            if left > 400:
+                left = 150
+                top += 100
+
+        if self._display_count % 20 == 0:
+            val = self._text_color[2]
+            self._text_color = (255, 255, 255 if not val else 0)
+
+        ptext.draw('spacebar to start', (25, 500),
+                   fontname=ALT_FONT,
+                   fontsize=32,
+                   color=self._text_color)
+
+        self._display_count += 1
+
+    def hide(self):
+        """Hide the start screen and unregister event listeners."""
+
+    def _on_keyup(self, event):
+        if event.key == pygame.K_SPACE:
+            self._on_start(1)
 
 
 class Game:
@@ -517,16 +634,6 @@ class RoundStartState(BaseState):
         self.game.ball.anchor((self._screen.get_width() / 2,
                                self._screen.get_height() - 100))
 
-        # Initialise the text.
-        self._caption = font(MAIN_FONT, 24).render(self.game.round.name,
-                                                   False, (255, 255, 255))
-        self._caption_pos = (h_centre_pos(self._caption),
-                             self.game.paddle.rect.center[1] - 150)
-        self._ready = font(MAIN_FONT, 24).render('Ready', False,
-                                                 (255, 255, 255))
-        self._ready_pos = (h_centre_pos(self._ready),
-                           self._caption_pos[1] + 50)
-
         # Whether we've reset the paddle
         self._paddle_reset = False
 
@@ -582,10 +689,18 @@ class RoundStartState(BaseState):
 
         if self._update_count > 100:
             # Display the caption after a short delay.
-            caption = self._screen.blit(self._caption, self._caption_pos)
+            caption = ptext.draw(self.game.round.name,
+                                 (235, self.game.paddle.rect.center[1] - 150),
+                                 fontname=MAIN_FONT,
+                                 fontsize=24,
+                                 color=(255, 255, 255))
         if self._update_count > 200:
             # Display the "Ready" message.
-            ready = self._screen.blit(self._ready, self._ready_pos)
+            ready = ptext.draw('ready',
+                               (250, caption[1][1] + 50),
+                               fontname=MAIN_FONT,
+                               fontsize=24,
+                               color=(255, 255, 255))
             # Anchor the ball to the paddle.
             self.game.ball.anchor(self.game.paddle,
                                   (self.game.paddle.rect.width // 2,
@@ -601,8 +716,8 @@ class RoundStartState(BaseState):
             self.game.paddle.transition(MaterializeState(self.game.paddle))
         if self._update_count > 310:
             # Erase the text.
-            self._screen.blit(self.game.round.background, caption, caption)
-            self._screen.blit(self.game.round.background, ready, ready)
+            self._screen.blit(self.game.round.background, caption[1])
+            self._screen.blit(self.game.round.background, ready[1])
         if self._update_count > 340:
             # Release the anchor.
             self.game.ball.release(BALL_START_ANGLE_RAD)

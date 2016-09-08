@@ -1,12 +1,11 @@
 import os
-
+from unittest import TestCase
 from unittest.mock import Mock
 from unittest.mock import patch
-from unittest import TestCase
 
-from arkanoid.util import (h_centre_pos,
-                           save_high_score,
-                           load_high_score)
+from arkanoid.utils.util import (h_centre_pos,
+                                 save_high_score,
+                                 load_high_score)
 
 
 class TestUtil(TestCase):
@@ -23,7 +22,7 @@ class TestUtil(TestCase):
         if os.path.exists(self._high_score_file_backup):
             os.rename(self._high_score_file_backup, self._high_score_file)
 
-    @patch('arkanoid.util.pygame')
+    @patch('arkanoid.utils.util.pygame')
     def test_returns_left_pos_for_horizontal_centre(self, mock_pygame):
         mock_screen = Mock()
         mock_screen.get_width.return_value = 600

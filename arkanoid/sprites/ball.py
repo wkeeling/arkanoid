@@ -4,7 +4,7 @@ import random
 
 import pygame
 
-from arkanoid.util import load_png
+from arkanoid.utils.util import load_png
 
 LOG = logging.getLogger(__name__)
 

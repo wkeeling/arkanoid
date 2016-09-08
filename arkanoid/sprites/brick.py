@@ -3,8 +3,8 @@ import logging
 
 import pygame
 
-from arkanoid.util import load_png
-from arkanoid.util import load_png_sequence
+from arkanoid.utils.util import load_png
+from arkanoid.utils.util import load_png_sequence
 
 LOG = logging.getLogger(__name__)
 
