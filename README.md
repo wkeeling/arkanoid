@@ -10,6 +10,11 @@ Being new to pygame, I started out by reading the tutorials, one of which helpfu
 
 This implementation of Arkanoid is still work in progress. The following sequences of the first 4 levels give you an idea of how it looks.
 
+Start
+-----
+
+![Start](./docs/img/start.gif "Start")
+
 Round 1
 -------
 
