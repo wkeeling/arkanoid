@@ -298,7 +298,7 @@ class StartScreen:
 
         ptext.draw('Based on original Arkanoid game\n'
                    'by Taito Corporation 1986',
-                   (100, 675),
+                   (100, 700),
                    align='center',
                    fontname=ALT_FONT,
                    fontsize=24,
