@@ -249,7 +249,7 @@ class StartScreen:
             receiver.register_handler(pygame.KEYUP, self._on_keyup)
             self._registered = True
 
-        ptext.draw('POWERUPS', (220, 200),
+        ptext.draw('POWERUPS', (210, 200),
                    fontname=ALT_FONT,
                    fontsize=32,
                    color=(255, 255, 255))
@@ -295,6 +295,14 @@ class StartScreen:
                                           fontname=ALT_FONT,
                                           fontsize=40,
                                           color=(255, 255, 255))[1]
+
+        ptext.draw('Based on original Arkanoid game\n'
+                   'by Taito Corporation 1986',
+                   (100, 675),
+                   align='center',
+                   fontname=ALT_FONT,
+                   fontsize=24,
+                   color=(128, 128, 128))
 
         self._display_count += 1
 
