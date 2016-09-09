@@ -275,7 +275,7 @@ class StartScreen:
                 left = 120
                 top += 100
 
-        if self._display_count % 20 == 0:
+        if self._display_count % 15 == 0:
             self._text_color_1 = next(self._text_colors_1)
             self._text_color_2 = next(self._text_colors_2)
 
