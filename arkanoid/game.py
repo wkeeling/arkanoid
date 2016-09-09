@@ -117,7 +117,7 @@ class Arkanoid:
                         self._high_score = self._game.score
                         self._display_high_score(self._high_score)
                         save_high_score(self._high_score)
-                    self._running = False
+                    self._game = None
 
             # Display all updates.
             pygame.display.flip()
@@ -203,6 +203,9 @@ class StartScreen:
         self._on_start = on_start
         self._screen = pygame.display.get_surface()
 
+        # Whether we've reinitialised the screen.
+        self._init = False
+
         # The key for the powerups - their images with names and descriptions.
         self._powerups = ((itertools.cycle(load_png_sequence('powerup_laser')),
                            'laser',
@@ -232,7 +235,7 @@ class StartScreen:
                                                (255, 0, 0)])
         self._text_color_2 = None
 
-        # The text entered.
+        # The text entered by the user.
         self._user_input = ''
         self._user_input_pos = None
 
@@ -248,6 +251,10 @@ class StartScreen:
         if not self._registered:
             receiver.register_handler(pygame.KEYUP, self._on_keyup)
             self._registered = True
+
+        if not self._init:
+            self._init = True
+            self._screen.blit(pygame.Surface((600, 650)), (0, TOP_OFFSET))
 
         ptext.draw('POWERUPS', (210, 200),
                    fontname=ALT_FONT,
@@ -310,6 +317,7 @@ class StartScreen:
         """Hide the start screen and unregister event listeners."""
         receiver.unregister_handler(self._on_keyup)
         self._registered = False
+        self._init = False
 
     def _on_keyup(self, event):
         """Event handler for capturing user input.
@@ -923,8 +931,12 @@ class RoundEndState(BaseState):
         if self._update_count > 120:
             # Move on to the next round, carrying over a single ball.
             self.game.balls = self.game.balls[:1]
-            self.game.round = self.game.round.next_round(TOP_OFFSET)
-            self.game.state = RoundStartState(self.game)
+            if self.game.round.next_round is not None:
+                self.game.round = self.game.round.next_round(TOP_OFFSET)
+                self.game.state = RoundStartState(self.game)
+            else:
+                # TODO: handle successful end of game.
+                self.game.over = True
 
         self._update_count += 1
 
