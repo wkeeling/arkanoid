@@ -1,5 +1,6 @@
-import itertools
 import functools
+import importlib
+import itertools
 import logging
 import os
 import random
@@ -13,8 +14,7 @@ from arkanoid.sprites.enemy import Enemy
 from arkanoid.sprites.paddle import (ExplodingState,
                                      Paddle,
                                      MaterializeState)
-from arkanoid.utils.util import (h_centre_pos,
-                                 load_high_score,
+from arkanoid.utils.util import (load_high_score,
                                  load_png,
                                  load_png_sequence,
                                  save_high_score)
@@ -35,7 +35,7 @@ BALL_START_ANGLE_RAD = 5.0  # Value must be no smaller than -3.14
 # The speed that the ball will always try to arrive at.
 # This is based on a game running at 60fps. You might need to increment it by
 # a couple of notches if you find the ball moves too slowly.
-BALL_BASE_SPEED = 10  # pixels per frame
+BALL_BASE_SPEED = 8  # pixels per frame
 # The max speed of the ball, prevents a runaway speed when lots of rapid
 # collisions.
 BALL_TOP_SPEED = 15  # pixels per frame
@@ -51,7 +51,7 @@ PADDLE_SPEED = 10
 MAIN_FONT = os.path.join(os.path.dirname(__file__), 'data', 'fonts',
                          'generation.ttf')
 ALT_FONT = os.path.join(os.path.dirname(__file__), 'data', 'fonts',
-                        'emulogic.ttf')
+                        'optimus.otf')
 
 # Initialise the pygame modules.
 pygame.init()
@@ -69,9 +69,7 @@ class Arkanoid:
         self._background = self._create_background()
         self._display_logo()
         self._display_score_titles()
-        self._display_score(0, 35)
         self._high_score = load_high_score()
-        self._display_score(self._high_score, 100)
 
         # The start screen displayed before the game is started.
         self._start_screen = StartScreen(self._start_game)
@@ -87,11 +85,13 @@ class Arkanoid:
             self._running = False
         receiver.register_handler(pygame.QUIT, quit_handler)
 
-        # For convenience.
+        # Initialise the scores.
         self._display_player_score = functools.partial(self._display_score,
                                                        y=35)
         self._display_high_score = functools.partial(self._display_score,
                                                      y=100)
+        self._display_player_score(0)
+        self._display_high_score(self._high_score)
 
     def main_loop(self):
         """Starts the main loop of the program which manages the screen
@@ -125,8 +125,22 @@ class Arkanoid:
         LOG.debug('Exiting')
 
     def _start_game(self, round_no):
-        # TODO: translate round_no to class of Round
-        self._game = Game()
+        """Callback invoked by the start screen when a user enters a round.
+
+        Args:
+            round_no:
+                The round number the user entered.
+
+        """
+        module_name = 'arkanoid.rounds.round{}'.format(round_no)
+        try:
+            module = importlib.import_module(module_name)
+            round_cls = getattr(module, 'Round{}'.format(round_no))
+        except (ImportError, AttributeError):
+            LOG.exception('Unable to import round')
+        else:
+            self._game = Game(round_class=round_cls)
+            self._start_screen.hide()
 
     def _create_screen(self):
         pygame.display.set_mode(DISPLAY_SIZE)
@@ -184,33 +198,43 @@ class StartScreen:
             on_start:
                 Callback invoked when a player starts a new game. The callback
                 should accept a single argument: the round number that the
-                game should start at.
+                game will start at.
         """
         self._on_start = on_start
         self._screen = pygame.display.get_surface()
 
-        # The key for the powerups - their images, names and descriptions.
+        # The key for the powerups - their images with names and descriptions.
         self._powerups = ((itertools.cycle(load_png_sequence('powerup_laser')),
                            'laser',
-                           'enables the vaus to fire a laser'),
+                           'enables the vaus\nto fire a laser'),
                           (itertools.cycle(load_png_sequence('powerup_slow')),
                            'slow',
-                           'slow down the energy ball'),
+                           'slow down the\nenergy ball'),
                           (itertools.cycle(load_png_sequence('powerup_life')),
                            'extra life',
-                           'gain an additional vaus'),
+                           'gain an additional\nvaus'),
                           (
                           itertools.cycle(load_png_sequence('powerup_expand')),
                           'expand',
                           'expands the vaus'),
                           (itertools.cycle(load_png_sequence('powerup_catch')),
                            'catch',
-                           'catches the energy ball'))
+                           'catches the energy\nball'))
 
         # Whether the event listeners have been registered.
         self._registered = False
 
-        self._text_color = 255, 255, 255
+        self._text_colors_1 = itertools.cycle([(255, 255, 255),
+                                               (255, 255, 0)])
+        self._text_color_1 = None
+
+        self._text_colors_2 = itertools.cycle([(255, 255, 0),
+                                               (255, 0, 0)])
+        self._text_color_2 = None
+
+        # The text entered.
+        self._user_input = ''
+        self._user_input_pos = None
 
         # Keep track of display count for animation purposes.
         self._display_count = 0
@@ -225,45 +249,83 @@ class StartScreen:
             receiver.register_handler(pygame.KEYUP, self._on_keyup)
             self._registered = True
 
-        ptext.draw('powerups', (200, 200),
-                   fontname=MAIN_FONT,
-                   fontsize=28,
+        ptext.draw('POWERUPS', (220, 200),
+                   fontname=ALT_FONT,
+                   fontsize=32,
                    color=(255, 255, 255))
 
-        left, top = 20, 250
+        left, top = 40, 270
 
         for anim, name, desc in self._powerups:
             if self._display_count % 4 == 0:
                 image, _ = next(anim)
                 self._screen.blit(image, (left, top))
                 ptext.draw(name.upper(), (left + image.get_width() + 20,
-                                          top + 5),
-                           fontname=MAIN_FONT,
+                                          top),
+                           fontname=ALT_FONT,
                            fontsize=20,
                            color=(255, 255, 255))
-            left += 170
+                ptext.draw(desc.upper(), (left, top + 25),
+                           fontname=ALT_FONT,
+                           fontsize=14,
+                           color=(255, 255, 255))
+            left += 180
 
             if left > 400:
-                left = 150
+                left = 120
                 top += 100
 
         if self._display_count % 20 == 0:
-            val = self._text_color[2]
-            self._text_color = (255, 255, 255 if not val else 0)
+            self._text_color_1 = next(self._text_colors_1)
+            self._text_color_2 = next(self._text_colors_2)
 
-        ptext.draw('spacebar to start', (25, 500),
+        ptext.draw('SPACEBAR TO START', (50, 500),
+                   fontname=ALT_FONT,
+                   fontsize=48,
+                   color=self._text_color_1,
+                   shadow=(1.0, 1.0),
+                   scolor="grey")
+
+        ptext.draw('OR ENTER LEVEL', (160, 575),
                    fontname=ALT_FONT,
                    fontsize=32,
-                   color=self._text_color)
+                   color=self._text_color_2)
+
+        self._user_input_pos = ptext.draw(self._user_input, (280, 625),
+                                          fontname=ALT_FONT,
+                                          fontsize=40,
+                                          color=(255, 255, 255))[1]
 
         self._display_count += 1
 
     def hide(self):
         """Hide the start screen and unregister event listeners."""
+        receiver.unregister_handler(self._on_keyup)
+        self._registered = False
 
     def _on_keyup(self, event):
+        """Event handler for capturing user input.
+
+        Args:
+            event:
+                The pygame event.
+
+        """
+        numeric_keys = {pygame.K_0: '0', pygame.K_1: '1', pygame.K_2: '2',
+                        pygame.K_3: '3', pygame.K_4: '4', pygame.K_5: '5',
+                        pygame.K_6: '6', pygame.K_7: '7', pygame.K_8: '8',
+                        pygame.K_9: '9'}
         if event.key == pygame.K_SPACE:
             self._on_start(1)
+        elif event.key in numeric_keys and len(self._user_input) < 2:
+            self._user_input += numeric_keys[event.key]
+        elif event.key == pygame.K_BACKSPACE:
+            self._user_input = ''
+            self._screen.blit(pygame.Surface((50, 50)), self._user_input_pos)
+        elif event.key == pygame.K_RETURN and self._user_input:
+            self._screen.blit(pygame.Surface((50, 50)), self._user_input_pos)
+            self._on_start(int(self._user_input))
+            self._user_input = ''
 
 
 class Game:

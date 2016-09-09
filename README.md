@@ -102,6 +102,7 @@ Credits
 * [The Spriters Resource](http://www.spriters-resource.com/) for the majority of the graphics.
 * [Positech Games](http://www.positech.co.uk/content/explosion/explosiongenerator.html) for the enemy explosion graphics.
 * [Geronimo](http://www.dafont.com/paradox-fontworks.d5233) for the Generation font used in the game.
+* [Pixel Sagas](http://www.dafont.com/optimus.font) for the Optimus font used in the game.
 * [pygame-text](https://github.com/cosmologicon/pygame-text) for text drawing functions.
 * Taito Corporation for the original Arkanoid game.
 
