@@ -95,7 +95,7 @@ cd arkanoid; pip install -r requirements.txt
 Run the game:
 
 ```
-python main.py
+python arkanoid.py
 ```
 
 Use the left and right arrow keys to control the paddle, and the spacebar to fire the laser and release caught balls.

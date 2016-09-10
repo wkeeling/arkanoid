@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python3 main.py
+    command: python3 arkanoid.py
     volumes:
       - .:/home/platform
 
