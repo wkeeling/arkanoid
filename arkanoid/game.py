@@ -222,7 +222,11 @@ class StartScreen:
                           'expands the vaus'),
                           (itertools.cycle(load_png_sequence('powerup_catch')),
                            'catch',
-                           'catches the energy\nball'))
+                           'catches the energy\nball'),
+                          (itertools.cycle(load_png_sequence(
+                              'powerup_duplicate')),
+                           'duplicate',
+                           'duplicates the energy\nball'))
 
         # Whether the event listeners have been registered.
         self._registered = False
@@ -261,14 +265,14 @@ class StartScreen:
                    fontsize=32,
                    color=(255, 255, 255))
 
-        left, top = 40, 270
+        left, top = 30, 270
 
         for anim, name, desc in self._powerups:
             if self._display_count % 4 == 0:
                 image, _ = next(anim)
                 self._screen.blit(image, (left, top))
                 ptext.draw(name.upper(), (left + image.get_width() + 20,
-                                          top),
+                                          top-3),
                            fontname=ALT_FONT,
                            fontsize=20,
                            color=(255, 255, 255))
@@ -279,7 +283,7 @@ class StartScreen:
             left += 180
 
             if left > 400:
-                left = 120
+                left = 30
                 top += 100
 
         if self._display_count % 15 == 0:
