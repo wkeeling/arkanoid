@@ -104,13 +104,11 @@ class BaseRound:
         """Blits the specified brick onto the game area by using a
         relative coordinate for the position of the brick.
 
-        This is a convenience method that concrete round subclasses can use
-        when setting up bricks. It assumes that the game area (area within
-        the edges) is split into a grid where each grid square corresponds to
-        one brick. The top left most brick is considered position (0, 0).
-
-        This allows clients to avoid having to work with actual screen
-        positions.
+        This is a convenience method that concrete subclasses can use when
+        setting up bricks. It assumes that the game area (area within the
+        edges) is split into a grid where each grid square corresponds to one
+        brick. The top left most brick is considered position (0, 0). This
+        allows clients to avoid having to work with actual screen positions.
 
         Note that this method will modify the brick's rect attribute once
         the brick has been set.

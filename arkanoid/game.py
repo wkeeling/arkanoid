@@ -125,7 +125,9 @@ class Arkanoid:
         LOG.debug('Exiting')
 
     def _start_game(self, round_no):
-        """Callback invoked by the start screen when a user enters a round.
+        """Callback invoked by the start screen when a user begins a game,
+        either by hitting the spacebar, or by entering a specific round number
+        to start at.
 
         Args:
             round_no:
@@ -939,8 +941,8 @@ class RoundEndState(BaseState):
                 self.game.round = self.game.round.next_round(TOP_OFFSET)
                 self.game.state = RoundStartState(self.game)
             else:
-                # TODO: handle successful end of game.
-                self.game.over = True
+                # TODO: special behaviour when user completes whole game.
+                self.game.state = GameEndState(self.game)
 
         self._update_count += 1
 
