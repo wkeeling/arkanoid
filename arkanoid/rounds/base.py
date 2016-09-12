@@ -136,14 +136,31 @@ class BaseRound:
     def _create_background(self):
         """Create the background surface for the round.
 
-        Subclasses must override this abstract method to return the
-        background surface.
+        This method provides a default implementation that simply creates a
+        solid colour for the background, delegating to an abstract hook method
+        for the colour itself. Subclasses may ovrerride this if they wish to
+        provide a more elaborate background (e.g. textured) for a round.
 
         Returns:
             The background surface.
         """
+        background = pygame.Surface(self.screen.get_size())
+        background = background.convert()
+        background.fill(self._get_background_colour())
+        return background
+
+    def _get_background_colour(self):
+        """Abstract method to obtain the background method for a round.
+
+        Subclasses must implement this to return the colour, or alternatively,
+        override _create_background() completely to create a more elaborate
+        background.
+
+        Returns:
+            The background colour.
+        """
         raise NotImplementedError(
-            'Subclasses must implement _create_background()')
+            'Subclasses must implement _get_background_colour()')
 
     def _create_edges(self):
         """Create the edge sprites and position them at the edges of the

@@ -41,11 +41,8 @@ class Round2(BaseRound):
         """Release the enemies right at the start."""
         return True
 
-    def _create_background(self):
-        background = pygame.Surface(self.screen.get_size())
-        background = background.convert()
-        background.fill(GREEN)
-        return background
+    def _get_background_colour(self):
+        return GREEN
 
     def _create_bricks(self):
         """Create the bricks and position them on the screen.
