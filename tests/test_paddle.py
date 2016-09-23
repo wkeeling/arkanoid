@@ -1,6 +1,7 @@
 import math
 from unittest import TestCase
-from unittest.mock import (call,
+from unittest.mock import (ANY,
+                           call,
                            Mock,
                            patch)
 
@@ -423,7 +424,7 @@ class TestLaserBullet(TestCase):
         mock_rect.move.assert_called_once_with(0, -15)
         mock_pygame.sprite.spritecollide. \
             assert_has_calls([call(bullet, [mock_game.round.edges.top], False),
-                              call(bullet, visible_bricks, False)])
+                              call(bullet, ANY, False)])
         mock_brick = visible_bricks[0]
         self.assertEqual(mock_brick.value, 0)
         self.assertIsNone(mock_brick.powerup_cls)
@@ -450,8 +451,8 @@ class TestLaserBullet(TestCase):
         mock_rect.move.assert_called_once_with(0, -15)
         mock_pygame.sprite.spritecollide. \
             assert_has_calls([call(bullet, [mock_game.round.edges.top], False),
-                              call(bullet, visible_bricks, False),
-                              call(bullet, visible_enemies, False)])
+                              call(bullet, ANY, False),
+                              call(bullet, ANY, False)])
         self.assertEqual(mock_game.on_brick_collide.call_count, 0)
         mock_enemy = visible_enemies[0]
         mock_game.on_enemy_collide.assert_called_once_with(mock_enemy, bullet)

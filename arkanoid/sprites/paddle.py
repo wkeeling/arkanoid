@@ -598,8 +598,8 @@ class LaserBullet(pygame.sprite.Sprite):
             if not top_edge_collision:
                 # We haven't collided with the top of the game area, so
                 # check whether we've collided with anything.
-                visible_bricks = [brick for brick in self._game.round.bricks
-                                  if brick.visible]
+                visible_bricks = (brick for brick in self._game.round.bricks
+                                  if brick.visible)
                 brick_collide = pygame.sprite.spritecollide(self,
                                                             visible_bricks,
                                                             False)
@@ -614,8 +614,8 @@ class LaserBullet(pygame.sprite.Sprite):
                     self._game.on_brick_collide(brick, self)
                     self.visible = False
                 else:
-                    visible_enemies = [
-                        enemy for enemy in self._game.enemies if enemy.visible]
+                    visible_enemies = (
+                        enemy for enemy in self._game.enemies if enemy.visible)
                     enemy_collide = pygame.sprite.spritecollide(
                         self,
                         visible_enemies,

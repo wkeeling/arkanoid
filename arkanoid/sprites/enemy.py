@@ -125,7 +125,7 @@ class Enemy(pygame.sprite.Sprite):
         # collision. This attribute tracks the last cycle a contact was made.
         self._last_contact = 0
 
-        # When frozen, an enemy sprite does not move.
+        # Stops the enemy sprite from moving if set to True.
         self.freeze = False
 
         # Track the number of update cycles.
@@ -174,12 +174,12 @@ class Enemy(pygame.sprite.Sprite):
                                                    False):
                         self._on_paddle_collide(self, self._paddle)
                     else:
-                        visible_sprites = [sprite for sprite in
-                                           self._collidable_sprites if
-                                           sprite.visible]
-                        visible_sprites += [sprite for sprite in self._enemies
-                                            if sprite.visible and sprite is not
-                                            self]
+                        visible_sprites = itertools.chain(
+                            (sprite for sprite in self._collidable_sprites if
+                             sprite.visible),
+                            (sprite for sprite in self._enemies if
+                             sprite.visible and sprite is not self)
+                        )
                         sprites_collided = pygame.sprite.spritecollide(
                             self,
                             visible_sprites, None)

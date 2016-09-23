@@ -206,7 +206,7 @@ class Ball(pygame.sprite.Sprite):
                 # if it has collided with anything.
                 sprites_collided = pygame.sprite.spritecollide(
                     self,
-                    [s for s in self._collidable_sprites if s.visible], False)
+                    (s for s in self._collidable_sprites if s.visible), False)
 
                 if sprites_collided:
                     # Handle the collision.
