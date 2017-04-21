@@ -1,5 +1,5 @@
-Arkanoid
-========
+#Arkanoid
+
 [![Build Status](https://travis-ci.org/wkeeling/arkanoid.svg?branch=master)](https://travis-ci.org/wkeeling/arkanoid)
 
 I decided I would have a go at building a game using Python and [pygame](http://www.pygame.org/), and I chose the 1980's arcade classic, Arkanoid.
@@ -10,33 +10,28 @@ Being new to pygame, I started out by reading the tutorials, one of which helpfu
 
 This implementation of Arkanoid is still work in progress. The following sequences of the first 4 levels give you an idea of how it looks.
 
-Start
------
+##Start
 
 ![Start](./docs/img/start.gif "Start")
 
-Round 1
--------
+##Round 1
 
 ![Round 1](./docs/img/round1.gif "Round 1")
 
-Round 2
--------
+##Round 2
 
 ![Round 2](./docs/img/round2.gif "Round 2")
 
-Round 3
--------
+##Round 3
 
 ![Round 3](./docs/img/round3.gif "Round 3")
 
-Round 4
--------
+##Round 4
 
 ![Round 4](./docs/img/round4.gif "Round 4")
 
-Installation
-------------
+##Installation
+
 Arkanoid runs on Python 3 and requires pygame, plus a few system-wide dependencies.
 
 ###On Ubuntu 16.04
@@ -102,8 +97,7 @@ Use the left and right arrow keys to control the paddle, and the spacebar to fir
 
 
 
-Credits
-=======
+##Credits
 * [The Spriters Resource](http://www.spriters-resource.com/) for the majority of the graphics.
 * [Positech Games](http://www.positech.co.uk/content/explosion/explosiongenerator.html) for the enemy explosion graphics.
 * [Geronimo](http://www.dafont.com/paradox-fontworks.d5233) for the Generation font used in the game.
@@ -111,7 +105,6 @@ Credits
 * [pygame-text](https://github.com/cosmologicon/pygame-text) for text drawing functions.
 * Taito Corporation for the original Arkanoid game.
 
-Author
-======
+##Author
 
 Will Keeling
