@@ -39,7 +39,8 @@ Installation
 ------------
 Arkanoid runs on Python 3 and requires pygame, plus a few system-wide dependencies.
 
-####On Ubuntu 16.04####
+On Ubuntu 16.04
+~~~~~~~~~~~~~~~
 
 Install virtualenv if not already installed:
 
