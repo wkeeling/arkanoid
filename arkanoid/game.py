@@ -351,8 +351,9 @@ class StartScreen:
 
 
 class Game:
-    """Represents a running Arkanoid game. An instance of a Game comes into
-    being when a player starts a new game.
+    """Represents a running Arkanoid game.
+
+    An instance of a Game comes into being when a player starts a new game.
     """
 
     def __init__(self, round_class=Round1, lives=3):
@@ -426,7 +427,8 @@ class Game:
 
     def _update_sprites(self):
         """Erase the sprites, update their state, and then redraw them
-        on the screen."""
+        on the screen.
+        """
         # Erase.
         for sprite in self.sprites:
             self._screen.blit(self.round.background, sprite.rect, sprite.rect)
@@ -881,15 +883,15 @@ class RoundRestartState(RoundStartState):
         self._enemies_rereleased = False
 
     def _setup_sprites(self):
-        """No need to setup the sprites again on round restart."""
+        # No need to setup the sprites again on round restart.
         pass
 
     def _configure_ball(self):
-        """No need to configure the ball again on round restart."""
+        # No need to configure the ball again on round restart.
         pass
 
     def _configure_paddle(self):
-        """No need to configure the paddle again on round restart."""
+        # No need to configure the paddle again on round restart.
         pass
 
     def update(self):
