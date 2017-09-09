@@ -20,10 +20,10 @@ class Brick(pygame.sprite.Sprite):
         where <colour> corresponds to the name attribute of the BrickColour
         enum. That file must exist.
 
-        In addition, the initialiser will also attempt  to load an image
-        sequence named  'brick_<colour>_N.png' from the  graphics folder
+        In addition, the initialiser will also attempt to load an image
+        sequence named 'brick_<colour>_N.png' from the graphics folder
         which will be used to animate the brick when  Brick.animate() is
-        called. This image sequence is optional, and if  the files do not
+        called. This image sequence is optional, and if the files do not
         exist, then triggering Brick.animate() will have no effect.
 
         The round number must also be supplied which is used to generate the
@@ -50,7 +50,7 @@ class Brick(pygame.sprite.Sprite):
         # Load the brick graphic.
         self.image, self.rect = load_png('brick_{}'.format(brick_colour.name))
 
-        # Load the images/rects required for the shimmering animation.
+        # Load the images/rects required for any animation.
         self._image_sequence = [image for image, _ in load_png_sequence(
             'brick_{}'.format(brick_colour.name))]
         self._animation = None
