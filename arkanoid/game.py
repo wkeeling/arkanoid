@@ -800,6 +800,9 @@ class RoundStartState(BaseState):
         if self._update_count == 201:
             # Animate the paddle materializing onto the screen.
             self.game.paddle.transition(MaterializeState(self.game.paddle))
+            # Animate the bricks
+            for brick in self.game.round.bricks:
+                brick.animate()
         if self._update_count > 310:
             # Erase the text.
             self._screen.blit(self.game.round.background, caption[1])
