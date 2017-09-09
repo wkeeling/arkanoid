@@ -11,7 +11,8 @@ from arkanoid.sprites.powerup import (CatchPowerUp,
                                       DuplicatePowerUp,
                                       ExtraLifePowerUp,
                                       ExpandPowerUp,
-                                      LaserPowerUp)
+                                      LaserPowerUp,
+                                      SlowBallPowerUp)
 
 
 class Round5(BaseRound):
@@ -46,10 +47,13 @@ class Round5(BaseRound):
         Returns:
             A pygame.sprite.Group of bricks.
         """
-        bricks = [self._blit_brick(Brick(BrickColour.orange, 5), 4, 2),
-                  self._blit_brick(Brick(BrickColour.orange, 5), 8, 2),
+        bricks = [self._blit_brick(Brick(BrickColour.orange, 5,
+                                         powerup_cls=ExpandPowerUp), 4, 2),
+                  self._blit_brick(Brick(BrickColour.orange, 5,
+                                         powerup_cls=LaserPowerUp), 8, 2),
                   self._blit_brick(Brick(BrickColour.orange, 5), 5, 3),
-                  self._blit_brick(Brick(BrickColour.orange, 5), 7, 3),
+                  self._blit_brick(Brick(BrickColour.orange, 5,
+                                         powerup_cls=SlowBallPowerUp), 7, 3),
                   self._blit_brick(Brick(BrickColour.orange, 5), 5, 4),
                   self._blit_brick(Brick(BrickColour.orange, 5), 7, 4)]
 
@@ -61,9 +65,15 @@ class Round5(BaseRound):
         for y in range(7, 9):
             for x in range(3, 10):
                 colour = BrickColour.silver
+                powerup_cls = None
                 if x in (5, 7):
                     colour = BrickColour.red
-                bricks.append(self._blit_brick(Brick(colour, 5), x, y))
+                    if (x, y) == (5, 8):
+                        powerup_cls = ExpandPowerUp
+                    elif (x, y) == (7, 8):
+                        powerup_cls = DuplicatePowerUp
+                bricks.append(self._blit_brick(
+                    Brick(colour, 5, powerup_cls=powerup_cls), x, y))
 
         for y in range(9, 16):
             for x in range(2, 11):
@@ -74,8 +84,12 @@ class Round5(BaseRound):
                                   (8, 14), (9, 14), (10, 14), (2, 15),
                                   (3, 15), (4, 15), (6, 15), (8, 15),
                                   (9, 15), (10, 15)]:
+                    powerup_cls = None
+                    if (x, y) == (7, 14):
+                        powerup_cls = LaserPowerUp
                     bricks.append(self._blit_brick(
-                        Brick(BrickColour.silver, 5), x, y))
+                        Brick(BrickColour.silver, 5,
+                              powerup_cls=powerup_cls), x, y))
 
         return pygame.sprite.Group(*bricks)
 
