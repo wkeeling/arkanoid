@@ -184,6 +184,14 @@ class Enemy(pygame.sprite.Sprite):
                             self,
                             visible_sprites, None)
 
+                        # The following code could be pulled into a separate
+                        # strategy class which could be passed to the enemy
+                        # when it is initialised. This could act as the default
+                        # movement behaviour, and would allow rounds to
+                        # inject their own strategy classes when they wanted
+                        # their own round specific movement behaviour.
+                        #####################################################
+
                         if sprites_collided:
                             self._last_contact = self._update_count
                             self._direction = self._calc_direction_collision(
@@ -205,6 +213,8 @@ class Enemy(pygame.sprite.Sprite):
                                 # given direction, so reset in order for the
                                 # direction to be modified next cycle.
                                 self._duration = 0
+
+                        #####################################################
                 else:
                     # We've dropped off the bottom of the screen.
                     if not self._on_destroyed_called:
