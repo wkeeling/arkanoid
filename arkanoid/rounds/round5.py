@@ -1,5 +1,3 @@
-import collections
-
 import pygame
 
 from arkanoid.rounds.base import (BaseRound,
@@ -9,7 +7,6 @@ from arkanoid.sprites.brick import (Brick,
 from arkanoid.sprites.enemy import EnemyType
 from arkanoid.sprites.powerup import (CatchPowerUp,
                                       DuplicatePowerUp,
-                                      ExtraLifePowerUp,
                                       ExpandPowerUp,
                                       LaserPowerUp,
                                       SlowBallPowerUp)
@@ -69,7 +66,7 @@ class Round5(BaseRound):
                 if x in (5, 7):
                     colour = BrickColour.red
                     if (x, y) == (5, 8):
-                        powerup_cls = ExpandPowerUp
+                        powerup_cls = CatchPowerUp
                     elif (x, y) == (7, 8):
                         powerup_cls = DuplicatePowerUp
                 bricks.append(self._blit_brick(
